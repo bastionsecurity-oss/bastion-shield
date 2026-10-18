@@ -1,0 +1,24 @@
+{
+  "$comment": "Input for Set-BastionShieldPolicy.ps1. Copy to bastion-shield-policy.json next to the script (Win32 app) or paste into its $EmbeddedConfig block (platform script / Remediation). Replace the <..._ID> placeholders with the store ids. Keys of 'policy' are documented in policy/managed_schema.json and docs/DEPLOYMENT-INTUNE.md.",
+  "extensionIds": {
+    "edge": "<EDGE_ADDONS_ID>",
+    "chrome": "<CHROME_WEB_STORE_ID>",
+    "brave": "<CHROME_WEB_STORE_ID>"
+  },
+  "policy": {
+    "organizationName": "Muster AG",
+    "supportUrl": "https://intranet.example.com/it-support",
+    "supportEmail": "it-support@example.com",
+    "reportBrokenSite": "email",
+    "defaultMode": "standard",
+    "disabledSites": ["intranet.example.com", "erp.example.com"],
+    "lists": { "annoyances": true, "social": false },
+    "customFilters": ["||ads.example.net^", "example.com##.promo-banner"],
+    "allowUserSiteToggle": true,
+    "allowUserFilters": false,
+    "lockSettings": true,
+    "historyEnabled": true,
+    "historyRetentionDays": 14,
+    "protectionEnabled": true
+  }
+}

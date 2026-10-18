@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.cache/
+*.pem
+*.crx
+test-results/
+playwright-report/
+dist-pkg/

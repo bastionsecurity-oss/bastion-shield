@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Bastion Shield for Microsoft Edge on macOS (example configuration profile).
+  SPDX-License-Identifier: GPL-3.0-or-later
+
+  BEFORE UPLOADING: replace every EDGE_ADDONS_ID (written <EDGE_ADDONS_ID> in the
+  other examples) with the Edge Add-ons id of Bastion Shield, which differs from
+  the Chrome Web Store id, and generate fresh PayloadUUIDs (uuidgen).
+
+  Intune: Devices > Manage devices > Configuration > Create > New policy >
+  macOS > Templates > Custom, Deployment channel "Device channel", upload this file.
+  Alternative for payload 1: the macOS Settings Catalog has
+  Microsoft Edge > Extensions > "Configure extension management settings".
+  Do not configure ExtensionSettings in both places.
+
+  Payload 1 (com.microsoft.Edge) force-installs the extension and shows it on
+  the toolbar (toolbar_state is Edge's key; Chrome's toolbar_pin does not apply).
+  Payload 2 (com.microsoft.Edge.extensions.<id>) is the extension's managed
+  configuration (all keys: policy/managed_schema.json).
+-->
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.microsoft.Edge</string>
+      <key>PayloadIdentifier</key>
+      <string>ch.bastionsecurity.shield.edge.install</string>
+      <key>PayloadUUID</key>
+      <string>93038591-30CB-4303-94C4-C338E158BF4D</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>Microsoft Edge: install Bastion Shield</string>
+      <key>PayloadEnabled</key>
+      <true/>
+      <key>ExtensionSettings</key>
+      <dict>
+        <key>EDGE_ADDONS_ID</key>
+        <dict>
+          <key>installation_mode</key>
+          <string>force_installed</string>
+          <key>update_url</key>
+          <string>https://edge.microsoft.com/extensionwebstorebase/v1/crx</string>
+          <key>toolbar_state</key>
+          <string>force_shown</string>
+        </dict>
+      </dict>
+    </dict>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.microsoft.Edge.extensions.EDGE_ADDONS_ID</string>
+      <key>PayloadIdentifier</key>
+      <string>ch.bastionsecurity.shield.edge.policy</string>
+      <key>PayloadUUID</key>
+      <string>9C81872F-69D8-4EBC-BE33-075C953FB3BA</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>Bastion Shield: managed configuration (Edge)</string>
+      <key>PayloadEnabled</key>
+      <true/>
+      <key>organizationName</key>
+      <string>Muster AG</string>
+      <key>supportUrl</key>
+      <string>https://intranet.example.com/it-support</string>
+      <key>supportEmail</key>
+      <string>it-support@example.com</string>
+      <key>reportBrokenSite</key>
+      <string>email</string>
+      <key>disabledSites</key>
+      <array>
+        <string>intranet.example.com</string>
+        <string>erp.example.com</string>
+      </array>
+      <key>lists</key>
+      <dict>
+        <key>annoyances</key>
+        <true/>
+        <key>social</key>
+        <false/>
+      </dict>
+      <key>lockSettings</key>
+      <true/>
+      <key>historyRetentionDays</key>
+      <integer>14</integer>
+      <key>protectionEnabled</key>
+      <true/>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key>
+  <string>Bastion Shield for Microsoft Edge</string>
+  <key>PayloadDescription</key>
+  <string>Installs Bastion Shield in Microsoft Edge and applies the organisation's settings.</string>
+  <key>PayloadIdentifier</key>
+  <string>ch.bastionsecurity.shield.edge</string>
+  <key>PayloadOrganization</key>
+  <string>Muster AG</string>
+  <key>PayloadScope</key>
+  <string>System</string>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>A9526494-9323-4CB7-87AA-E0BE9BF90946</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>

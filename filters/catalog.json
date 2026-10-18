@@ -1,0 +1,570 @@
+{
+  "version": 1,
+  "lists": [
+    {
+      "id": "bastion",
+      "name": {
+        "en": "Bastion filters",
+        "de": "Bastion-Filter",
+        "fr": "Filtres Bastion",
+        "it": "Filtri Bastion"
+      },
+      "description": {
+        "en": "Bastion's own fixes and additions for Swiss websites and customer environments. Maintained in the open on GitHub.",
+        "de": "Bastions eigene Korrekturen und Ergänzungen für Schweizer Websites und Kundenumgebungen. Öffentlich auf GitHub gepflegt.",
+        "fr": "Corrections et ajouts de Bastion pour les sites suisses et les environnements clients. Maintenu publiquement sur GitHub.",
+        "it": "Correzioni e aggiunte di Bastion per siti svizzeri e ambienti dei clienti. Mantenuto pubblicamente su GitHub."
+      },
+      "category": "ads",
+      "default": true,
+      "locked": true,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "",
+          "path": "filters/bastion.txt"
+        }
+      ],
+      "homepage": "https://github.com/bastion-security/bastion-shield/tree/main/filters",
+      "license": "GPL-3.0-or-later",
+      "attribution": "Bastion GmbH i. Gr. and contributors"
+    },
+    {
+      "id": "ublock",
+      "name": {
+        "en": "uBlock filters",
+        "de": "uBlock-Filter",
+        "fr": "Filtres uBlock",
+        "it": "Filtri uBlock"
+      },
+      "description": {
+        "en": "Ads, anti-adblock walls and site fixes from the uBlock Origin team (incl. quick fixes and unbreak rules). Also part of Brave's default.",
+        "de": "Werbung, Adblock-Sperren und Website-Korrekturen vom uBlock-Origin-Team (inkl. Schnellkorrekturen). Auch Teil der Brave-Standardliste.",
+        "fr": "Publicités, murs anti-bloqueurs et corrections de l'équipe uBlock Origin. Fait aussi partie de la liste par défaut de Brave.",
+        "it": "Pubblicità, blocchi anti-adblock e correzioni del team uBlock Origin. Parte anche della lista predefinita di Brave."
+      },
+      "category": "ads",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": true,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+        },
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/quick-fixes.txt"
+        },
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/unbreak.txt"
+        }
+      ],
+      "homepage": "https://github.com/uBlockOrigin/uAssets",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "attribution": "uBlock Origin / uAssets contributors"
+    },
+    {
+      "id": "easylist",
+      "name": {
+        "en": "EasyList",
+        "de": "EasyList",
+        "fr": "EasyList",
+        "it": "EasyList"
+      },
+      "description": {
+        "en": "The primary international ad-blocking list. Part of Brave's default.",
+        "de": "Die wichtigste internationale Werbefilterliste. Teil der Brave-Standardliste.",
+        "fr": "La principale liste internationale de blocage des publicités. Fait partie de la liste par défaut de Brave.",
+        "it": "La principale lista internazionale per il blocco della pubblicità. Parte della lista predefinita di Brave."
+      },
+      "category": "ads",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://easylist.to/easylist/easylist.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (https://easylist.to/)"
+    },
+    {
+      "id": "brave",
+      "name": {
+        "en": "Brave filters",
+        "de": "Brave-Filter",
+        "fr": "Filtres Brave",
+        "it": "Filtri Brave"
+      },
+      "description": {
+        "en": "Brave's own additions and unbreak rules that ship in Brave Shields by default.",
+        "de": "Brave-eigene Ergänzungen und Korrekturen, die standardmässig in Brave Shields enthalten sind.",
+        "fr": "Ajouts et corrections propres à Brave, inclus par défaut dans Brave Shields.",
+        "it": "Aggiunte e correzioni di Brave incluse per impostazione predefinita in Brave Shields."
+      },
+      "category": "ads",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": true,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-unbreak.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-social.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-sugarcoat.txt"
+        }
+      ],
+      "homepage": "https://github.com/brave/adblock-lists",
+      "license": "MPL-2.0",
+      "licenseUrl": "https://github.com/brave/adblock-lists/blob/master/LICENSE",
+      "attribution": "Brave Software, Inc. and contributors"
+    },
+    {
+      "id": "brave-firstparty",
+      "name": {
+        "en": "Brave first-party filters",
+        "de": "Brave-Erstanbieter-Filter",
+        "fr": "Filtres Brave première partie",
+        "it": "Filtri Brave di prima parte"
+      },
+      "description": {
+        "en": "Rules Brave applies even in Standard mode, regardless of first-party status.",
+        "de": "Regeln, die Brave auch im Standardmodus anwendet, auch wenn ein Inhalt vom Betreiber selbst stammt.",
+        "fr": "Règles que Brave applique même en mode standard, que le contenu soit de première partie ou non.",
+        "it": "Regole che Brave applica anche in modalità standard, a prescindere dalla prima parte."
+      },
+      "category": "ads",
+      "default": true,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-firstparty.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-firstparty-regional.txt"
+        }
+      ],
+      "homepage": "https://github.com/brave/adblock-lists",
+      "license": "MPL-2.0",
+      "licenseUrl": "https://github.com/brave/adblock-lists/blob/master/LICENSE",
+      "attribution": "Brave Software, Inc. and contributors"
+    },
+    {
+      "id": "easyprivacy",
+      "name": {
+        "en": "EasyPrivacy",
+        "de": "EasyPrivacy",
+        "fr": "EasyPrivacy",
+        "it": "EasyPrivacy"
+      },
+      "description": {
+        "en": "Blocks tracking scripts, analytics and tracking pixels. Part of Brave's default.",
+        "de": "Blockiert Tracking-Skripte, Analyse-Dienste und Zählpixel. Teil der Brave-Standardliste.",
+        "fr": "Bloque les scripts de pistage, l'analytique et les pixels espions. Fait partie de la liste par défaut de Brave.",
+        "it": "Blocca script di tracciamento, analisi e pixel traccianti. Parte della lista predefinita di Brave."
+      },
+      "category": "privacy",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://easylist.to/easylist/easyprivacy.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (https://easylist.to/)"
+    },
+    {
+      "id": "ublock-privacy",
+      "name": {
+        "en": "uBlock filters – Privacy",
+        "de": "uBlock-Filter – Privatsphäre",
+        "fr": "Filtres uBlock – Vie privée",
+        "it": "Filtri uBlock – Privacy"
+      },
+      "description": {
+        "en": "Additional tracker blocking and resource-abuse (crypto-mining) protection from the uBlock Origin team.",
+        "de": "Zusätzlicher Tracker-Schutz und Schutz vor Ressourcenmissbrauch (Krypto-Mining) vom uBlock-Origin-Team.",
+        "fr": "Blocage supplémentaire des traqueurs et protection contre l'abus de ressources (minage de cryptomonnaie).",
+        "it": "Blocco aggiuntivo dei tracker e protezione contro l'abuso di risorse (mining di criptovalute)."
+      },
+      "category": "privacy",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": true,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/privacy.txt"
+        }
+      ],
+      "homepage": "https://github.com/uBlockOrigin/uAssets",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "attribution": "uBlock Origin / uAssets contributors"
+    },
+    {
+      "id": "peter-lowe",
+      "name": {
+        "en": "Peter Lowe's ad and tracking server list",
+        "de": "Peter Lowes Liste von Werbe- und Tracking-Servern",
+        "fr": "Liste de serveurs publicitaires de Peter Lowe",
+        "it": "Lista dei server pubblicitari di Peter Lowe"
+      },
+      "description": {
+        "en": "Hand-checked list of servers run by known advertising and tracking companies.",
+        "de": "Von Hand geprüfte Liste der Server bekannter Werbe- und Tracking-Firmen.",
+        "fr": "Liste vérifiée à la main des serveurs de sociétés publicitaires et de pistage connues.",
+        "it": "Elenco verificato a mano dei server di note aziende pubblicitarie e di tracciamento."
+      },
+      "category": "privacy",
+      "default": true,
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
+          "format": "hosts"
+        }
+      ],
+      "homepage": "https://pgl.yoyo.org/adservers/",
+      "license": "Permission of the author (see homepage)",
+      "licenseUrl": "https://pgl.yoyo.org/adservers/policy.php",
+      "attribution": "Peter Lowe (https://pgl.yoyo.org/)"
+    },
+    {
+      "id": "ublock-badware",
+      "name": {
+        "en": "Badware risks",
+        "de": "Schadsoftware-Risiken",
+        "fr": "Risques de logiciels malveillants",
+        "it": "Rischi di malware"
+      },
+      "description": {
+        "en": "Blocks sites known to spread malware, scams and fake downloads (uBlock Origin team).",
+        "de": "Blockiert Websites, die bekanntermassen Schadsoftware, Betrug und gefälschte Downloads verbreiten (uBlock-Origin-Team).",
+        "fr": "Bloque les sites connus pour diffuser des logiciels malveillants, des arnaques et de faux téléchargements.",
+        "it": "Blocca i siti noti per diffondere malware, truffe e falsi download."
+      },
+      "category": "security",
+      "default": true,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/badware.txt"
+        }
+      ],
+      "homepage": "https://github.com/uBlockOrigin/uAssets",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "attribution": "uBlock Origin / uAssets contributors"
+    },
+    {
+      "id": "urlhaus",
+      "name": {
+        "en": "Malicious URL blocklist (URLhaus)",
+        "de": "Liste gefährlicher Adressen (URLhaus)",
+        "fr": "Liste d'adresses malveillantes (URLhaus)",
+        "it": "Lista di indirizzi malevoli (URLhaus)"
+      },
+      "description": {
+        "en": "Domains currently distributing malware, from abuse.ch's URLhaus. Part of Brave's default.",
+        "de": "Domains, die aktuell Schadsoftware verbreiten, aus URLhaus von abuse.ch. Teil der Brave-Standardliste.",
+        "fr": "Domaines distribuant actuellement des logiciels malveillants, issus d'URLhaus (abuse.ch).",
+        "it": "Domini che distribuiscono attualmente malware, da URLhaus di abuse.ch."
+      },
+      "category": "security",
+      "default": true,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-agh-online.txt"
+        }
+      ],
+      "homepage": "https://gitlab.com/malware-filter/urlhaus-filter",
+      "license": "CC0-1.0 / MIT (list); upstream data: abuse.ch terms",
+      "licenseUrl": "https://gitlab.com/malware-filter/urlhaus-filter#license",
+      "attribution": "curbengh (malware-filter), data by abuse.ch URLhaus"
+    },
+    {
+      "id": "cookies",
+      "name": {
+        "en": "Cookie notices",
+        "de": "Cookie-Hinweise",
+        "fr": "Bandeaux cookies",
+        "it": "Avvisi sui cookie"
+      },
+      "description": {
+        "en": "Hides cookie consent banners and declines where possible. On by default, as in Brave.",
+        "de": "Blendet Cookie-Banner aus und lehnt wo möglich ab. Standardmässig aktiv, wie bei Brave.",
+        "fr": "Masque les bandeaux de consentement aux cookies et refuse si possible. Actif par défaut, comme dans Brave.",
+        "it": "Nasconde i banner sui cookie e rifiuta dove possibile. Attivo per impostazione predefinita, come in Brave."
+      },
+      "category": "annoyances",
+      "default": true,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://secure.fanboy.co.nz/fanboy-cookiemonster_ubo.txt",
+          "trusted": false
+        },
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/annoyances-cookies.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-cookie-specific.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "CC-BY-3.0 / GPL-3.0 / MPL-2.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors, uBlock Origin / uAssets contributors, Brave Software"
+    },
+    {
+      "id": "app-promos",
+      "name": {
+        "en": "Mobile app promotions",
+        "de": "App-Werbebanner",
+        "fr": "Promotions d'applications",
+        "it": "Promozioni di app"
+      },
+      "description": {
+        "en": "Hides 'open in app' banners and notification prompts. On by default, as in Brave.",
+        "de": "Blendet «In der App öffnen»-Banner und Benachrichtigungsaufforderungen aus. Standardmässig aktiv, wie bei Brave.",
+        "fr": "Masque les bannières «Ouvrir dans l'application» et les demandes de notifications.",
+        "it": "Nasconde i banner «Apri nell'app» e le richieste di notifiche."
+      },
+      "category": "annoyances",
+      "default": true,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://secure.fanboy.co.nz/fanboy-mobile-notifications.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (Fanboy)"
+    },
+    {
+      "id": "annoyances",
+      "name": {
+        "en": "Annoyances",
+        "de": "Störelemente",
+        "fr": "Éléments gênants",
+        "it": "Elementi fastidiosi"
+      },
+      "description": {
+        "en": "Hides newsletter pop-ups, chat boxes, social widgets and other distractions. Can occasionally hide wanted content.",
+        "de": "Blendet Newsletter-Pop-ups, Chat-Fenster, Social-Widgets und andere Ablenkungen aus. Kann vereinzelt erwünschte Inhalte ausblenden.",
+        "fr": "Masque les pop-ups de newsletter, fenêtres de chat, widgets sociaux et autres distractions.",
+        "it": "Nasconde pop-up di newsletter, chat, widget social e altre distrazioni."
+      },
+      "category": "annoyances",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt",
+          "trusted": false
+        },
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/annoyances-others.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "CC-BY-3.0 / GPL-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (Fanboy), uBlock Origin / uAssets contributors"
+    },
+    {
+      "id": "social",
+      "name": {
+        "en": "Social media widgets",
+        "de": "Social-Media-Widgets",
+        "fr": "Widgets de réseaux sociaux",
+        "it": "Widget dei social media"
+      },
+      "description": {
+        "en": "Removes share buttons, like boxes and embedded social widgets.",
+        "de": "Entfernt Teilen-Schaltflächen, Like-Boxen und eingebettete Social-Media-Widgets.",
+        "fr": "Supprime les boutons de partage, les boîtes «J'aime» et les widgets sociaux intégrés.",
+        "it": "Rimuove pulsanti di condivisione, box «Mi piace» e widget social incorporati."
+      },
+      "category": "annoyances",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://easylist.to/easylist/fanboy-social.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (Fanboy)"
+    },
+    {
+      "id": "url-tracking",
+      "name": {
+        "en": "Tracking parameters (extended)",
+        "de": "Tracking-Parameter (erweitert)",
+        "fr": "Paramètres de pistage (étendu)",
+        "it": "Parametri di tracciamento (esteso)"
+      },
+      "description": {
+        "en": "Removes over 2,000 tracking parameters from links and requests. Bastion already strips Brave's set by default.",
+        "de": "Entfernt über 2000 Tracking-Parameter aus Links und Anfragen. Die Auswahl von Brave entfernt Bastion bereits standardmässig.",
+        "fr": "Supprime plus de 2000 paramètres de pistage des liens et des requêtes.",
+        "it": "Rimuove oltre 2000 parametri di tracciamento da link e richieste."
+      },
+      "category": "privacy",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/privacy-removeparam.txt"
+        }
+      ],
+      "homepage": "https://github.com/uBlockOrigin/uAssets",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "attribution": "uBlock Origin / uAssets contributors, AdGuard"
+    },
+    {
+      "id": "regional-de",
+      "name": {
+        "en": "German websites (EasyList Germany)",
+        "de": "Deutschsprachige Websites (EasyList Germany)",
+        "fr": "Sites germanophones (EasyList Germany)",
+        "it": "Siti in tedesco (EasyList Germany)"
+      },
+      "description": {
+        "en": "Ads on German-language websites in Switzerland, Germany and Austria.",
+        "de": "Werbung auf deutschsprachigen Websites in der Schweiz, in Deutschland und Österreich.",
+        "fr": "Publicités sur les sites germanophones en Suisse, en Allemagne et en Autriche.",
+        "it": "Pubblicità sui siti in lingua tedesca in Svizzera, Germania e Austria."
+      },
+      "category": "regional",
+      "default": true,
+      "langs": [
+        "de",
+        "gsw",
+        "rm",
+        "lb"
+      ],
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://easylist.to/easylistgermany/easylistgermany.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList Germany authors"
+    },
+    {
+      "id": "regional-fr",
+      "name": {
+        "en": "French websites (AdGuard French)",
+        "de": "Französischsprachige Websites (AdGuard French)",
+        "fr": "Sites francophones (AdGuard Français)",
+        "it": "Siti in francese (AdGuard French)"
+      },
+      "description": {
+        "en": "Ads on French-language websites, including Liste FR. Same list Brave uses for French.",
+        "de": "Werbung auf französischsprachigen Websites, inklusive Liste FR. Dieselbe Liste, die Brave für Französisch nutzt.",
+        "fr": "Publicités sur les sites francophones, Liste FR incluse. La même liste que Brave pour le français.",
+        "it": "Pubblicità sui siti in lingua francese, inclusa Liste FR."
+      },
+      "category": "regional",
+      "default": false,
+      "langs": [
+        "fr"
+      ],
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://filters.adtidy.org/extension/ublock/filters/16.txt"
+        }
+      ],
+      "homepage": "https://github.com/AdguardTeam/AdguardFilters",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE",
+      "attribution": "AdGuard and Liste FR authors"
+    },
+    {
+      "id": "regional-it",
+      "name": {
+        "en": "Italian websites (EasyList Italy)",
+        "de": "Italienischsprachige Websites (EasyList Italy)",
+        "fr": "Sites italophones (EasyList Italy)",
+        "it": "Siti in italiano (EasyList Italy)"
+      },
+      "description": {
+        "en": "Ads on Italian-language websites, including Ticino.",
+        "de": "Werbung auf italienischsprachigen Websites, inklusive Tessin.",
+        "fr": "Publicités sur les sites italophones, Tessin compris.",
+        "it": "Pubblicità sui siti in lingua italiana, Ticino incluso."
+      },
+      "category": "regional",
+      "default": false,
+      "langs": [
+        "it"
+      ],
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://easylist-downloads.adblockplus.org/easylistitaly.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList Italy authors"
+    }
+  ]
+}

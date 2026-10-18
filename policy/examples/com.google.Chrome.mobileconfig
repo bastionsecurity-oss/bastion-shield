@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Bastion Shield for Google Chrome on macOS (example configuration profile).
+  SPDX-License-Identifier: GPL-3.0-or-later
+
+  BEFORE UPLOADING: replace every CHROME_WEB_STORE_ID (written <CHROME_WEB_STORE_ID>
+  in the other examples) with the Chrome Web Store id of Bastion Shield, and
+  generate fresh PayloadUUIDs (uuidgen) for your organisation.
+
+  Intune: Devices > Manage devices > Configuration > Create > New policy >
+  macOS > Templates > Custom, Deployment channel "Device channel", upload this file.
+
+  Payload 1 (com.google.Chrome) force-installs the extension and pins it.
+  Payload 2 (com.google.Chrome.extensions.<id>) is the extension's managed
+  configuration, read by Chromium from the preference domain
+  "<bundle id>.extensions.<extension id>" (all keys: policy/managed_schema.json).
+  Profile-delivered values are forced, so Chrome treats them as mandatory.
+  Remove payload 2 if you only want to install the extension.
+-->
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.google.Chrome</string>
+      <key>PayloadIdentifier</key>
+      <string>ch.bastionsecurity.shield.chrome.install</string>
+      <key>PayloadUUID</key>
+      <string>08622587-AAC6-499B-9677-6B8C3828CA90</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>Google Chrome: install Bastion Shield</string>
+      <key>PayloadEnabled</key>
+      <true/>
+      <key>ExtensionSettings</key>
+      <dict>
+        <key>CHROME_WEB_STORE_ID</key>
+        <dict>
+          <key>installation_mode</key>
+          <string>force_installed</string>
+          <key>update_url</key>
+          <string>https://clients2.google.com/service/update2/crx</string>
+          <key>toolbar_pin</key>
+          <string>force_pinned</string>
+        </dict>
+      </dict>
+    </dict>
+    <dict>
+      <key>PayloadType</key>
+      <string>com.google.Chrome.extensions.CHROME_WEB_STORE_ID</string>
+      <key>PayloadIdentifier</key>
+      <string>ch.bastionsecurity.shield.chrome.policy</string>
+      <key>PayloadUUID</key>
+      <string>C0C9E275-A9C7-4F85-B6CB-7AB43EF6BD8B</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>Bastion Shield: managed configuration (Chrome)</string>
+      <key>PayloadEnabled</key>
+      <true/>
+      <key>organizationName</key>
+      <string>Muster AG</string>
+      <key>supportUrl</key>
+      <string>https://intranet.example.com/it-support</string>
+      <key>supportEmail</key>
+      <string>it-support@example.com</string>
+      <key>reportBrokenSite</key>
+      <string>email</string>
+      <key>disabledSites</key>
+      <array>
+        <string>intranet.example.com</string>
+        <string>erp.example.com</string>
+      </array>
+      <key>lists</key>
+      <dict>
+        <key>annoyances</key>
+        <true/>
+        <key>social</key>
+        <false/>
+      </dict>
+      <key>lockSettings</key>
+      <true/>
+      <key>historyRetentionDays</key>
+      <integer>14</integer>
+      <key>protectionEnabled</key>
+      <true/>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key>
+  <string>Bastion Shield for Google Chrome</string>
+  <key>PayloadDescription</key>
+  <string>Installs Bastion Shield in Google Chrome and applies the organisation's settings.</string>
+  <key>PayloadIdentifier</key>
+  <string>ch.bastionsecurity.shield.chrome</string>
+  <key>PayloadOrganization</key>
+  <string>Muster AG</string>
+  <key>PayloadScope</key>
+  <string>System</string>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>F2DE4AF7-3837-4882-B41E-BEF08C6B7D62</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>

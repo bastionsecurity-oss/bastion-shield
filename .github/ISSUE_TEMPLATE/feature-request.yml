@@ -1,0 +1,52 @@
+# Feature request form.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Feature request
+description: Suggest an improvement to Bastion Shield.
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bastion Shield runs as a Manifest V3 extension. Some things a browser-native blocker can do are out of reach for extensions (for example CNAME uncloaking); docs/PARITY.md lists what is and is not possible. Please check it and the open issues first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, not only the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Who benefits?
+      multiple: true
+      options:
+        - People using Bastion Shield in their own browser
+        - IT administrators deploying it (Intune, policies)
+        - Filter list maintainers and contributors
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: parity
+    attributes:
+      label: Context
+      options:
+        - label: Brave Shields (or another blocker) already has this.
+        - label: This would need a new permission or a new managed policy key.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Optional, for example a browser policy that already covers it.

@@ -1,0 +1,160 @@
+{
+  "type": "object",
+  "title": "Bastion Shield managed configuration",
+  "description": "Administrator settings for Bastion Shield, read through chrome.storage.managed. Every key is optional. A key that is present overrides the user's value and locks the matching control in the dashboard. Mirrors ManagedPolicy in src/shared/types.ts; see docs/DEPLOYMENT-INTUNE.md.",
+  "properties": {
+    "organizationName": {
+      "type": "string",
+      "title": "Organisation name",
+      "description": "Shown as 'Managed by <name>' in the popup and dashboard. When set, the first-run welcome page is not opened."
+    },
+    "supportUrl": {
+      "type": "string",
+      "title": "Support URL",
+      "description": "https:// link to the organisation's IT support page, shown next to the organisation name."
+    },
+    "supportEmail": {
+      "type": "string",
+      "title": "Support e-mail address",
+      "description": "Address used by the 'Report a broken site' button when reportBrokenSite is 'email'. When supportEmail is set and reportBrokenSite is not, the button opens an e-mail to this address."
+    },
+    "defaultMode": {
+      "type": "string",
+      "enum": ["standard", "aggressive"],
+      "title": "Default blocking mode",
+      "description": "'standard' (Brave Standard semantics: first-party requests are not blocked by first-party-protected lists) or 'aggressive' (block first-party requests too)."
+    },
+    "lists": {
+      "type": "object",
+      "title": "Filter lists",
+      "description": "Map of filter list id to true (forced on) or false (forced off), for example {\"annoyances\": true}. List ids are listed in docs/FILTER-LISTS.md. Lists that are not mentioned keep the user's choice unless lockLists is true.",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "lockLists": {
+      "type": "boolean",
+      "title": "Lock all filter lists",
+      "description": "If true, users cannot enable or disable any filter list, including lists not mentioned in 'lists'. lockSettings=true implies this unless lockLists is explicitly false."
+    },
+    "disabledSites": {
+      "type": "array",
+      "title": "Sites with protection off",
+      "description": "Hostnames (for example intranet.example.ch) where Bastion Shield does not filter. Subdomains are included. No schemes, paths or wildcards.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "aggressiveSites": {
+      "type": "array",
+      "title": "Sites forced to aggressive mode",
+      "description": "Hostnames where first-party requests are blocked as well. Subdomains are included.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "customFilters": {
+      "type": "array",
+      "title": "Administrator filters",
+      "description": "One filter per entry in uBlock Origin / Adblock Plus syntax. Network and cosmetic filters are supported; scriptlet filters (##+js) are ignored and need a Bastion Shield release.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowUserSiteToggle": {
+      "type": "boolean",
+      "title": "Allow users to switch protection off per site",
+      "description": "Default true. If false, the per-site on/off switch is locked."
+    },
+    "allowUserFilters": {
+      "type": "boolean",
+      "title": "Allow users to edit their own filters",
+      "description": "Default true. If false, the custom filter editor is read-only. lockSettings=true also makes it read-only unless allowUserFilters is explicitly true."
+    },
+    "lockSettings": {
+      "type": "boolean",
+      "title": "Lock all dashboard settings",
+      "description": "If true, users cannot change any dashboard setting, filter list or per-site mode/script/fingerprinting setting, nor their own filters. Set lockLists=false or allowUserFilters=true to leave those editable. The per-site protection switch is controlled by allowUserSiteToggle."
+    },
+    "gpc": {
+      "type": "boolean",
+      "title": "Global Privacy Control",
+      "description": "Send the Sec-GPC: 1 header and expose navigator.globalPrivacyControl. Default true."
+    },
+    "stripParams": {
+      "type": "boolean",
+      "title": "Remove tracking parameters",
+      "description": "Strip Brave's list of tracking query parameters on cross-site navigations. Default true."
+    },
+    "debounce": {
+      "type": "boolean",
+      "title": "Skip bounce-tracking redirects",
+      "description": "Navigate directly to the destination of known bounce-tracking links. Default true."
+    },
+    "deAmp": {
+      "type": "boolean",
+      "title": "Redirect AMP pages",
+      "description": "Redirect AMP pages to the publisher's canonical page. Default true."
+    },
+    "fingerprinting": {
+      "type": "string",
+      "enum": ["off", "standard", "strict"],
+      "title": "Fingerprinting protection",
+      "description": "Default protection level for all sites. Default 'standard'."
+    },
+    "blockHyperlinkAuditing": {
+      "type": "boolean",
+      "title": "Block hyperlink auditing",
+      "description": "Disable <a ping> click tracking in the browser. Default true."
+    },
+    "webrtcPolicy": {
+      "type": "string",
+      "enum": ["default", "default_public_interface_only", "disable_non_proxied_udp"],
+      "title": "WebRTC IP handling",
+      "description": "Browser WebRTC IP handling policy set through chrome.privacy. A browser policy (WebRtcIPHandling, WebRtcLocalhostIpHandling) takes precedence."
+    },
+    "blockThirdPartyCookies": {
+      "type": "boolean",
+      "title": "Block third-party cookies",
+      "description": "Set the browser's third-party cookie setting through chrome.privacy. A browser policy (BlockThirdPartyCookies) takes precedence."
+    },
+    "disablePrivacySandboxAds": {
+      "type": "boolean",
+      "title": "Turn off Privacy Sandbox ad APIs",
+      "description": "Turn off Topics, Protected Audience and Attribution Reporting through chrome.privacy. Default true."
+    },
+    "showBadge": {
+      "type": "boolean",
+      "title": "Show blocked count on the toolbar icon",
+      "description": "Default true."
+    },
+    "activityLog": {
+      "type": "boolean",
+      "title": "Live activity log",
+      "description": "Record per-tab blocking activity in memory for the popup and dashboard. Default true."
+    },
+    "historyEnabled": {
+      "type": "boolean",
+      "title": "Blocking history",
+      "description": "Keep a blocking history on the device (never transmitted). Default true."
+    },
+    "historyRetentionDays": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3650,
+      "title": "History retention in days",
+      "description": "Days of history to keep. 0 keeps only today's totals. Default 30."
+    },
+    "reportBrokenSite": {
+      "type": "string",
+      "enum": ["github", "email", "none"],
+      "title": "Report a broken site",
+      "description": "'github' opens a prefilled public GitHub issue that the user reviews and submits, 'email' opens a message to supportEmail, 'none' hides the button. Default: 'email' when supportEmail is set, otherwise 'github'."
+    },
+    "protectionEnabled": {
+      "type": "boolean",
+      "title": "Protection enabled (emergency switch)",
+      "description": "Fleet-wide emergency switch. false switches protection off on every site: requests are no longer blocked or redirected, no cosmetic filters, scriptlets or privacy scripts are injected, and the extension's chrome.privacy overrides are released. The extension stays installed and its popup shows that protection is off. Missing or true = normal protection; set true (or remove the key) to restore it."
+    }
+  }
+}

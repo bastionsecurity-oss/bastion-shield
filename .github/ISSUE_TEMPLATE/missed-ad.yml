@@ -1,0 +1,97 @@
+# Report an ad, tracker, cookie banner or annoyance that Bastion Shield does
+# not block. Field ids match broken-site.yml so the extension can prefill them.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Missed ad or tracker
+description: An ad, tracker, cookie banner or pop-up is not blocked.
+title: '<hostname>: missed ad'
+labels: [missed-ad, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This issue is public.** Enter only hostnames (for example `www.example.ch`), never full addresses with personal data. Do not attach screenshots that show personal data.
+
+        **Dieses Ticket ist öffentlich.** Bitte nur Hostnamen angeben, keine vollständigen Adressen und keine Screenshots mit Personendaten.
+
+        Generic ads that appear on many sites are best fixed upstream in EasyList or EasyList Germany; we forward reports there (see docs/FILTER-LISTS.md). Swiss sites and Bastion customer environments are fixed in the Bastion filter list.
+
+  - type: input
+    id: site
+    attributes:
+      label: Website (hostname only)
+      placeholder: www.example.ch
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: What is not blocked?
+      options:
+        - Advertisement
+        - Tracker or analytics
+        - Cookie banner
+        - Newsletter or other pop-up
+        - '"Open in app" banner'
+        - Malware or scam page
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Where on the page?
+      description: Describe where it appears and on which kind of page (home page, article, search results). If you know the hostname the ad or tracker loads from, add it.
+      placeholder: Large banner above the article title on article pages; loads from ads.example.net.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: Protection is switched on for this site (the popup shows it as protected).
+        - label: I have removed personal data from everything I entered here.
+          required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Google Chrome 155.0.7600.41 (macOS 26)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Bastion Shield version
+      placeholder: 1.0.0.2910
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Blocking mode for this site
+      options:
+        - Standard
+        - Aggressive
+        - I don't know
+
+  - type: textarea
+    id: lists
+    attributes:
+      label: Enabled filter lists
+      description: Filled in by the extension, or copied from the dashboard. Optional lists such as "Annoyances" catch many pop-ups that the defaults leave alone.
+      render: text
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Other details
+      description: Optional. A suggested filter is welcome (uBlock Origin syntax).
+      render: text

@@ -1,0 +1,37 @@
+# Dependency updates for the build tool chain and the GitHub Actions used in
+# CI. The extension itself has no runtime npm dependencies; vendored uBlock
+# Origin and Brave sources are pinned in vendor/VENDOR.json and updated
+# deliberately (tools/vendor.ts --update-vendor), not by Dependabot.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: '06:00'
+      timezone: Europe/Zurich
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'deps'
+    groups:
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: '06:00'
+      timezone: Europe/Zurich
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci'
+    groups:
+      actions:
+        patterns: ['*']

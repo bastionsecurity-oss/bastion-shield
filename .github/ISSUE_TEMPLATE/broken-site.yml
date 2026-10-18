@@ -1,0 +1,111 @@
+# Field ids are part of the extension's "Report a broken site" contract: the
+# popup opens issues/new?template=broken-site.yml&title=...&site=...&browser=...
+# &version=...&mode=...&lists=... to prefill them. Rename ids only together
+# with the UI code.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Broken website
+description: A website does not work correctly with Bastion Shield enabled.
+title: '<hostname>: broken'
+labels: [broken-site, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This issue is public.** Enter only the **hostname** (for example `www.example.ch`), never a full address: addresses often contain personal data such as session ids, e-mail addresses, order or customer numbers. Do not attach screenshots that show personal data, and do not report internal company sites here; contact your IT support instead.
+
+        **Dieses Ticket ist öffentlich.** Bitte nur den Hostnamen angeben (z. B. `www.example.ch`), keine vollständigen Adressen und keine Screenshots mit Personendaten. Interne Firmenseiten bitte nicht hier, sondern bei Ihrem IT-Support melden.
+
+        Bastion Shield never sends anything to us by itself. When you use the button in the extension, it only opens this form with the details below filled in; nothing is submitted until you click "Create".
+
+  - type: input
+    id: site
+    attributes:
+      label: Website (hostname only)
+      placeholder: www.example.ch
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is broken?
+      description: What did you expect, and what happens instead? Which page or feature (describe it, e.g. "checkout page", "video player on article pages")?
+      placeholder: The video on article pages stays black; without Bastion Shield it plays.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Kind of problem
+      options:
+        - Page does not load or stays blank
+        - Layout broken or content missing
+        - Video or audio does not play
+        - Sign-in, payment or form does not work
+        - Site shows an "ad blocker detected" message
+        - Bastion Shield blocked the whole site (warning page)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: The problem goes away when I switch protection off for this site in the Bastion Shield popup and reload.
+        - label: I have removed personal data from everything I entered here.
+          required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      description: From edge://settings/help, chrome://settings/help or brave://settings/help.
+      placeholder: Microsoft Edge 155.0.3400.12 (Windows 11)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Bastion Shield version
+      description: Shown at the bottom of the popup and on the dashboard's About page.
+      placeholder: 1.0.0.2910
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Blocking mode for this site
+      options:
+        - Standard
+        - Aggressive
+        - I don't know
+
+  - type: textarea
+    id: lists
+    attributes:
+      label: Enabled filter lists
+      description: Filled in by the extension. Otherwise copy them from the dashboard (Filter lists), or write "defaults".
+      placeholder: bastion, ublock, easylist, easyprivacy, ...
+      render: text
+
+  - type: dropdown
+    id: managed
+    attributes:
+      label: Is your browser managed by an organisation?
+      description: The popup shows "Managed by ..." when it is.
+      options:
+        - 'No'
+        - 'Yes'
+        - I don't know
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Steps to reproduce and other details
+      description: Optional. Anything that helps us see the problem, such as the steps you take or blocked hostnames from the popup's activity list.

@@ -1,0 +1,42 @@
+# Functional test of the Intune remediation script on a real Windows registry
+# (PowerShell 7 and Windows PowerShell 5.1, which Intune uses). Runs only when
+# the policy artefacts or their checks change.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Policy scripts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'policy/**'
+      - 'src/shared/types.ts'
+      - '.github/scripts/**'
+      - '.github/workflows/policy.yml'
+  pull_request:
+    paths:
+      - 'policy/**'
+      - 'src/shared/types.ts'
+      - '.github/scripts/**'
+      - '.github/workflows/policy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Set-BastionShieldPolicy.ps1 on Windows
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: PowerShell 7
+        shell: pwsh
+        run: ./.github/scripts/test-policy-script.ps1 -Shell pwsh
+
+      - name: Windows PowerShell 5.1
+        shell: pwsh
+        run: ./.github/scripts/test-policy-script.ps1 -Shell powershell.exe

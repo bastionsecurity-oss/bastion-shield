@@ -1,0 +1,83 @@
+/*
+ * Bastion Shield — strict-block interstitial. Calm and unambiguous: a heavy
+ * ink rule, a large statement, the blocked host in mono, one primary way
+ * back. No red (Bundesrot is reserved for incident CTAs); seriousness comes
+ * from typography and contrast.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+body.bl {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+  border-top: 4px solid var(--text-strong);
+}
+.bl-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  min-height: calc(100vh - 4px);
+  margin: 0 auto;
+  padding: 24px 20px 28px;
+}
+@media (min-width: 768px) { .bl-main { padding: 32px 48px 36px; } }
+@media (min-width: 1024px) { .bl-main { padding: 40px 120px 44px; } }
+
+.bl-brand { display: flex; align-items: center; gap: 8px; color: var(--text-strong); }
+.bl-brand__word { font-family: var(--font-brand); font-size: 18px; font-weight: 600; letter-spacing: -0.012em; }
+
+.bl-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  max-width: 680px;
+  margin: auto 0;
+  padding: 56px 0 48px;
+}
+.bl-title {
+  font-size: clamp(34px, 5.2vw, 60px);
+  line-height: 1.06;
+  letter-spacing: var(--tracking-display);
+}
+.bl-host {
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg-quiet);
+  color: var(--text-strong);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+.bl-reason { color: var(--text-2); font-size: 17px; line-height: 27px; max-width: 60ch; }
+
+.bl-facts { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 6px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); width: 100%; }
+.bl-facts__item dt { color: var(--text-2); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; }
+.bl-facts__item dd { margin: 3px 0 0; color: var(--text-strong); font-size: var(--text-md); font-weight: 600; }
+
+.bl-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.bl-btn { min-height: 44px; padding: 10px 20px; font-size: var(--text-md); }
+
+.bl-confirm {
+  width: 100%;
+  margin-top: 4px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--text-strong);
+  border-radius: var(--radius);
+  background: var(--bg-quiet);
+}
+.bl-confirm__title { font-size: 18px; line-height: 24px; }
+.bl-confirm__text { margin-top: 6px; color: var(--text-2); font-size: var(--text-md); line-height: 22px; }
+.bl-confirm__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.bl-confirm__error { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; color: var(--text-strong); font-size: var(--text-sm); }
+
+.bl-foot { color: var(--text-2); font-size: var(--text-xs); line-height: 18px; max-width: 70ch; }
+
+body[data-state="loading"] .bl-body { opacity: 0.001; }
+body[data-state="ready"] .bl-body { opacity: 1; transition: opacity var(--dur) var(--ease); }

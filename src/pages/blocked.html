@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Bastion Shield — strict-block interstitial (ARCHITECTURE §4.5). A DNR rule
+  redirects main-frame navigations to known malicious or tracking hosts here;
+  blocked.ts asks the service worker (blocked:info) what was blocked.
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="referrer" content="no-referrer">
+  <title data-i18n="blockedTitle">Diese Seite wurde blockiert</title>
+  <link rel="stylesheet" href="../ui/shared/tokens.css">
+  <link rel="stylesheet" href="blocked.css">
+  <script src="blocked.js" defer></script>
+</head>
+<body class="bl" data-category="unknown" data-state="loading">
+  <main class="bl-main">
+    <header class="bl-brand">
+      <span data-mark data-mark-size="30"></span>
+      <span class="bl-brand__word" data-i18n="extName">Bastion Shield</span>
+    </header>
+
+    <div class="bl-body">
+      <div class="eyebrow" id="bl-eyebrow"><span data-icon="tick" data-icon-size="11" class="eyebrow__tick"></span><span id="bl-eyebrow-text" data-i18n="blockedEyebrow">Seite gesperrt</span></div>
+      <h1 class="bl-title" data-i18n="blockedTitle">Diese Seite wurde blockiert</h1>
+      <p class="bl-host mono" id="bl-host" hidden></p>
+      <p class="bl-reason" id="bl-reason" data-i18n="blockedReasonGeneric">Bastion Shield hat das Laden dieser Adresse verhindert, weil sie auf einer Filterliste steht.</p>
+
+      <dl class="bl-facts">
+        <div class="bl-facts__item"><dt data-i18n="blockedCategory">Grund</dt><dd id="bl-category">–</dd></div>
+        <div class="bl-facts__item"><dt data-i18n="blockedList">Filterliste</dt><dd id="bl-list">–</dd></div>
+      </dl>
+
+      <div class="bl-actions" id="bl-actions">
+        <button type="button" class="btn btn--primary bl-btn" id="bl-back"><span data-icon="arrowLeft" data-icon-size="15"></span><span data-i18n="actionBack">Zurück</span></button>
+        <button type="button" class="btn btn--secondary bl-btn" id="bl-proceed" aria-expanded="false" aria-controls="bl-confirm" data-i18n="blockedProceed">Trotzdem fortfahren</button>
+      </div>
+
+      <section class="bl-confirm" id="bl-confirm" hidden aria-labelledby="bl-confirm-title">
+        <h2 class="bl-confirm__title" id="bl-confirm-title" data-i18n="blockedConfirmTitle">Wirklich fortfahren?</h2>
+        <p class="bl-confirm__text" id="bl-confirm-text" data-i18n="blockedConfirmText">Öffnen Sie diese Seite nur, wenn Sie der Adresse vertrauen. Die Ausnahme gilt nur in diesem Tab und endet, wenn Sie ihn schliessen.</p>
+        <div class="bl-confirm__actions">
+          <button type="button" class="btn btn--secondary" id="bl-confirm-cancel" data-i18n="actionCancel">Abbrechen</button>
+          <button type="button" class="btn btn--primary" id="bl-confirm-go" data-i18n="blockedConfirmGo">Seite trotzdem öffnen</button>
+        </div>
+        <div class="bl-confirm__error" id="bl-error" role="alert" hidden></div>
+      </section>
+    </div>
+
+    <footer class="bl-foot">
+      <p data-i18n="blockedFoot">Bastion Shield prüft Adressen lokal anhand öffentlicher Filterlisten. Es wurden keine Daten übertragen.</p>
+    </footer>
+  </main>
+</body>
+</html>

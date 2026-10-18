@@ -1,0 +1,22 @@
+<!doctype html>
+<!--
+  Bastion Shield e2e fixture index. Served for every fixture host by
+  test/e2e/support/server.ts (routing by Host header, everything mapped to
+  127.0.0.1 via --host-resolver-rules).
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head><meta charset="utf-8"><title>Bastion Shield fixtures</title></head>
+<body>
+<h1>Bastion Shield fixtures</h1>
+<p id="host"></p>
+<ul>
+  <li><a href="/blank.html">blank.html</a> — empty page</li>
+  <li><a href="/heavy.html">heavy.html</a> — performance fixture</li>
+  <li><a href="/fingerprint.html">fingerprint.html</a> — fingerprinting readouts (content agent)</li>
+  <li><a href="/procedural.html">procedural.html</a> — procedural cosmetic filters (content agent)</li>
+  <li><a href="/__echo">/__echo</a> — request headers as JSON</li>
+</ul>
+<script>document.getElementById('host').textContent = location.host;</script>
+</body>
+</html>

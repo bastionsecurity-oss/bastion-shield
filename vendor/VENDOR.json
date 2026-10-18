@@ -1,0 +1,33 @@
+{
+  "ublock": {
+    "repo": "https://github.com/gorhill/uBlock",
+    "commit": "2818335553a853edb12c02acd8ad98548e232202",
+    "license": "GPL-3.0-or-later",
+    "paths": [
+      "src/js/resources/*.js",
+      "src/js/redirect-resources.js",
+      "src/web_accessible_resources/*",
+      "src/js/urlskip.js",
+      "src/js/arglist-parser.js",
+      "src/js/jsonpath.js"
+    ]
+  },
+  "braveResources": {
+    "repo": "https://github.com/brave/adblock-resources",
+    "commit": "6da9b247c3368baa8b4f24cd02046e18702a6527",
+    "license": "MPL-2.0",
+    "paths": [
+      "resources/*",
+      "metadata.json"
+    ]
+  },
+  "braveLists": {
+    "repo": "https://github.com/brave/adblock-lists",
+    "commit": "8846788d578bf89696ad4ec5cdff845dfb170f1a",
+    "license": "MPL-2.0",
+    "paths": [
+      "brave-lists/debounce.json",
+      "brave-lists/query-filter.json"
+    ]
+  }
+}

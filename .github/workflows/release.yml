@@ -1,0 +1,387 @@
+# Bastion Shield weekly release ("fire and forget"): fetch the current filter
+# lists, build, test, package, publish a GitHub release with the GPL
+# corresponding-source inputs, and submit to the Chrome Web Store and
+# Microsoft Edge Add-ons when store credentials are configured.
+# Skips the release when neither the filter sources nor the code changed since
+# the previous release (unless started by hand with "force").
+# Details: docs/RELEASING.md
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release
+
+on:
+  schedule:
+    # Mondays 03:00 UTC (04:00 or 05:00 in Zurich). GitHub may start scheduled
+    # runs late under load.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Release even if no filter list or code changed
+        type: boolean
+        default: false
+      publish:
+        description: Submit to the Chrome Web Store and Edge Add-ons (if credentials are configured)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24'
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      release: ${{ steps.decide.outputs.release }}
+      version: ${{ steps.version.outputs.version }}
+      skip_review: ${{ steps.skipreview.outputs.eligible }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Tags are needed for the build counter and the change check.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Previous release
+        id: prev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --exclude-drafts --exclude-pre-releases --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          mkdir -p prev
+          if [ -n "$tag" ]; then
+            echo "Previous release: $tag"
+            gh release download "$tag" --dir prev --pattern 'lock.json' --pattern '*-chromium.zip' || echo "::warning::could not download assets of $tag"
+          else
+            echo "No previous release."
+          fi
+
+      # Version = MAJOR.MINOR.PATCH.BUILD with BUILD = days since 2026-01-01 * 10
+      # + same-day counter (docs/RELEASING.md). The counter is derived from the
+      # tags of today's releases; tools/ reads it from BASTION_BUILD_COUNTER.
+      - name: Build counter
+        run: |
+          days=$(( ( $(date -u +%s) - $(date -u -d 2026-01-01 +%s) ) / 86400 ))
+          n=0
+          for t in $(git tag -l 'v*'); do
+            last=${t##*.}
+            if [[ "$last" =~ ^[0-9]+$ ]] && (( last / 10 == days )); then n=$(( n + 1 )); fi
+          done
+          if (( n > 9 )); then echo "::error::10 releases today already; the BUILD component allows at most 10 per day"; exit 1; fi
+          echo "BASTION_BUILD_COUNTER=$n" >> "$GITHUB_ENV"
+          echo "Build counter for day $days: $n"
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Managed policy schema and examples
+        run: node .github/scripts/check-policy.ts
+
+      # .cache/regex-unsupported.json (written by `npm run validate`) carries the
+      # regexes Chromium's RE2 rejected over to the next run.
+      - name: Restore filter list cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/lists
+            .cache/regex-unsupported.json
+          key: filter-lists-${{ hashFiles('filters/catalog.json') }}-${{ github.run_id }}
+          restore-keys: |
+            filter-lists-${{ hashFiles('filters/catalog.json') }}-
+            filter-lists-
+
+      # The validate pass below needs Chromium, so install it before building.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Two passes (docs/RELEASING.md): the first build fetches the lists,
+      # `npm run validate` loads it in Chromium and records the regexes RE2
+      # rejects in .cache/regex-unsupported.json, and the offline rebuild drops
+      # them from exactly the same list inputs. BASTION_BUILD_COUNTER is already
+      # in GITHUB_ENV, so both passes produce the same version, and --offline
+      # rewrites filters/lock.json from the same cache entries.
+      - name: Build (release)
+        run: |
+          npm run build:release
+          xvfb-run --auto-servernum npm run validate
+          node tools/build.ts --release --offline
+
+      - name: Rule budget of the default lists
+        run: node .github/scripts/check-budget.ts dist
+
+      - name: Version
+        id: version
+        run: |
+          v=$(node -p "require('./dist/manifest.json').version")
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::unexpected manifest version '$v'"; exit 1; fi
+          if git rev-parse -q --verify "refs/tags/v$v" >/dev/null; then echo "::error::tag v$v already exists"; exit 1; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Version $v"
+
+      - name: Did the filter sources change?
+        id: lists
+        run: node .github/scripts/release-info.ts changed --lock filters/lock.json --prev-lock prev/lock.json
+
+      - name: Decide
+        id: decide
+        env:
+          PREV_TAG: ${{ steps.prev.outputs.tag }}
+          LISTS_CHANGED: ${{ steps.lists.outputs.lists_changed }}
+          FORCE: ${{ inputs.force || false }}
+        run: |
+          code_changed=true
+          if [ -n "$PREV_TAG" ] && git rev-parse -q --verify "refs/tags/$PREV_TAG" >/dev/null; then
+            if [ -z "$(git diff --name-only "$PREV_TAG" HEAD -- src tools vendor filters/catalog.json filters/bastion.txt package.json package-lock.json)" ]; then
+              code_changed=false
+            fi
+          fi
+          release=false
+          if [ "$FORCE" = "true" ] || [ "$LISTS_CHANGED" = "true" ] || [ "$code_changed" = "true" ]; then release=true; fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "force=$FORCE lists_changed=$LISTS_CHANGED code_changed=$code_changed -> release=$release" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: End-to-end tests
+        if: steps.decide.outputs.release == 'true'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npm run test:e2e
+
+      - name: Package
+        if: steps.decide.outputs.release == 'true'
+        run: npm run package
+
+      - name: Chrome Web Store skip-review eligibility
+        id: skipreview
+        if: steps.decide.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          prev_zip=$(ls prev/*-chromium.zip 2>/dev/null | head -n 1 || true)
+          if [ -z "$prev_zip" ]; then
+            echo "No previous package to compare with: normal review."
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/old" "$RUNNER_TEMP/new"
+          unzip -q "$prev_zip" -d "$RUNNER_TEMP/old"
+          unzip -q "dist-pkg/bastion-shield-$VERSION-chromium.zip" -d "$RUNNER_TEMP/new"
+          node .github/scripts/skip-review-check.ts --old "$RUNNER_TEMP/old" --new "$RUNNER_TEMP/new" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Assemble release assets
+        if: steps.decide.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          cp "dist-pkg/bastion-shield-$VERSION-chromium.zip" release/
+          if [ -f "dist-pkg/bastion-shield-$VERSION-edge.zip" ]; then cp "dist-pkg/bastion-shield-$VERSION-edge.zip" release/; fi
+          cp filters/lock.json release/lock.json
+          if [ -f dist/build-report.json ]; then cp dist/build-report.json release/build-report.json; fi
+          # GPL corresponding source for the compiled rulesets: the exact raw
+          # lists the build consumed, next to the catalog and lock file.
+          tar -czf "release/bastion-shield-$VERSION-filter-sources.tar.gz" .cache/lists filters/catalog.json filters/bastion.txt filters/lock.json
+          node .github/scripts/release-info.ts notes --meta dist/rulesets/meta.json --lock filters/lock.json --prev-lock prev/lock.json --version "$VERSION" > "$RUNNER_TEMP/notes.md"
+          (cd release && sha256sum -- * > SHA256SUMS.txt)
+          mv "$RUNNER_TEMP/notes.md" release/notes.md
+          ls -l release
+
+      - name: Upload release assets
+        if: steps.decide.outputs.release == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release/
+          if-no-files-found: error
+          retention-days: 90
+
+  release:
+    name: GitHub release
+    needs: build
+    if: needs.build.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release
+
+      - name: Create tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          mapfile -t assets < <(find release -maxdepth 1 -type f ! -name notes.md | sort)
+          gh release create "v$VERSION" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Bastion Shield $VERSION" \
+            --notes-file release/notes.md \
+            --latest
+
+  publish-cws:
+    name: Chrome Web Store
+    needs: [build, release]
+    if: needs.build.outputs.release == 'true' && (github.event_name == 'schedule' || inputs.publish)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # Add required reviewers to this environment for a manual approval gate.
+    environment: chrome-web-store
+    env:
+      HAS_CREDENTIALS: ${{ secrets.CWS_CLIENT_ID != '' && secrets.CWS_CLIENT_SECRET != '' && secrets.CWS_REFRESH_TOKEN != '' && secrets.CWS_PUBLISHER_ID != '' && secrets.CWS_ITEM_ID != '' }}
+    steps:
+      - name: Credentials
+        if: env.HAS_CREDENTIALS != 'true'
+        run: echo "::notice::Chrome Web Store credentials are not configured; skipping store submission."
+
+      - uses: actions/checkout@v5
+        if: env.HAS_CREDENTIALS == 'true'
+
+      - uses: actions/setup-node@v5
+        if: env.HAS_CREDENTIALS == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        if: env.HAS_CREDENTIALS == 'true'
+        with:
+          name: release-assets
+          path: release
+
+      - name: Upload and submit
+        if: env.HAS_CREDENTIALS == 'true'
+        env:
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ secrets.CWS_ITEM_ID }}
+          VERSION: ${{ needs.build.outputs.version }}
+          SKIP_REVIEW: ${{ needs.build.outputs.skip_review == 'true' }}
+        run: node .github/scripts/store-publish.ts cws --zip "release/bastion-shield-$VERSION-chromium.zip" --skip-review "$SKIP_REVIEW"
+
+  publish-edge:
+    name: Microsoft Edge Add-ons
+    needs: [build, release]
+    if: needs.build.outputs.release == 'true' && (github.event_name == 'schedule' || inputs.publish)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: edge-addons
+    env:
+      HAS_CREDENTIALS: ${{ secrets.EDGE_CLIENT_ID != '' && secrets.EDGE_API_KEY != '' && secrets.EDGE_PRODUCT_ID != '' }}
+    steps:
+      - name: Credentials
+        if: env.HAS_CREDENTIALS != 'true'
+        run: echo "::notice::Edge Add-ons credentials are not configured; skipping store submission."
+
+      - uses: actions/checkout@v5
+        if: env.HAS_CREDENTIALS == 'true'
+
+      - uses: actions/setup-node@v5
+        if: env.HAS_CREDENTIALS == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        if: env.HAS_CREDENTIALS == 'true'
+        with:
+          name: release-assets
+          path: release
+
+      - name: Upload and submit for certification
+        if: env.HAS_CREDENTIALS == 'true'
+        env:
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          zip="release/bastion-shield-$VERSION-edge.zip"
+          if [ ! -f "$zip" ]; then
+            echo "::warning::no Edge-specific package; submitting the Chromium package"
+            zip="release/bastion-shield-$VERSION-chromium.zip"
+          fi
+          node .github/scripts/store-publish.ts edge --zip "$zip" \
+            --notes "Bastion Shield $VERSION: automated update of the bundled filter lists (static declarativeNetRequest rulesets). No remote code; all rules ship in the package. Source: https://github.com/${GITHUB_REPOSITORY}/releases/tag/v$VERSION"
+
+  self-host:
+    name: Self-hosted CRX (optional)
+    needs: [build, release]
+    # Enable with the repository variable SELF_HOST_CRX=true; see docs/RELEASING.md.
+    if: needs.build.outputs.release == 'true' && vars.SELF_HOST_CRX == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Protect the signing key: required reviewers on this environment.
+    environment: crx-signing
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release
+
+      # No `npm ci` here on purpose: tools/package.ts and its helpers use only
+      # Node built-ins, so no third-party package code runs while the key is on
+      # disk. The released package is unpacked into dist/ and packaged again
+      # with the key, which also adds update_url to the CRX's manifest.
+      - name: Sign CRX and write update.xml
+        env:
+          CRX_PRIVATE_KEY: ${{ secrets.CRX_PRIVATE_KEY }}
+          UPDATE_BASE_URL: ${{ vars.BASTION_UPDATE_BASE_URL }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "$CRX_PRIVATE_KEY" ] || [ -z "$UPDATE_BASE_URL" ]; then echo "::error::CRX_PRIVATE_KEY secret and BASTION_UPDATE_BASE_URL variable are required"; exit 1; fi
+          umask 077
+          key="$RUNNER_TEMP/crx-key.pem"
+          trap 'rm -f "$key"' EXIT
+          printf '%s\n' "$CRX_PRIVATE_KEY" > "$key"
+          rm -rf dist dist-pkg
+          mkdir -p dist
+          unzip -q "release/bastion-shield-$VERSION-chromium.zip" -d dist
+          BASTION_CRX_KEY="$key" BASTION_UPDATE_BASE_URL="$UPDATE_BASE_URL" node tools/package.ts
+          test -f "dist-pkg/bastion-shield-$VERSION.crx" && test -f dist-pkg/update.xml
+          ls -l dist-pkg
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: gh release upload "v$VERSION" "dist-pkg/bastion-shield-$VERSION.crx" dist-pkg/update.xml --repo "$GITHUB_REPOSITORY"

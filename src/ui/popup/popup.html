@@ -1,0 +1,150 @@
+<!doctype html>
+<!--
+  Bastion Shield — toolbar popup. Static skeleton so the first paint happens
+  before any script runs; popup.ts fills in the per-tab state.
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title data-i18n="extName">Bastion Shield</title>
+  <link rel="preload" href="shared/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="shared/fonts/inter-tight-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="shared/fonts/ibm-plex-mono-latin-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="shared/tokens.css">
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body class="pp" data-state="loading">
+  <header class="pp-head">
+    <span data-mark data-mark-size="22" id="pp-mark" class="pp-head__mark"></span>
+    <h1 class="pp-head__word" data-i18n="extName">Bastion Shield</h1>
+    <span class="pp-head__org" id="pp-org" hidden></span>
+  </header>
+
+  <main class="pp-main" id="pp-main">
+    <!-- Current site and the primary per-site switch -->
+    <section class="pp-site" aria-labelledby="pp-toggle-label">
+      <div class="pp-site__host mono" id="pp-host">&nbsp;</div>
+      <div class="pp-site__row">
+        <div class="pp-site__text">
+          <div class="pp-site__label" id="pp-toggle-label" data-i18n="popupSiteToggle">Schutz für diese Website</div>
+          <div class="pp-site__state" id="pp-toggle-state">&nbsp;</div>
+        </div>
+        <span class="pp-site__lock" id="pp-toggle-lock" hidden></span>
+        <span id="pp-toggle-slot" class="pp-site__switch"></span>
+      </div>
+    </section>
+
+    <!-- Non-filterable pages (chrome://, edge://, web stores, ...) -->
+    <section class="pp-calm" id="pp-unfilterable" hidden>
+      <span data-icon="info" data-icon-size="20" class="pp-calm__icon"></span>
+      <h2 class="pp-calm__title" data-i18n="popupUnfilterableTitle">Diese Seite wird nicht gefiltert</h2>
+      <p class="pp-calm__text" data-i18n="popupUnfilterableText">Browser-Seiten und Erweiterungs-Stores sind für Erweiterungen gesperrt. Auf allen anderen Websites ist Bastion Shield aktiv.</p>
+    </section>
+
+    <!-- Managed fleet-wide kill switch (policy protectionEnabled: false) -->
+    <section class="pp-calm" id="pp-global-off" hidden>
+      <span data-icon="info" data-icon-size="20" class="pp-calm__icon"></span>
+      <h2 class="pp-calm__title" data-i18n="popupGlobalOffTitle">Schutz wurde von Ihrer Organisation vorübergehend deaktiviert</h2>
+      <p class="pp-calm__text" data-i18n="popupGlobalOffText">Bastion Shield filtert im Moment auf keiner Website. Bei Fragen wenden Sie sich an Ihre IT-Abteilung.</p>
+    </section>
+
+    <!-- Service worker unreachable -->
+    <section class="pp-calm" id="pp-error" hidden>
+      <span data-icon="alert" data-icon-size="20" class="pp-calm__icon"></span>
+      <h2 class="pp-calm__title" data-i18n="popupErrorTitle">Keine Verbindung zum Schutzdienst</h2>
+      <p class="pp-calm__text" data-i18n="popupErrorText">Schliessen Sie dieses Fenster und öffnen Sie es erneut. Bleibt der Fehler bestehen, starten Sie den Browser neu.</p>
+    </section>
+
+    <!-- Live counter for the current page load -->
+    <section class="pp-count" id="pp-count-section" aria-labelledby="pp-count-eyebrow">
+      <div class="eyebrow" id="pp-count-eyebrow"><span data-icon="tick" data-icon-size="11" class="eyebrow__tick"></span><span data-i18n="popupBlockedOnPage">Auf dieser Seite blockiert</span></div>
+      <div class="pp-count__body" id="pp-count-body">
+        <div class="pp-count__value num" id="pp-count">0</div>
+        <dl class="pp-break">
+          <div class="pp-break__row"><dt data-i18n="popupCountAds">Werbung &amp; Tracker</dt><dd class="num" id="pp-c-blocked">0</dd></div>
+          <div class="pp-break__row"><dt data-i18n="popupCountRedirects">Durch Ersatzdateien ersetzt</dt><dd class="num" id="pp-c-redirected">0</dd></div>
+          <div class="pp-break__row"><dt data-i18n="popupCountParams">Tracking-Parameter entfernt</dt><dd class="num" id="pp-c-stripped">0</dd></div>
+          <div class="pp-break__row" id="pp-c-debounced-row" hidden><dt data-i18n="popupCountDebounced">Weiterleitungen übersprungen</dt><dd class="num" id="pp-c-debounced">0</dd></div>
+        </dl>
+        <div class="pp-count__third" id="pp-c-third" hidden></div>
+      </div>
+      <p class="pp-count__off" id="pp-count-off" hidden></p>
+    </section>
+
+    <!-- Lower panel: live feed, matched rules, per-site settings -->
+    <section class="pp-tabs" id="pp-tabs">
+      <div class="pp-tabs__bar" role="tablist" data-i18n-aria-label="popupTabsLabel">
+        <button type="button" class="pp-tab" role="tab" id="pp-tab-feed" aria-controls="pp-panel-feed" aria-selected="true"><span data-i18n="popupTabFeed">Live</span></button>
+        <button type="button" class="pp-tab" role="tab" id="pp-tab-rules" aria-controls="pp-panel-rules" aria-selected="false" tabindex="-1"><span data-i18n="popupTabRules">Filterregeln</span><span class="pp-tab__count num" id="pp-rules-count"></span></button>
+        <button type="button" class="pp-tab" role="tab" id="pp-tab-site" aria-controls="pp-panel-site" aria-selected="false" tabindex="-1"><span data-i18n="popupTabSite">Diese Website</span></button>
+      </div>
+
+      <div class="pp-panel" role="tabpanel" id="pp-panel-feed" aria-labelledby="pp-tab-feed" tabindex="0">
+        <ol class="pp-feed" id="pp-feed"></ol>
+        <p class="pp-empty" id="pp-feed-empty" data-i18n="popupFeedEmpty">Noch nichts blockiert. Neue Einträge erscheinen hier sofort.</p>
+        <div class="pp-empty pp-feed-off" id="pp-feed-off" hidden>
+          <p data-i18n="popupFeedLogOff">Das Aktivitätsprotokoll ist ausgeschaltet. Einzelne Anfragen werden nicht angezeigt.</p>
+          <button type="button" class="link-btn" id="pp-feed-settings"><span data-i18n="popupOpenSettings">Einstellungen öffnen</span><span data-icon="arrowRight" data-icon-size="12"></span></button>
+        </div>
+        <div class="pp-panel__foot">
+          <button type="button" class="link-btn" id="pp-feed-all"><span data-i18n="popupFeedAll">Gesamtes Protokoll</span><span data-icon="arrowRight" data-icon-size="12"></span></button>
+        </div>
+      </div>
+
+      <div class="pp-panel" role="tabpanel" id="pp-panel-rules" aria-labelledby="pp-tab-rules" tabindex="0" hidden>
+        <p class="pp-panel__intro" data-i18n="popupRulesIntro">Welche Filter auf dieser Seite gegriffen haben. Öffnen Sie eine Liste, um den genauen Filtertext zu sehen.</p>
+        <div id="pp-rules"></div>
+        <div class="pp-panel__foot">
+          <button type="button" class="link-btn" id="pp-rules-refresh"><span data-icon="reload" data-icon-size="12"></span><span data-i18n="actionRefresh">Aktualisieren</span></button>
+        </div>
+      </div>
+
+      <div class="pp-panel pp-panel--site" role="tabpanel" id="pp-panel-site" aria-labelledby="pp-tab-site" tabindex="-1" hidden>
+        <div class="pp-ctl-lock" id="pp-controls-lock" hidden></div>
+        <div class="pp-ctl">
+          <div class="pp-ctl__text">
+            <div class="pp-ctl__label" id="pp-mode-label" data-i18n="popupMode">Blockiermodus</div>
+            <div class="pp-ctl__hint" id="pp-mode-hint">&nbsp;</div>
+          </div>
+          <span class="pp-ctl__lock" id="pp-mode-lock" hidden></span>
+          <span id="pp-mode-slot"></span>
+        </div>
+        <div class="pp-ctl">
+          <div class="pp-ctl__text">
+            <div class="pp-ctl__label" id="pp-scripts-label" data-i18n="popupScripts">Skripte blockieren</div>
+            <div class="pp-ctl__hint" id="pp-scripts-hint" data-i18n="popupScriptsHint">Kann Websites stark einschränken</div>
+          </div>
+          <span id="pp-scripts-slot"></span>
+        </div>
+        <div class="pp-ctl">
+          <div class="pp-ctl__text">
+            <div class="pp-ctl__label" id="pp-fp-label" data-i18n="popupFingerprinting">Fingerprinting-Schutz</div>
+            <div class="pp-ctl__hint" id="pp-fp-hint">&nbsp;</div>
+          </div>
+          <span id="pp-fp-slot"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Shown after a per-site change -->
+  <div class="pp-reload" id="pp-reload" role="status" hidden>
+    <span data-icon="reload" data-icon-size="15"></span>
+    <span class="pp-reload__text" data-i18n="popupReloadHint">Neu laden, um die Änderung anzuwenden</span>
+    <button type="button" class="btn btn--primary btn--sm" id="pp-reload-btn" data-i18n="actionReload">Neu laden</button>
+    <button type="button" class="pp-reload__close" id="pp-reload-close" data-i18n-aria-label="actionDismiss"><span data-icon="close" data-icon-size="14"></span></button>
+  </div>
+
+  <footer class="pp-foot">
+    <div class="pp-foot__totals" id="pp-totals">&nbsp;</div>
+    <div class="pp-foot__actions">
+      <button type="button" class="btn btn--ghost btn--sm" id="pp-report" hidden><span data-icon="flag" data-icon-size="14"></span><span data-i18n="popupReport">Seite defekt? Melden</span></button>
+      <button type="button" class="btn btn--secondary btn--sm" id="pp-dashboard"><span data-icon="dashboard" data-icon-size="14"></span><span data-i18n="popupOpenDashboard">Dashboard öffnen</span></button>
+    </div>
+  </footer>
+</body>
+</html>

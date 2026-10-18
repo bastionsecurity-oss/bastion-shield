@@ -1,0 +1,21 @@
+Windows Registry Editor Version 5.00
+
+; Bastion Shield - force-install in Brave (example). SPDX-License-Identifier: GPL-3.0-or-later
+;
+; BEFORE IMPORTING: replace <CHROME_WEB_STORE_ID> with the published store id of Bastion Shield.
+; Brave installs extensions from the Chrome Web Store, so it uses the Chrome
+; Web Store id and update URL, and Chrome's toolbar_pin key. Brave's policy
+; root is SOFTWARE\Policies\BraveSoftware\Brave.
+; Brave Shields blocks before extensions see a request; read the Brave FAQ
+; in docs/DEPLOYMENT-INTUNE.md before deploying Bastion Shield to Brave.
+; Reference: https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy
+;
+; This sets the ExtensionSettings policy (one REG_SZ JSON string). If your
+; organisation already uses ExtensionSettings, merge the Bastion Shield entry
+; into the existing JSON instead: only one ExtensionSettings value can apply.
+; For production use Intune (docs/DEPLOYMENT-INTUNE.md); this file is meant
+; for testing on a single machine. To undo, delete the ExtensionSettings
+; value in regedit; the browser then uninstalls the extension.
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave]
+"ExtensionSettings"="{\"<CHROME_WEB_STORE_ID>\":{\"installation_mode\":\"force_installed\",\"update_url\":\"https://clients2.google.com/service/update2/crx\",\"toolbar_pin\":\"force_pinned\"}}"

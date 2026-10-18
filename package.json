@@ -1,0 +1,44 @@
+{
+  "name": "bastion-shield",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node tools/build.ts",
+    "build:offline": "node tools/build.ts --offline",
+    "build:release": "node tools/build.ts --release",
+    "fetch-lists": "node tools/fetch-lists.ts",
+    "package": "node tools/package.ts",
+    "release": "node tools/build.ts --release && node tools/package.ts",
+    "resources": "node tools/resources.ts",
+    "validate": "node tools/validate-dist.ts",
+    "vendor": "node tools/vendor.ts",
+    "vendor:check": "node tools/vendor.ts --check",
+    "typecheck": "tsc -p .",
+    "test": "node --test \"test/compiler/**/*.test.ts\" \"test/tools/**/*.test.ts\" \"test/background/**/*.test.ts\" \"test/content/**/*.test.ts\" \"test/ui/**/*.test.ts\"",
+    "test:e2e": "playwright test -c test/e2e/playwright.config.ts",
+    "bench": "node test/bench/run.ts",
+    "icons": "node tools/gen-icons.ts",
+    "test:compiler": "node --test \"test/compiler/**/*.test.ts\"",
+    "compare:ubo": "node tools/compare-ubo.ts",
+    "check:policy": "node .github/scripts/check-policy.ts",
+    "check:budget": "node .github/scripts/check-budget.ts dist",
+    "bench:rea": "node test/bench/run.ts --rea"
+  },
+  "author": "Bastion GmbH i. Gr. (Zürich)",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "description": "Bastion Shield - lean, open-source ad and tracker blocker for Chromium browsers (Chrome, Edge, Brave)",
+  "devDependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/inter-tight": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@playwright/test": "^1.64.1",
+    "@types/chrome": "^0.3.5",
+    "@types/node": "^24.19.2",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.18"
+  }
+}

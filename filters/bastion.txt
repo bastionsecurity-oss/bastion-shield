@@ -1,0 +1,25 @@
+[Adblock Plus 2.0]
+! Title: Bastion filters
+! Description: Bastion's own fixes and additions for Swiss websites and customer environments.
+! Homepage: https://github.com/bastion-security/bastion-shield/tree/main/filters
+! License: GPL-3.0-or-later
+! Expires: 1 day
+!
+! Contribution rules (see CONTRIBUTING.md):
+! - Precede every filter with a comment linking the GitHub issue that motivated it.
+! - Prefer upstream fixes: generic ad/tracker filters belong in EasyList or EasyList Germany,
+!   extended-syntax fixes in uBlock filters. This list is for Swiss specifics and customer unbreaks.
+! - Append new filters at the end of their section.
+!
+! ---------------------------------------------------------------------------
+! Unbreak: Microsoft 365 / Entra ID sign-in must never be affected
+! ---------------------------------------------------------------------------
+@@||login.microsoftonline.com^$document
+@@||login.microsoft.com^$document
+@@||login.live.com^$document
+@@||aadcdn.msauth.net^
+@@||aadcdn.msftauth.net^
+!
+! ---------------------------------------------------------------------------
+! Swiss publishers
+! ---------------------------------------------------------------------------

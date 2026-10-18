@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "version": "0.0.0.0",
+  "homepage_url": "https://bastionsecurity.ch",
+  "minimum_chrome_version": "128",
+  "icons": {
+    "16": "icons/icon-on-16.png",
+    "32": "icons/icon-on-32.png",
+    "48": "icons/icon-on-48.png",
+    "128": "icons/icon-on-128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-on-16.png",
+      "24": "icons/icon-on-24.png",
+      "32": "icons/icon-on-32.png"
+    },
+    "default_title": "__MSG_extName__",
+    "default_popup": "ui/popup.html"
+  },
+  "options_page": "ui/dashboard.html",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "webRequest",
+    "webNavigation",
+    "privacy",
+    "contentSettings",
+    "tabs"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "incognito": "split",
+  "storage": {
+    "managed_schema": "managed_schema.json"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "declarative_net_request": {
+    "rule_resources": []
+  },
+  "web_accessible_resources": []
+}

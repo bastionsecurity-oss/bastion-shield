@@ -1,0 +1,262 @@
+<!doctype html>
+<!--
+  Bastion Shield — procedural cosmetic filter fixture.
+  SPDX-License-Identifier: GPL-3.0-or-later
+
+  The JSON block #procedural-cases lists, per case:
+    filter    uBO filter text WITHOUT the hostname: install it as a custom
+              filter "<fixture-host>" + filter (e.g. "proc.example.com##.pt-card:has-text(Sponsored)")
+    compiled  the ProceduralFilter the compiler is expected to produce (also
+              what the standalone harness feeds to self.bastionProcedural.apply)
+    expect    what must be true once filters ran
+  Cases with "scenario" are only meaningful on procedural.html?scenario=<name>
+  (":others()" hides most of the page, so it gets its own load).
+
+  The page mutates itself after load (late inserts, attribute changes,
+  un-hiding) and evaluates the expectations 1.5 s after DOMContentLoaded:
+    * window.__procResults = {pass, cases: {name: {pass, detail}}}
+    * <html data-proc-done="1">
+  window.__procCheck() re-evaluates on demand.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bastion procedural fixture</title>
+<style>
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; }
+  .box { border: 1px solid #ccc; margin: 4px 0; padding: 4px; }
+  .pt-mcb.with-ad::before { content: "AD"; color: #900; }
+  #mc-1 { position: fixed; right: 0; bottom: 0; }
+  .blur { filter: blur(2px); }
+  pre { white-space: pre-wrap; background: #f4f4f4; padding: 8px; }
+</style>
+<script type="application/json" id="procedural-cases">
+[
+  {"name": "has-text", "filter": "##.pt-card:has-text(Sponsored)",
+   "compiled": {"raw": "##.pt-card:has-text(Sponsored)", "selector": ".pt-card", "tasks": [["has-text", "Sponsored"]]},
+   "expect": {"hidden": ["ht-1", "dyn-1"], "visible": ["ht-2", "uh-1"]}},
+  {"name": "has-text-regex", "filter": "##.pt-re:has-text(/^\\s*anzeige\\s*$/i)",
+   "compiled": {"raw": "##.pt-re:has-text(/^\\s*anzeige\\s*$/i)", "selector": ".pt-re", "tasks": [["has-text", "/^\\s*anzeige\\s*$/i"]]},
+   "expect": {"hidden": ["htr-1"], "visible": ["htr-2"]}},
+  {"name": "has-procedural", "filter": "##.pt-has:has(.pt-label:has-text(Promoted))",
+   "compiled": {"raw": "##.pt-has:has(.pt-label:has-text(Promoted))", "selector": ".pt-has", "tasks": [["has", {"raw": "", "selector": ".pt-label", "tasks": [["has-text", "Promoted"]]}]]},
+   "expect": {"hidden": ["has-1"], "visible": ["has-2"]}},
+  {"name": "if-not", "filter": "##.pt-ifnot:if-not(.pt-keep)",
+   "compiled": {"raw": "##.pt-ifnot:if-not(.pt-keep)", "selector": ".pt-ifnot", "tasks": [["if-not", {"raw": "", "selector": ".pt-keep", "tasks": []}]]},
+   "expect": {"hidden": ["ifn-1"], "visible": ["ifn-2"]}},
+  {"name": "not-procedural", "filter": "##.pt-not:not(:has-text(Keep))",
+   "compiled": {"raw": "##.pt-not:not(:has-text(Keep))", "selector": ".pt-not", "tasks": [["not", {"raw": "", "selector": "", "tasks": [["has-text", "Keep"]]}]]},
+   "expect": {"hidden": ["not-1"], "visible": ["not-2"]}},
+  {"name": "matches-attr", "filter": "##div.pt-ma:matches-attr(\"data-ad-slot\"=\"/^top/\")",
+   "compiled": {"raw": "##div.pt-ma:matches-attr(\"data-ad-slot\"=\"/^top/\")", "selector": "div.pt-ma", "tasks": [["matches-attr", "\"data-ad-slot\"=\"/^top/\""]]},
+   "expect": {"hidden": ["ma-1"], "visible": ["ma-2"]}},
+  {"name": "matches-css", "filter": "##.pt-mc:matches-css(position: fixed)",
+   "compiled": {"raw": "##.pt-mc:matches-css(position: fixed)", "selector": ".pt-mc", "tasks": [["matches-css", "position: fixed"]]},
+   "expect": {"hidden": ["mc-1"], "visible": ["mc-2"]}},
+  {"name": "matches-css-before", "filter": "##.pt-mcb:matches-css-before(content: /AD/)",
+   "compiled": {"raw": "##.pt-mcb:matches-css-before(content: /AD/)", "selector": ".pt-mcb", "tasks": [["matches-css-before", "content: /AD/"]]},
+   "expect": {"hidden": ["mcb-1"], "visible": ["mcb-2"]}},
+  {"name": "matches-media", "filter": "##.pt-mm:matches-media((min-width: 1px))",
+   "compiled": {"raw": "##.pt-mm:matches-media((min-width: 1px))", "selector": ".pt-mm", "tasks": [["matches-media", "(min-width: 1px)"]]},
+   "expect": {"hidden": ["mm-1"]}},
+  {"name": "matches-media-miss", "filter": "##.pt-mm2:matches-media((max-width: 1px))",
+   "compiled": {"raw": "##.pt-mm2:matches-media((max-width: 1px))", "selector": ".pt-mm2", "tasks": [["matches-media", "(max-width: 1px)"]]},
+   "expect": {"visible": ["mm-2"]}},
+  {"name": "matches-path", "filter": "##.pt-mp:matches-path(/procedural/)",
+   "compiled": {"raw": "##.pt-mp:matches-path(/procedural/)", "selector": ".pt-mp", "tasks": [["matches-path", "/procedural/"]]},
+   "expect": {"hidden": ["mp-1"]}},
+  {"name": "matches-path-miss", "filter": "##.pt-mp2:matches-path(/no-such-path/)",
+   "compiled": {"raw": "##.pt-mp2:matches-path(/no-such-path/)", "selector": ".pt-mp2", "tasks": [["matches-path", "/no-such-path/"]]},
+   "expect": {"visible": ["mp-2"]}},
+  {"name": "matches-prop", "filter": "##.pt-mprop:matches-prop(tagName=SECTION)",
+   "compiled": {"raw": "##.pt-mprop:matches-prop(tagName=SECTION)", "selector": ".pt-mprop", "tasks": [["matches-prop", "tagName=SECTION"]]},
+   "expect": {"hidden": ["mprop-1"], "visible": ["mprop-2"]}},
+  {"name": "min-text-length", "filter": "##.pt-mtl:min-text-length(40)",
+   "compiled": {"raw": "##.pt-mtl:min-text-length(40)", "selector": ".pt-mtl", "tasks": [["min-text-length", 40]]},
+   "expect": {"hidden": ["mtl-1"], "visible": ["mtl-2"]}},
+  {"name": "upward-number", "filter": "##.pt-up-target:upward(2)",
+   "compiled": {"raw": "##.pt-up-target:upward(2)", "selector": ".pt-up-target", "tasks": [["upward", 2]]},
+   "expect": {"hidden": ["up-gp"]}},
+  {"name": "upward-selector", "filter": "##.pt-ups-target:upward(.pt-ups-box)",
+   "compiled": {"raw": "##.pt-ups-target:upward(.pt-ups-box)", "selector": ".pt-ups-target", "tasks": [["upward", ".pt-ups-box"]]},
+   "expect": {"hidden": ["ups-box"]}},
+  {"name": "spath", "filter": "##.pt-sp:has-text(Lead) + .pt-sp-next",
+   "compiled": {"raw": "##.pt-sp:has-text(Lead) + .pt-sp-next", "selector": ".pt-sp", "tasks": [["has-text", "Lead"], ["spath", " + .pt-sp-next"]]},
+   "expect": {"hidden": ["sp-next"], "visible": ["sp-lead", "sp-other"]}},
+  {"name": "xpath", "filter": "##:xpath(//div[@id=\"xp-1\"])",
+   "compiled": {"raw": "##:xpath(//div[@id=\"xp-1\"])", "selector": "", "tasks": [["xpath", "//div[@id=\"xp-1\"]"]]},
+   "expect": {"hidden": ["xp-1"], "visible": ["xp-2"]}},
+  {"name": "shadow", "filter": "###sh-host:shadow(.pt-inner-ad)",
+   "compiled": {"raw": "###sh-host:shadow(.pt-inner-ad)", "selector": "#sh-host", "tasks": [["shadow", ".pt-inner-ad"]]},
+   "expect": {"shadowHidden": [".pt-inner-ad"], "shadowVisible": [".pt-inner-ok"]}},
+  {"name": "watch-attr", "filter": "##.pt-wa:watch-attr(data-label):matches-attr(data-label=sponsored)",
+   "compiled": {"raw": "##.pt-wa:watch-attr(data-label):matches-attr(data-label=sponsored)", "selector": ".pt-wa", "tasks": [["watch-attr", "data-label"], ["matches-attr", "data-label=sponsored"]]},
+   "expect": {"hidden": ["wa-1"], "visible": ["wa-2"]}},
+  {"name": "style", "filter": "##.pt-style:has-text(Restyle):style(opacity: 0.5 !important)",
+   "compiled": {"raw": "##.pt-style:has-text(Restyle):style(opacity: 0.5 !important)", "selector": ".pt-style", "tasks": [["has-text", "Restyle"]], "action": ["style", "opacity: 0.5 !important"]},
+   "expect": {"style": [{"id": "st-1", "prop": "opacity", "value": "0.5"}], "visible": ["st-1"]}},
+  {"name": "remove", "filter": "##.pt-rm:has-text(Remove me):remove()",
+   "compiled": {"raw": "##.pt-rm:has-text(Remove me):remove()", "selector": ".pt-rm", "tasks": [["has-text", "Remove me"]], "action": ["remove"]},
+   "expect": {"removed": ["rm-1"], "present": ["rm-2"]}},
+  {"name": "remove-attr", "filter": "##.pt-ra:remove-attr(data-track)",
+   "compiled": {"raw": "##.pt-ra:remove-attr(data-track)", "selector": ".pt-ra", "tasks": [], "action": ["remove-attr", "data-track"]},
+   "expect": {"attrRemoved": [{"id": "ra-1", "attr": "data-track"}]}},
+  {"name": "remove-class", "filter": "##.pt-rc:remove-class(blur)",
+   "compiled": {"raw": "##.pt-rc:remove-class(blur)", "selector": ".pt-rc", "tasks": [], "action": ["remove-class", "blur"]},
+   "expect": {"classRemoved": [{"id": "rc-1", "cls": "blur"}]}},
+  {"name": "others", "scenario": "others", "filter": "##.pt-oth-keep:others()",
+   "compiled": {"raw": "##.pt-oth-keep:others()", "selector": ".pt-oth-keep", "tasks": [["others"]]},
+   "expect": {"hidden": ["oth-sib"], "visible": ["oth-keep", "oth-child"]}}
+]
+</script>
+</head>
+<body>
+<h1>Procedural fixture</h1>
+<p id="status">running…</p>
+
+<div class="box pt-card" id="ht-1">Sponsored content</div>
+<div class="box pt-card" id="ht-2">Regular content</div>
+<div class="box pt-card" id="uh-1"><span>Sponsored (becomes regular)</span></div>
+
+<div class="box pt-re" id="htr-1">  ANZEIGE </div>
+<div class="box pt-re" id="htr-2">Anzeige bei uns schalten</div>
+
+<div class="box pt-has" id="has-1"><span class="pt-label">Promoted</span> item</div>
+<div class="box pt-has" id="has-2"><span class="pt-label">Editorial</span> item</div>
+
+<div class="box pt-ifnot" id="ifn-1"><span>no keeper</span></div>
+<div class="box pt-ifnot" id="ifn-2"><span class="pt-keep">keeper</span></div>
+
+<div class="box pt-not" id="not-1">Drop</div>
+<div class="box pt-not" id="not-2">Keep me</div>
+
+<div class="box pt-ma" id="ma-1" data-ad-slot="top-banner">attr top</div>
+<div class="box pt-ma" id="ma-2" data-ad-slot="side">attr side</div>
+
+<div class="box pt-mc" id="mc-1">fixed</div>
+<div class="box pt-mc" id="mc-2">static</div>
+
+<div class="box pt-mcb with-ad" id="mcb-1">before AD</div>
+<div class="box pt-mcb" id="mcb-2">no before</div>
+
+<div class="box pt-mm" id="mm-1">media hit</div>
+<div class="box pt-mm2" id="mm-2">media miss</div>
+
+<div class="box pt-mp" id="mp-1">path hit</div>
+<div class="box pt-mp2" id="mp-2">path miss</div>
+
+<section class="box pt-mprop" id="mprop-1">section</section>
+<div class="box pt-mprop" id="mprop-2">div</div>
+
+<div class="box pt-mtl" id="mtl-1">This text is clearly longer than forty characters in total.</div>
+<div class="box pt-mtl" id="mtl-2">Short text</div>
+
+<div class="box" id="up-gp"><div id="up-p"><span class="pt-up-target">upward target</span></div></div>
+<div class="box pt-ups-box" id="ups-box"><div><div><span class="pt-ups-target">upward selector target</span></div></div></div>
+
+<div class="sp-row">
+  <div class="box pt-sp" id="sp-lead">Lead</div>
+  <div class="box pt-sp-next" id="sp-next">next sibling of lead</div>
+  <div class="box pt-sp-next" id="sp-other">not adjacent</div>
+</div>
+
+<div class="box" id="xp-1">xpath target</div>
+<div class="box" id="xp-2">xpath other</div>
+
+<div class="box" id="sh-host"></div>
+
+<div class="box pt-wa" id="wa-1" data-label="news">watched (becomes sponsored)</div>
+<div class="box pt-wa" id="wa-2" data-label="news">watched (stays news)</div>
+
+<div class="box pt-style" id="st-1">Restyle me</div>
+
+<div class="box pt-rm" id="rm-1">Remove me</div>
+<div class="box pt-rm" id="rm-2">Keep this one</div>
+
+<div class="box pt-ra" id="ra-1" data-track="abc">tracking attribute</div>
+<div class="box pt-rc blur" id="rc-1">blurred</div>
+
+<div id="dyn-slot"></div>
+
+<div id="oth-wrap">
+  <div class="box pt-oth-keep" id="oth-keep"><span id="oth-child">kept by :others()</span></div>
+  <div class="box" id="oth-sib">sibling hidden by :others()</div>
+</div>
+
+<pre id="results"></pre>
+
+<script>
+(() => {
+  'use strict';
+  const cases = JSON.parse(document.getElementById('procedural-cases').textContent);
+  const scenario = new URLSearchParams(location.search).get('scenario') || '';
+  window.__proceduralCases = cases;
+  // Compiled filters for the standalone harness (no extension): it injects
+  // content/procedural.js and calls self.bastionProcedural.apply(...) with these.
+  window.__proceduralCompiled = cases
+    .filter((c) => (c.scenario || '') === scenario)
+    .map((c) => c.compiled);
+
+  const shadow = document.getElementById('sh-host').attachShadow({ mode: 'open' });
+  shadow.innerHTML = '<div class="pt-inner-ad">inner ad</div><div class="pt-inner-ok">inner ok</div>';
+
+  const byId = (id) => document.getElementById(id);
+  const hidden = (el) => !!el && getComputedStyle(el).display === 'none';
+  const visible = (el) => !!el && (typeof el.checkVisibility === 'function' ? el.checkVisibility() : getComputedStyle(el).display !== 'none');
+
+  function check() {
+    const out = { pass: true, scenario, cases: {} };
+    for (const c of cases) {
+      if ((c.scenario || '') !== scenario) continue;
+      const e = c.expect;
+      const fails = [];
+      for (const id of e.hidden || []) if (!hidden(byId(id))) fails.push('not hidden: #' + id);
+      for (const id of e.visible || []) if (!visible(byId(id))) fails.push('not visible: #' + id);
+      for (const id of e.removed || []) if (byId(id)) fails.push('not removed: #' + id);
+      for (const id of e.present || []) if (!byId(id)) fails.push('missing: #' + id);
+      for (const s of e.style || []) {
+        const el = byId(s.id);
+        const v = el ? getComputedStyle(el).getPropertyValue(s.prop) : null;
+        if (v !== s.value) fails.push(`style ${s.prop} of #${s.id} is ${v}`);
+      }
+      for (const a of e.attrRemoved || []) { const el = byId(a.id); if (!el || el.hasAttribute(a.attr)) fails.push(`attr ${a.attr} still on #${a.id}`); }
+      for (const a of e.classRemoved || []) { const el = byId(a.id); if (!el || el.classList.contains(a.cls)) fails.push(`class ${a.cls} still on #${a.id}`); }
+      for (const sel of e.shadowHidden || []) { const el = shadow.querySelector(sel); if (!el || getComputedStyle(el).display !== 'none') fails.push('shadow not hidden: ' + sel); }
+      for (const sel of e.shadowVisible || []) { const el = shadow.querySelector(sel); if (!el || getComputedStyle(el).display === 'none') fails.push('shadow not visible: ' + sel); }
+      out.cases[c.name] = { pass: fails.length === 0, detail: fails };
+      if (fails.length) out.pass = false;
+    }
+    window.__procResults = out;
+    document.getElementById('results').textContent = JSON.stringify(out, null, 2);
+    document.getElementById('status').textContent = out.pass ? 'pass' : 'FAIL';
+    return out;
+  }
+  window.__procCheck = check;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Late insert: must be caught by the engine's MutationObserver.
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.className = 'box pt-card';
+      d.id = 'dyn-1';
+      d.textContent = 'Sponsored (inserted late)';
+      byId('dyn-slot').appendChild(d);
+    }, 300);
+    // Attribute change: only :watch-attr() makes the engine notice it.
+    setTimeout(() => { byId('wa-1').setAttribute('data-label', 'sponsored'); }, 500);
+    // Un-hide: the element stops matching (element child replaced -> childList mutation).
+    setTimeout(() => {
+      const el = byId('uh-1');
+      const span = document.createElement('span');
+      span.textContent = 'Regular now';
+      el.replaceChildren(span);
+    }, 700);
+    setTimeout(() => {
+      check();
+      document.documentElement.dataset.procDone = '1';
+    }, 1500);
+  });
+})();
+</script>
+</body>
+</html>

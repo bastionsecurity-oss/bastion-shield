@@ -1,0 +1,138 @@
+[
+    {
+        "name": "async-sugarcoat-04394153a7ce417b88e3fe1790a4e6a269bfebe5.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "async-sugarcoat-04394153a7ce417b88e3fe1790a4e6a269bfebe5.js"
+    },
+    {
+        "name": "async-sugarcoat-8a459c41783885dc83d30f5b7da2359091f4e607.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "async-sugarcoat-8a459c41783885dc83d30f5b7da2359091f4e607.js"
+    },
+    {
+        "name": "brave-auto-pip.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-auto-pip.js"
+    },
+    {
+        "name": "brave-disable-pageview-api.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-disable-pageview-api.js"
+    },
+    {
+        "name": "brave-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-fix.js"
+    },
+    {
+        "name": "brave-google-maps-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-google-maps-fix.js"
+    },
+    {
+        "name": "brave-video-bg-play-update.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-video-bg-play-update.js"
+    },
+    {
+        "name": "brave-video-bg-play.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-video-bg-play.js"
+    },
+    {
+        "name": "brave-youtube-navigation-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-youtube-navigation-fix.js"
+    },
+    {
+        "name": "brave-youtube-theater-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-youtube-theater-fix.js"
+    },
+    {
+        "name": "brave-yt-sabr-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-yt-sabr-fix.js"
+    },
+    {
+        "name": "brave-youtube-playback-speed-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "brave-youtube-playback-speed-fix.js"
+    },
+    {
+        "name": "de-amp.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "de-amp.js"
+    },
+    {
+        "name": "touch-fix.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "touch-fix.js"
+    },
+    {
+        "name": "trusted_types.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "trusted_types.js"
+    },
+    {
+        "name": "vaft-ublock-origin.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "vaft-ublock-origin.js"
+    },
+    {
+        "name": "video-swap-new-ublock-origin.js",
+        "aliases": [],
+        "kind": {
+            "mime": "application/javascript"
+        },
+        "resourcePath": "video-swap-new-ublock-origin.js"
+    }
+]

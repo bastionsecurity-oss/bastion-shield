@@ -1,0 +1,45 @@
+Windows Registry Editor Version 5.00
+
+; Bastion Shield - managed configuration for Brave (example). SPDX-License-Identifier: GPL-3.0-or-later
+;
+; BEFORE IMPORTING: replace every <CHROME_WEB_STORE_ID> with the published store id.
+; The browser hands these values to the extension (chrome.storage.managed)
+; once it is installed. Every key is optional; a key that is present
+; overrides the user setting and locks it. All keys: policy/managed_schema.json.
+;
+; Encoding (Chromium components/policy/core/common/registry_dict.cc):
+;   booleans, integers  REG_DWORD (dword:00000001 = true)
+;   strings             REG_SZ
+;   lists               a sub-key with REG_SZ values named 1, 2, 3 ...
+;                       (disabledSites below) or one REG_SZ JSON string
+;                       (customFilters below; keeps the order)
+;   "lists" object      a sub-key with one REG_DWORD per list id, or one
+;                       REG_SZ JSON string such as {"annoyances":true}
+; The browser matches value names case-insensitively; keep the spelling shown.
+;
+; The first section deletes the whole policy key so that no stale values
+; survive a re-import. Set-BastionShieldPolicy.ps1 does the same
+; idempotently and is the recommended way to deploy this through Intune.
+
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave\3rdparty\extensions\<CHROME_WEB_STORE_ID>\policy]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave\3rdparty\extensions\<CHROME_WEB_STORE_ID>\policy]
+"organizationName"="Muster AG"
+"supportUrl"="https://intranet.example.com/it-support"
+"supportEmail"="it-support@example.com"
+"reportBrokenSite"="email"
+"lockSettings"=dword:00000001
+; Emergency switch: dword:00000000 turns protection off on every device
+; (docs/DEPLOYMENT-INTUNE.md, "Emergency"). Keep 1 for normal operation.
+"protectionEnabled"=dword:00000001
+"allowUserFilters"=dword:00000000
+"historyRetentionDays"=dword:0000000e
+"customFilters"="[\"||ads.example.net^\",\"example.com##.promo-banner\"]"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave\3rdparty\extensions\<CHROME_WEB_STORE_ID>\policy\disabledSites]
+"1"="intranet.example.com"
+"2"="erp.example.com"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave\3rdparty\extensions\<CHROME_WEB_STORE_ID>\policy\lists]
+"annoyances"=dword:00000001
+"social"=dword:00000000

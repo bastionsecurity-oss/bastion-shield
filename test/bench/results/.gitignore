@@ -1,0 +1,3 @@
+# Bastion Shield bench: REA Evidence is ~1.5 MB per visit (75 files per full run);
+# keep it local. The dated JSON and summary.md are the shareable results.
+rea/

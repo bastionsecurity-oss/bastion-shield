@@ -1,0 +1,352 @@
+/*
+ * Bastion Shield — popup layout. Fixed 360px width and a fixed-height tab
+ * panel so the popup never jumps in size while counts stream in or tabs
+ * change (Chrome caps popups at 600px height).
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+html, body { background: var(--bg); }
+body.pp {
+  width: 360px;
+  min-height: 200px;
+  overflow-x: hidden;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+/* ---------------------------------------------------------------- Header -- */
+.pp-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0 14px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.pp-head__word {
+  margin: 0;
+  font-family: var(--font-brand);
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.pp-head__org {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  max-width: 180px;
+  margin-left: auto;
+  text-align: right;
+}
+.pp-head__org-label { color: var(--text-2); font-size: 9.5px; line-height: 13px; letter-spacing: 0.09em; }
+.pp-head__org-name {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------- Site row -- */
+.pp-site { padding: 12px 16px 13px; border-bottom: 1px solid var(--line); }
+.pp-site__host {
+  margin-bottom: 8px;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pp-site__row { display: flex; align-items: center; gap: 12px; }
+.pp-site__text { flex: 1 1 auto; min-width: 0; }
+.pp-site__label { color: var(--text-strong); font-size: 14px; font-weight: 600; line-height: 19px; }
+.pp-site__state { color: var(--text-2); font-size: var(--text-xs); line-height: 17px; }
+.pp-site__lock { display: inline-flex; }
+
+/* --------------------------------------------------------------- Counter -- */
+.pp-count { padding: 12px 16px 13px; border-bottom: 1px solid var(--line); }
+.pp-count__body {
+  display: grid;
+  grid-template-columns: minmax(96px, auto) 1fr;
+  align-items: end;
+  gap: 4px 18px;
+  margin-top: 8px;
+}
+/* Context for the total (distinct third-party hosts), not part of the breakdown. */
+.pp-count__third { grid-column: 1 / -1; color: var(--text-2); font-size: 11.5px; line-height: 15px; }
+.pp-count__off { margin-top: 8px; color: var(--text-2); font-size: var(--text-sm); line-height: 19px; }
+.pp-count__value {
+  font-family: var(--font-brand);
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  color: var(--text-strong);
+  /* Keep the live number from shifting width as digits change. */
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 2px;
+  transform-origin: left bottom;
+}
+.pp-break { display: flex; flex-direction: column; margin: 0; }
+.pp-break__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.pp-break__row:first-child { border-top: 0; padding-top: 0; }
+.pp-break dt { min-width: 0; color: var(--text-2); font-size: 11.5px; line-height: 15px; }
+.pp-break dd { margin: 0; color: var(--text-strong); font-size: 12px; font-weight: 600; line-height: 15px; }
+body[data-site="off"] .pp-count__value { color: var(--text-3); }
+
+/* ------------------------------------------------------------------ Tabs -- */
+.pp-tabs__bar {
+  display: flex;
+  gap: 18px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.pp-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.pp-tab:hover { color: var(--text-strong); }
+.pp-tab[aria-selected="true"] { color: var(--text-strong); }
+.pp-tab[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--text-strong);
+}
+.pp-tab:focus-visible { outline-offset: -2px; }
+.pp-tab__count {
+  min-width: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: 10px;
+  line-height: 15px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.pp-tab__count:empty { display: none; }
+
+.pp-panel {
+  display: flex;
+  flex-direction: column;
+  height: 200px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pp-panel:focus-visible { outline-offset: -2px; }
+.pp-panel__foot { margin-top: auto; padding: 8px 16px 10px; }
+.pp-panel__intro { padding: 10px 16px 4px; color: var(--text-2); font-size: var(--text-xs); line-height: 17px; }
+.pp-empty { padding: 18px 16px; color: var(--text-2); font-size: var(--text-xs); }
+.pp-feed-off { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+/* Live feed rows */
+.pp-feed { margin: 0; padding: 0; list-style: none; }
+.pp-ev {
+  display: block;
+  padding: 5px 16px 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+/* Two independent rows: a long list name must never squeeze the host. */
+.pp-ev__row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; }
+.pp-ev__host {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pp-ev__time { flex: none; color: var(--text-3); font-family: var(--font-mono); font-size: 10.5px; line-height: 17px; }
+.pp-ev__meta { display: flex; flex: 0 1 auto; align-items: center; gap: 6px; min-width: 0; color: var(--text-2); font-size: 11.5px; line-height: 16px; }
+.pp-ev__list { flex: 0 1 auto; min-width: 0; max-width: 150px; overflow: hidden; color: var(--text-2); font-size: 11.5px; line-height: 16px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.pp-ev--new { animation: pp-ev-in var(--dur) var(--ease); }
+@keyframes pp-ev-in { from { background: var(--bg-hover); } to { background: transparent; } }
+
+.tag {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 13px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Matched rules */
+.pp-rl { border-bottom: 1px solid var(--line-soft); }
+.pp-rl > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.pp-rl > summary::-webkit-details-marker { display: none; }
+.pp-rl > summary:hover { background: var(--bg-hover); }
+.pp-rl > summary:focus-visible { outline-offset: -2px; }
+.pp-rl__chev { color: var(--text-2); transition: transform var(--dur-fast) var(--ease); }
+.pp-rl[open] .pp-rl__chev { transform: rotate(90deg); }
+.pp-rl__name { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--text-strong); font-size: var(--text-sm); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.pp-rl__cat { color: var(--text-2); font-size: 11px; }
+.pp-rl__n { color: var(--text-strong); font-size: 12px; font-weight: 600; }
+.pp-rl__body { padding: 0 16px 10px 38px; }
+.pp-rl__rule { padding: 5px 0; border-top: 1px solid var(--line-soft); }
+.pp-rl__rule:first-child { border-top: 0; }
+.pp-rl__text {
+  margin: 0;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pp-rl__more { color: var(--text-3); }
+.pp-rl__meta { color: var(--text-3); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; }
+.pp-rl__loading { color: var(--text-2); font-size: 11.5px; }
+/* Bastion's own rules (GPC, Standard first-party allow, protection off): muted, last, not counted. */
+.pp-rl--sys .pp-rl__name { color: var(--text-2); font-weight: 400; }
+.pp-rl--sys .pp-rl__n { color: var(--text-2); font-weight: 400; }
+.pp-rl__hint { margin: 0 0 4px; color: var(--text-2); font-size: 11.5px; line-height: 16px; }
+.pp-rl__sys { color: var(--text-strong); font-size: 11.5px; line-height: 16px; }
+
+/* Per-site controls */
+.pp-panel--site { padding: 0; }
+.pp-panel--site .seg__opt { padding: 3px 9px; font-size: 11.5px; }
+.pp-ctl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pp-ctl:last-child { border-bottom: 0; }
+.pp-ctl__text { flex: 1 1 auto; min-width: 0; }
+.pp-ctl__label { color: var(--text-strong); font-size: var(--text-sm); font-weight: 600; line-height: 18px; }
+.pp-ctl__hint { color: var(--text-2); font-size: 11.5px; line-height: 16px; }
+.pp-ctl-lock { padding: 6px 16px 2px; }
+.pp-ctl__lock { display: inline-flex; }
+body[data-site="off"] .pp-panel--site .pp-ctl { opacity: 0.55; }
+
+/* ------------------------------------------------------- Calm/error state -- */
+.pp-calm { display: flex; flex-direction: column; gap: 8px; padding: 26px 16px 28px; }
+.pp-calm__icon { color: var(--text-2); }
+.pp-calm__title { font-size: 17px; line-height: 22px; letter-spacing: var(--tracking-heading); }
+.pp-calm__text { color: var(--text-2); font-size: var(--text-sm); line-height: 19px; max-width: 300px; }
+
+/* ----------------------------------------------------------- Reload hint -- */
+.pp-reload {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 8px 10px 16px;
+  background: var(--accent);
+  color: var(--on-accent);
+  animation: pp-rise var(--dur) var(--ease);
+}
+.pp-reload .btn--primary { background: var(--on-accent); color: var(--accent); }
+.pp-reload .btn--primary:hover { background: color-mix(in srgb, var(--on-accent) 88%, var(--accent)); }
+.pp-reload :focus-visible { outline-color: var(--on-accent); }
+.pp-reload__text { flex: 1 1 auto; font-size: var(--text-xs); font-weight: 500; line-height: 16px; }
+.pp-reload__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  opacity: 0.8;
+}
+.pp-reload__close:hover { opacity: 1; background: color-mix(in srgb, var(--on-accent) 12%, transparent); }
+@keyframes pp-rise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* ---------------------------------------------------------------- Footer -- */
+.pp-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-quiet);
+}
+.pp-foot__totals { color: var(--text-2); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; }
+.pp-foot__actions { display: flex; justify-content: space-between; gap: 8px; }
+.pp-foot__actions .btn--ghost { padding-left: 4px; margin-left: -4px; }
+.pp-foot__actions #pp-dashboard { margin-left: auto; }
+
+/* --------------------------------------------------------- Report dialog -- */
+.pp-report__pre {
+  max-height: 150px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-quiet);
+  color: var(--text-strong);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pp .dialog { width: calc(100vw - 24px); }
+.pp .dialog__body { padding: 16px; gap: 10px; }
+.pp .dialog__title { font-size: 16px; line-height: 21px; }
+.pp .dialog__actions { padding: 10px 16px; }
+.pp .kv { font-size: var(--text-xs); }
+
+/* Loading: keep layout, soften numbers until real state arrives. */
+body[data-state="loading"] .pp-count__value,
+body[data-state="loading"] .pp-break dd { color: var(--text-3); }

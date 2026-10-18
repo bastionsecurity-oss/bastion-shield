@@ -1,0 +1,343 @@
+<!doctype html>
+<!--
+  Bastion Shield — fingerprinting fixture (served by the e2e fixture server).
+  SPDX-License-Identifier: GPL-3.0-or-later
+
+  Reads every surface main/privacy.js touches and publishes the results:
+    * window.__fpResults        (object, also rendered as JSON in #results)
+    * <html data-fp-done="1">   once all probes finished
+  Values that a test compares across runs are hashes (FNV-1a, hex). Expected
+  with fingerprinting protection on:
+    canvas.stable / webgl.stable / audio.stable              true  (deterministic)
+    canvas.visibleUnchanged                                   true  (toDataURL works on a copy)
+    canvas.blankEqual / canvas.blankAllZero / canvas.uniformUntouched   true
+    canvas.transparentRgbLeak                                 0
+    canvas.smallReadExact                                     true  (tiny reads stay exact)
+    canvas.tileConsistent                                     true
+    audio.noCompounding / audio.copyMatchesGet                true
+    stealth.*                                                 true
+    globals.seeds / globals.cfg                               false
+  Compare canvas.dataUrlHash / webgl.readHash / audio.sampleHash between two
+  sites (must differ) and between two loads of one site (must match), and
+  against a profile with protection off (must differ). webgl.fboReadHash
+  (framebuffer-object read-back) must EQUAL the unprotected value, and
+  canvas.jpegHash usually does too (LSB noise does not survive JPEG).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bastion fingerprint fixture</title>
+<style>
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; }
+  pre { white-space: pre-wrap; word-break: break-all; background: #f4f4f4; padding: 8px; }
+</style>
+</head>
+<body>
+<h1>Fingerprint fixture</h1>
+<p id="status">running…</p>
+<pre id="results"></pre>
+<script>
+(async () => {
+  'use strict';
+  const R = {};
+  const fnv = (s) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(16).padStart(8, '0');
+  };
+  const fnvBytes = (u8) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < u8.length; i++) { h ^= u8[i]; h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(16).padStart(8, '0');
+  };
+  const blobHash = async (blob) => blob ? fnvBytes(new Uint8Array(await blob.arrayBuffer())) : null;
+  const step = async (name, fn) => {
+    try { R[name] = await fn(); } catch (e) { R[name] = { error: String((e && e.message) || e) }; }
+  };
+  const draw = (ctx) => {
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial, sans-serif';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('Bastion fp \u{1F603} <canvas>', 2, 15);
+    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+    ctx.fillText('Bastion fp \u{1F603} <canvas>', 4, 17);
+    const g = ctx.createLinearGradient(0, 0, 240, 0);
+    g.addColorStop(0, '#123456');
+    g.addColorStop(1, '#fedcba');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(200, 40, 18, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  const W = 240, H = 60;
+  const drawnCanvas = () => {
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    draw(c.getContext('2d'));
+    return c;
+  };
+
+  // --- navigator / GPC ----------------------------------------------------
+  await step('navigator', () => ({
+    globalPrivacyControl: navigator.globalPrivacyControl,
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    deviceMemory: navigator.deviceMemory,
+    language: navigator.language,
+    languages: Array.from(navigator.languages || []),
+    languagesFrozen: Object.isFrozen(navigator.languages),
+    languagesSameObject: navigator.languages === navigator.languages,
+  }));
+
+  // --- canvas 2D ----------------------------------------------------------
+  await step('canvas', async () => {
+    const c = drawnCanvas();
+    const ctx = c.getContext('2d');
+    const img1 = ctx.getImageData(0, 0, W, H).data;
+    const url1 = c.toDataURL();
+    const url2 = c.toDataURL();
+    const img2 = ctx.getImageData(0, 0, W, H).data;
+    // A second canvas with the same drawing must give the same result.
+    const url3 = drawnCanvas().toDataURL();
+    const blank1 = document.createElement('canvas'); blank1.width = W; blank1.height = H; blank1.getContext('2d');
+    const blank2 = document.createElement('canvas'); blank2.width = W; blank2.height = H;
+    const blankData = blank1.getContext('2d').getImageData(0, 0, W, H).data;
+    const uni = document.createElement('canvas'); uni.width = W; uni.height = H;
+    const uctx = uni.getContext('2d'); uctx.fillStyle = '#ffffff'; uctx.fillRect(0, 0, W, H);
+    const uniData = uctx.getImageData(0, 0, W, H).data;
+    let leak = 0;
+    for (let i = 0; i < img1.length; i += 4) if (img1[i + 3] === 0 && (img1[i] | img1[i + 1] | img1[i + 2]) !== 0) leak++;
+    // Tile read vs full read: a 4x4 tile inside the text must agree with the full read.
+    const tx = 20, ty = 18;
+    const tile = ctx.getImageData(tx, ty, 4, 4).data;
+    let tileOk = true;
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) for (let k = 0; k < 4; k++) {
+      if (tile[(y * 4 + x) * 4 + k] !== img1[((ty + y) * W + tx + x) * 4 + k]) tileOk = false;
+    }
+    const px = ctx.getImageData(130, 5, 1, 1).data;
+    const blob = await new Promise((res) => c.toBlob(res));
+    return {
+      dataUrlHash: fnv(url1),
+      imageDataHash: fnvBytes(img1),
+      stable: url1 === url2 && url1 === url3 && fnvBytes(img1) === fnvBytes(img2),
+      visibleUnchanged: fnvBytes(img1) === fnvBytes(img2),
+      blankEqual: blank1.toDataURL() === blank2.toDataURL(),
+      blankAllZero: blankData.every((v) => v === 0),
+      uniformUntouched: uniData.every((v) => v === 255),
+      transparentRgbLeak: leak,
+      smallReadExact: px[0] === 255 && px[1] === 102 && px[2] === 0 && px[3] === 255,
+      tileConsistent: tileOk,
+      blobHash: await blobHash(blob),
+      jpegHash: fnv(c.toDataURL('image/jpeg', 0.92)),
+    };
+  });
+
+  // --- OffscreenCanvas ----------------------------------------------------
+  await step('offscreen', async () => {
+    if (typeof OffscreenCanvas !== 'function') return { supported: false };
+    const oc = new OffscreenCanvas(W, H);
+    const octx = oc.getContext('2d');
+    draw(octx);
+    const d1 = fnvBytes(octx.getImageData(0, 0, W, H).data);
+    const b1 = await blobHash(await oc.convertToBlob());
+    const b2 = await blobHash(await oc.convertToBlob());
+    return { supported: true, imageDataHash: d1, blobHash: b1, stable: b1 === b2 };
+  });
+
+  // --- WebGL --------------------------------------------------------------
+  await step('webgl', () => {
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    const gl = c.getContext('webgl', { preserveDrawingBuffer: true });
+    if (!gl) return { supported: false };
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, 'attribute vec2 p; attribute vec3 c; varying vec3 v; void main(){ v = c; gl_Position = vec4(p, 0.0, 1.0); }');
+    gl.compileShader(vs);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, 'precision mediump float; varying vec3 v; void main(){ gl_FragColor = vec4(v, 1.0); }');
+    gl.compileShader(fs);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 1, 0, 0,
+       1, -1, 0, 1, 0,
+       0,  1, 0, 0, 1,
+    ]), gl.STATIC_DRAW);
+    const pl = gl.getAttribLocation(prog, 'p');
+    const cl = gl.getAttribLocation(prog, 'c');
+    gl.enableVertexAttribArray(pl); gl.vertexAttribPointer(pl, 2, gl.FLOAT, false, 20, 0);
+    gl.enableVertexAttribArray(cl); gl.vertexAttribPointer(cl, 3, gl.FLOAT, false, 20, 8);
+    const scene = () => {
+      gl.clearColor(0.2, 0.4, 0.6, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    const read = () => { const a = new Uint8Array(64 * 64 * 4); gl.readPixels(0, 0, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, a); return a; };
+    // Same scene rendered into a framebuffer object: GPGPU-style read-backs stay exact.
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 64, 64, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    scene();
+    const fboRead = read();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    scene();
+    const r1 = read(), r2 = read();
+    const one = new Uint8Array(4);
+    gl.readPixels(0, 63, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, one);
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return {
+      supported: true,
+      readHash: fnvBytes(r1),
+      fboReadHash: fnvBytes(fboRead),
+      stable: fnvBytes(r1) === fnvBytes(r2),
+      // The corner pixel is pure clear colour: (0.2, 0.4, 0.6) -> 51, 102, 153.
+      pickReadExact: one[0] === 51 && one[1] === 102 && one[2] === 153 && one[3] === 255,
+      dataUrlHash: fnv(c.toDataURL()),
+      vendor: gl.getParameter(gl.VENDOR),
+      renderer: gl.getParameter(gl.RENDERER),
+      unmaskedVendor: ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null,
+      unmaskedRenderer: ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null,
+    };
+  });
+
+  // --- Web Audio ----------------------------------------------------------
+  await step('audio', async () => {
+    const Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!Ctx) return { supported: false };
+    const ctx = new Ctx(1, 5000, 44100);
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = 10000;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -50; comp.knee.value = 40; comp.ratio.value = 12;
+    comp.attack.value = 0; comp.release.value = 0.25;
+    osc.connect(comp); comp.connect(ctx.destination);
+    osc.start(0);
+    const buffer = await ctx.startRendering();
+    const d1 = buffer.getChannelData(0);
+    let sum1 = 0;
+    for (let i = 4500; i < 5000; i++) sum1 += Math.abs(d1[i]);
+    const d2 = buffer.getChannelData(0);
+    let sum2 = 0;
+    for (let i = 4500; i < 5000; i++) sum2 += Math.abs(d2[i]);
+    const copy = new Float32Array(500);
+    buffer.copyFromChannel(copy, 0, 4500);
+    let copyOk = true;
+    for (let i = 0; i < 500; i++) if (copy[i] !== d1[4500 + i]) copyOk = false;
+    return {
+      supported: true,
+      sum: sum1,
+      sampleHash: fnvBytes(new Uint8Array(d1.buffer, d1.byteOffset + 4500 * 4, 2000)),
+      stable: sum1 === sum2,
+      noCompounding: sum1 === sum2,
+      copyMatchesGet: copyOk,
+    };
+  });
+
+  await step('analyser', async () => {
+    const Ctx = window.OfflineAudioContext;
+    if (!Ctx) return { supported: false };
+    const ctx = new Ctx(1, 44100, 44100);
+    const osc = ctx.createOscillator();
+    osc.frequency.value = 1000;
+    const an = ctx.createAnalyser();
+    osc.connect(an); an.connect(ctx.destination);
+    osc.start(0);
+    const f = new Float32Array(an.frequencyBinCount);
+    const b = new Uint8Array(an.frequencyBinCount);
+    const t = new Uint8Array(an.fftSize);
+    const done = ctx.suspend(0.5).then(() => {
+      an.getFloatFrequencyData(f);
+      an.getByteFrequencyData(b);
+      an.getByteTimeDomainData(t);
+      return ctx.resume();
+    });
+    await ctx.startRendering();
+    await done;
+    return { supported: true, floatHash: fnvBytes(new Uint8Array(f.buffer)), byteHash: fnvBytes(b), timeHash: fnvBytes(t) };
+  });
+
+  // --- speech / media devices ---------------------------------------------
+  await step('speech', () => ({
+    supported: typeof speechSynthesis !== 'undefined',
+    voices: typeof speechSynthesis !== 'undefined' ? speechSynthesis.getVoices().length : null,
+  }));
+  await step('devices', async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return { supported: false };
+    const list = await navigator.mediaDevices.enumerateDevices();
+    return {
+      supported: true,
+      count: list.length,
+      kinds: list.map((d) => d.kind),
+      labelsEmpty: list.every((d) => d.label === ''),
+      jsonLabelsEmpty: list.every((d) => d.toJSON().label === ''),
+    };
+  });
+
+  // --- stealth: patched functions must look native -------------------------
+  await step('stealth', () => {
+    const ts = Function.prototype.toString;
+    const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+    const hcGetter = Object.getOwnPropertyDescriptor(Navigator.prototype, 'hardwareConcurrency').get;
+    let cyclicThrows = false;
+    try { Object.setPrototypeOf(toDataURL, toDataURL); } catch (e) { cyclicThrows = e instanceof TypeError && /Cyclic/.test(e.message); }
+    let badReceiverStackClean = true;
+    try { toDataURL.call({}); badReceiverStackClean = false; } catch (e) { badReceiverStackClean = !/extension:\/\//.test(String(e.stack)); }
+    let illegalInvocation = false;
+    try { hcGetter.call({}); } catch (e) { illegalInvocation = /Illegal invocation/.test(e.message); }
+    let notConstructor = false;
+    try { new toDataURL(); } catch (e) { notConstructor = e instanceof TypeError; }
+    const gpcDesc = Object.getOwnPropertyDescriptor(Navigator.prototype, 'globalPrivacyControl');
+    return {
+      toDataURLString: ts.call(toDataURL) === 'function toDataURL() { [native code] }',
+      toDataURLName: toDataURL.name === 'toDataURL' && toDataURL.length === 0,
+      getImageDataLength: CanvasRenderingContext2D.prototype.getImageData.length === 4,
+      getterString: ts.call(hcGetter) === 'function get hardwareConcurrency() { [native code] }',
+      toStringString: ts.call(ts) === 'function toString() { [native code] }' && ts.call(Function.prototype.toString) === 'function toString() { [native code] }',
+      noPrototype: !Object.prototype.hasOwnProperty.call(toDataURL, 'prototype'),
+      ownKeys: Reflect.ownKeys(toDataURL).join(',') === 'length,name',
+      cyclicThrows,
+      badReceiverStackClean,
+      illegalInvocation,
+      notConstructor,
+      gpcGetterString: gpcDesc && gpcDesc.get ? ts.call(gpcDesc.get) === 'function get globalPrivacyControl() { [native code] }' : null,
+    };
+  });
+
+  await step('globals', () => ({
+    seeds: '__bastionSeeds' in window,
+    cfg: '__bastionCfg' in window,
+  }));
+
+  // --- same-origin iframe created and read in the same task ----------------
+  await step('iframe', () => {
+    const f = document.createElement('iframe');
+    f.style.display = 'none';
+    document.body.appendChild(f);
+    const cw = f.contentWindow;
+    const c = cw.document.createElement('canvas');
+    c.width = W; c.height = H;
+    draw(c.getContext('2d'));
+    const child = cw.HTMLCanvasElement.prototype.toDataURL.call(c);
+    const parent = drawnCanvas().toDataURL();
+    // "Clean realm" probe: the child's toString applied to the parent's patched function.
+    const crossRealmToString = cw.Function.prototype.toString.call(HTMLCanvasElement.prototype.toDataURL) === 'function toDataURL() { [native code] }';
+    f.remove();
+    // false = the child realm was still unpatched when it was used (documented gap).
+    return { childMatchesParent: child === parent, crossRealmToString };
+  });
+
+  document.getElementById('results').textContent = JSON.stringify(R, null, 2);
+  document.getElementById('status').textContent = 'done';
+  window.__fpResults = R;
+  document.documentElement.dataset.fpDone = '1';
+})();
+</script>
+</body>
+</html>

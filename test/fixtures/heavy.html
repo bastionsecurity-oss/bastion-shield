@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  Bastion Shield e2e/perf fixture: a "news front page" sized document.
+  ~3'000 elements with realistic class/id churn (the cosmetic surveyor has to
+  look at all of them), 40 same-origin images, 8 third-party CDN scripts and a
+  handful of ad/tracker requests (blocked with the extension, served by the
+  fixture server without it). Every URL is built from location so the page
+  works on any fixture host and port.
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bastion heavy fixture</title>
+<style>
+  body { font: 15px/1.45 system-ui, sans-serif; margin: 0; color: #2a3134; }
+  header, footer { background: #2a3134; color: #fff; padding: 12px 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; padding: 16px; }
+  .teaser { border: 1px solid #ddd; border-radius: 6px; padding: 8px; min-height: 80px; }
+  .teaser img { width: 100%; height: 60px; object-fit: cover; background: #eee; }
+</style>
+<script>
+  // Per-load marker the perf test reads back.
+  window.__heavyStart = performance.now();
+</script>
+</head>
+<body>
+<header><strong>Bastion Heavy News</strong> <nav id="main-nav"></nav></header>
+<main id="content" class="grid"></main>
+<aside id="sidebar"></aside>
+<footer>Fixture</footer>
+<script>
+(function () {
+  var port = location.port ? ':' + location.port : '';
+  var scheme = location.protocol;
+  var host = function (h) { return scheme + '//' + h + port; };
+  var nav = document.getElementById('main-nav');
+  for (var n = 0; n < 12; n++) {
+    var a = document.createElement('a');
+    a.href = '#section-' + n; a.className = 'nav-link nav-item-' + n; a.textContent = ' Rubrik ' + n + ' ';
+    nav.appendChild(a);
+  }
+  var main = document.getElementById('content');
+  var frag = document.createDocumentFragment();
+  var adClasses = ['ad-banner', 'sponsored', 'promo-box', 'adsbox', 'teaser-ad', 'native-ad'];
+  for (var i = 0; i < 300; i++) {
+    var art = document.createElement('article');
+    art.className = 'teaser teaser--' + (i % 7) + ' story-' + i + (i % 25 === 0 ? ' ' + adClasses[i % adClasses.length] : '');
+    art.id = 'story-' + i;
+    var h = document.createElement('h3'); h.className = 'teaser__title title-' + (i % 13); h.textContent = 'Schlagzeile Nummer ' + i;
+    var p = document.createElement('p'); p.className = 'teaser__lead lead-' + (i % 11); p.textContent = 'Kurzer Lead-Text für Artikel ' + i + ', mit genügend Inhalt.';
+    var meta = document.createElement('div'); meta.className = 'teaser__meta';
+    for (var k = 0; k < 4; k++) { var s = document.createElement('span'); s.className = 'tag tag-' + ((i + k) % 17); s.textContent = 'tag' + k; meta.appendChild(s); }
+    art.appendChild(h); art.appendChild(p); art.appendChild(meta);
+    if (i < 40) {
+      var img = document.createElement('img');
+      img.src = '/res/heavy/img-' + i + '.gif'; img.alt = ''; img.loading = 'eager';
+      art.insertBefore(img, h);
+    }
+    frag.appendChild(art);
+  }
+  main.appendChild(frag);
+  var head = document.head;
+  for (var j = 0; j < 8; j++) {
+    var sc = document.createElement('script');
+    sc.src = host('cdn.example.net') + '/lib/heavy-vendor-' + j + '.js'; sc.async = false;
+    head.appendChild(sc);
+  }
+  var css = document.createElement('link');
+  css.rel = 'stylesheet'; css.href = host('cdn.example.net') + '/css/heavy.css';
+  head.appendChild(css);
+  // Typical ad/tracker requests of a news site.
+  var trackers = [
+    ['script', host('securepubads.g.doubleclick.net') + '/tag/js/gpt.js'],
+    ['script', host('www.googletagmanager.com') + '/gtm.js?id=GTM-E2E'],
+    ['script', host('www.google-analytics.com') + '/analytics.js'],
+    ['script', host('connect.facebook.net') + '/en_US/fbevents.js'],
+    ['img', host('ad.doubleclick.net') + '/ddm/trackimp/heavy.gif'],
+    ['img', host('www.facebook.com') + '/tr?id=1&ev=PageView'],
+    ['script', host('pagead2.googlesyndication.com') + '/pagead/js/adsbygoogle.js'],
+    ['img', host('pixel.adsafeprotected.com') + '/services/pub?anId=1']
+  ];
+  trackers.forEach(function (t) {
+    var el = document.createElement(t[0] === 'img' ? 'img' : 'script');
+    el.src = t[1];
+    (t[0] === 'img' ? document.body : head).appendChild(el);
+  });
+  var side = document.getElementById('sidebar');
+  for (var m = 0; m < 6; m++) {
+    var box = document.createElement('div');
+    box.className = m % 2 ? 'ad-banner sidebar-box' : 'sidebar-box widget-' + m;
+    box.id = m % 3 ? 'widget-' + m : 'ad-slot-' + m;
+    box.textContent = 'Box ' + m;
+    side.appendChild(box);
+  }
+})();
+</script>
+</body>
+</html>

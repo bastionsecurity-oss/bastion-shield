@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "list": "bastion",
+      "url": "filters/bastion.txt",
+      "sha256": "a3d33946b12530c95c83d7a1e4418e82f0f98799dcd4dc2f106f01a55b768a10",
+      "bytes": 1195,
+      "fetchedAt": "2026-10-18T11:20:34.571Z"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters.txt",
+      "sha256": "50e8f75fee3e863417ff1dea445a542053962fda37591dda1af082d3f11895c9",
+      "bytes": 471642,
+      "lastModified": "Fri, 16 Oct 2026 23:52:01 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.308Z"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-general.txt",
+      "sha256": "7e0e073e923be225c23b99edf010ec75743b702af70ce61e67697cbeef9d0409",
+      "bytes": 701337,
+      "lastModified": "Sun, 18 Oct 2026 16:29:01 GMT",
+      "fetchedAt": "2026-10-18T16:42:21.166Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2020.txt",
+      "sha256": "b6235860c4bc90386d9b7d37e0c95961a113eec6965c71c0a6b71b256d9baf4c",
+      "bytes": 131800,
+      "lastModified": "Wed, 14 Oct 2026 14:41:20 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.342Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2021.txt",
+      "sha256": "505675892dc3c30c57a8eb15f562588936d36a757b5a8a3e765f991525a956fc",
+      "bytes": 166950,
+      "lastModified": "Mon, 05 Oct 2026 10:20:29 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.354Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2022.txt",
+      "sha256": "b48bad82073555a805b7b232c8768c3d4d6d3a66f2dc95187b9e9eab29096e43",
+      "bytes": 157044,
+      "lastModified": "Wed, 14 Oct 2026 14:34:16 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.363Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2023.txt",
+      "sha256": "34731dc2d62f33006339aed8ba5546d2a11028c70f2aa7b33b94da5b31503be2",
+      "bytes": 214122,
+      "lastModified": "Sat, 17 Oct 2026 16:59:38 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.372Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2024.txt",
+      "sha256": "838590b672afc0869ade2b99e020498e0c68e0362e54962980a29a3824b501f4",
+      "bytes": 231314,
+      "lastModified": "Fri, 09 Oct 2026 13:41:37 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.382Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2025.txt",
+      "sha256": "3cc99e8a012d68c5e8846fda3604ccebe2ac7a159340a2c6f27a5f5846cf852f",
+      "bytes": 168921,
+      "lastModified": "Thu, 15 Oct 2026 06:14:24 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.395Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-2026.txt",
+      "sha256": "79c7a9efbaa83b58103405f9d7ec4a3233c00d79e09d8257a4a3dc86bce9a1db",
+      "bytes": 99252,
+      "lastModified": "Sun, 18 Oct 2026 16:27:29 +0000",
+      "fetchedAt": "2026-10-18T16:42:21.251Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/ubo-link-shorteners.txt",
+      "sha256": "d677d0ff0dd478fd4f393fed8973b0099c9e0fadb7f2eba2c41a33aacb85b8ab",
+      "bytes": 120265,
+      "lastModified": "Sat, 17 Oct 2026 19:45:45 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.417Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/filters-mobile.txt",
+      "sha256": "e32cef40f31e9ab1d5e18823e310735ab0f494cd5f131e86fdcbe761186988f6",
+      "bytes": 20923,
+      "lastModified": "Wed, 16 Sep 2026 11:18:11 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.425Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/filters.txt"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/quick-fixes.txt",
+      "sha256": "e0a6ae045ba83262468256f234be28b3ea40c8af6124482778c3736b8437cb81",
+      "bytes": 88931,
+      "lastModified": "Sun, 18 Oct 2026 11:14:28 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.436Z"
+    },
+    {
+      "list": "ublock",
+      "url": "https://ublockorigin.github.io/uAssets/filters/unbreak.txt",
+      "sha256": "eecf6d07b34896ad49561f939c9de476218383ab97f754ce9e0ad06d370df313",
+      "bytes": 281005,
+      "lastModified": "Sun, 18 Oct 2026 07:31:20 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.445Z"
+    },
+    {
+      "list": "easylist",
+      "url": "https://easylist.to/easylist/easylist.txt",
+      "sha256": "5adc3916f84e909ff66f15488b2b20d13602af81ef12858a9ac4921f187e1be7",
+      "bytes": 2192308,
+      "version": "202610181630",
+      "lastModified": "18 Oct 2026 16:30 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.174Z"
+    },
+    {
+      "list": "brave",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-unbreak.txt",
+      "sha256": "57c08f868a2a886105b2047580fc06ee79f3ded076aca66968da885956812eb0",
+      "bytes": 121930,
+      "fetchedAt": "2026-10-18T11:41:26.303Z"
+    },
+    {
+      "list": "brave",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt",
+      "sha256": "f2fa61e972136c51b052cf1e832480cbba22adf03c1210eaff5a654b8e0935a1",
+      "bytes": 10831,
+      "fetchedAt": "2026-10-18T11:41:26.315Z"
+    },
+    {
+      "list": "brave",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-social.txt",
+      "sha256": "b4a5abdf0388d3cf118096f370cab84d7578221733d27dd04e4bd52dad41a722",
+      "bytes": 1272,
+      "fetchedAt": "2026-10-18T11:41:26.324Z"
+    },
+    {
+      "list": "brave",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-sugarcoat.txt",
+      "sha256": "1fa064de6651638c5235f3f4a57a206869daea92d5ac6f41e787342e17f07127",
+      "bytes": 385,
+      "fetchedAt": "2026-10-18T11:41:26.483Z"
+    },
+    {
+      "list": "brave-firstparty",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-firstparty.txt",
+      "sha256": "5c4b55471c06d7c197c708944ee8d1277905019a93f469a03c9fb710b8bf67cb",
+      "bytes": 220668,
+      "fetchedAt": "2026-10-18T16:42:21.268Z"
+    },
+    {
+      "list": "brave-firstparty",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-firstparty-regional.txt",
+      "sha256": "c1a06034820b39de381746d9c4ee8251a29f56dbd9c609d404236f4b93d04e39",
+      "bytes": 51376,
+      "fetchedAt": "2026-10-18T11:41:26.572Z"
+    },
+    {
+      "list": "easyprivacy",
+      "url": "https://easylist.to/easylist/easyprivacy.txt",
+      "sha256": "e5ddac72b4f5b6d1b98c583a0ae686b4e7558bc43f36cb9b1894b263bf018057",
+      "bytes": 1509886,
+      "version": "202610181630",
+      "lastModified": "18 Oct 2026 16:30 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.160Z"
+    },
+    {
+      "list": "ublock-privacy",
+      "url": "https://ublockorigin.github.io/uAssets/filters/privacy.txt",
+      "sha256": "ac99e89cf39fa99cdd869f21575815efba99e9ceedbe36feea32b87b0e32ca76",
+      "bytes": 183869,
+      "lastModified": "Sun, 18 Oct 2026 10:08:44 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.305Z"
+    },
+    {
+      "list": "ublock-privacy",
+      "url": "https://ublockorigin.github.io/uAssets/filters/resource-abuse.txt",
+      "sha256": "e77991b337dad1ef43ea181b36504fc9ff9bfa549eb2b9a9aec47181339e8584",
+      "bytes": 9243,
+      "lastModified": "Fri, 02 Oct 2026 05:29:20 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.317Z",
+      "includedFrom": "https://ublockorigin.github.io/uAssets/filters/privacy.txt"
+    },
+    {
+      "list": "peter-lowe",
+      "url": "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
+      "sha256": "bdb69f5f08027b3242d474df24e224870e80836d2e9e530ca5950de5ecd1ff9b",
+      "bytes": 95518,
+      "lastModified": "Fri, 16 Oct 2026 10:45:23 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.621Z"
+    },
+    {
+      "list": "ublock-badware",
+      "url": "https://ublockorigin.github.io/uAssets/filters/badware.txt",
+      "sha256": "cc826618b826f97b000f0fab2819416b1abfacb52e0adbe4435fb010d89245b6",
+      "bytes": 261737,
+      "lastModified": "Sun, 18 Oct 2026 16:15:59 +0000",
+      "fetchedAt": "2026-10-18T16:42:21.176Z"
+    },
+    {
+      "list": "urlhaus",
+      "url": "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-agh-online.txt",
+      "sha256": "1bf1593acbba82477e70659b7b04fb7b4133f0535b577e5de81feafc0a006646",
+      "bytes": 35992,
+      "lastModified": "2026-10-18T12:10:00Z",
+      "fetchedAt": "2026-10-18T13:48:05.222Z"
+    },
+    {
+      "list": "cookies",
+      "url": "https://secure.fanboy.co.nz/fanboy-cookiemonster_ubo.txt",
+      "sha256": "9b1643442405a2fa8b75cd4ea54ebf8966045ddc95585f92272073f3ab4a13e3",
+      "bytes": 1213446,
+      "lastModified": "2026-10-18 15:25 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.232Z"
+    },
+    {
+      "list": "cookies",
+      "url": "https://secure.fanboy.co.nz/easylist_cookie_specific_uBO.txt",
+      "sha256": "a0972743fec8efc4db554fb900656e9df7d48c61a9319b5dcdc555370776d81e",
+      "bytes": 313821,
+      "lastModified": "Sun, 18 Oct 2026 16:25:08 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.409Z",
+      "includedFrom": "https://secure.fanboy.co.nz/fanboy-cookiemonster_ubo.txt"
+    },
+    {
+      "list": "cookies",
+      "url": "https://ublockorigin.github.io/uAssets/filters/annoyances-cookies.txt",
+      "sha256": "315d1b1e4da6e740859735f91b839451560e018066f5e61fd7695790daef8537",
+      "bytes": 377216,
+      "lastModified": "Sat, 17 Oct 2026 01:36:37 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.420Z"
+    },
+    {
+      "list": "cookies",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-cookie-specific.txt",
+      "sha256": "1b045ab579824e3ad09b381d004295fc47a50e5219aab76835b328a1102f0d4f",
+      "bytes": 24422,
+      "fetchedAt": "2026-10-18T11:41:26.594Z"
+    },
+    {
+      "list": "app-promos",
+      "url": "https://secure.fanboy.co.nz/fanboy-mobile-notifications.txt",
+      "sha256": "e6bd8d3d3b7119aca2d44156505e5e0ac25ffdf8d53c53d9f7fdd93ea7425c3d",
+      "bytes": 50608,
+      "version": "202610161350",
+      "lastModified": "2026-10-16 13:50 UTC",
+      "fetchedAt": "2026-10-18T11:41:26.458Z"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt",
+      "sha256": "f4faa197e409fe1c14ca859e6c9972c5b68bee14a8ce50e49cacc5e475514a0b",
+      "bytes": 2173697,
+      "version": "202610181525",
+      "lastModified": "2026-10-18 15:25 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.345Z"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://secure.fanboy.co.nz/fanboy_annoyance_specific_uBO.txt",
+      "sha256": "c6d793a5af9a7ea681f684e7b1579a36671aba9e4946eaf30256fe1b1eeba3e0",
+      "bytes": 22662,
+      "lastModified": "Sun, 18 Oct 2026 15:50:10 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.510Z",
+      "includedFrom": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://secure.fanboy.co.nz/fanboy_social_specific_uBO.txt",
+      "sha256": "173b21d7961e99c42a889e6f363b83c8c992e488742f6d507a6ccdb4698a9912",
+      "bytes": 1397,
+      "lastModified": "Sun, 18 Oct 2026 16:00:08 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.525Z",
+      "includedFrom": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://secure.fanboy.co.nz/easylist_cookie_specific_uBO.txt",
+      "sha256": "a0972743fec8efc4db554fb900656e9df7d48c61a9319b5dcdc555370776d81e",
+      "bytes": 313821,
+      "lastModified": "Sun, 18 Oct 2026 16:25:08 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.409Z",
+      "includedFrom": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://secure.fanboy.co.nz/fanboy_newsletter_specific_uBO.txt",
+      "sha256": "75926fdb900bbc42c99e5cf4a163e5ef32cddb99e9f47839e244d592c8dd1ff4",
+      "bytes": 44434,
+      "lastModified": "Sun, 18 Oct 2026 15:50:09 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.542Z",
+      "includedFrom": "https://secure.fanboy.co.nz/fanboy-annoyance_ubo.txt"
+    },
+    {
+      "list": "annoyances",
+      "url": "https://ublockorigin.github.io/uAssets/filters/annoyances-others.txt",
+      "sha256": "92a1ed695ce991555b4f97777d2d66007fcbebace5e99fee486ce8cfa56da1ee",
+      "bytes": 419604,
+      "lastModified": "Sun, 18 Oct 2026 12:16:27 +0000",
+      "fetchedAt": "2026-10-18T12:19:39.618Z"
+    },
+    {
+      "list": "social",
+      "url": "https://easylist.to/easylist/fanboy-social.txt",
+      "sha256": "7c4c83d36bd895cad77c7013488a0aec40934a1fe67d8785827523835c2e97a5",
+      "bytes": 405096,
+      "version": "202610181630",
+      "lastModified": "18 Oct 2026 16:30 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.417Z"
+    },
+    {
+      "list": "url-tracking",
+      "url": "https://ublockorigin.github.io/uAssets/filters/privacy-removeparam.txt",
+      "sha256": "7c16d5cdbaa3aa63c560f118f50c2c92e1af1852c060264de39cf27a1a3fee69",
+      "bytes": 180540,
+      "lastModified": "Fri, 16 Oct 2026 15:54:08 +0000",
+      "fetchedAt": "2026-10-18T11:41:26.612Z"
+    },
+    {
+      "list": "regional-de",
+      "url": "https://easylist.to/easylistgermany/easylistgermany.txt",
+      "sha256": "52c015d79e799e5fb44f9806380fa7327c7b798f994adf675120e2c2ece7b249",
+      "bytes": 279805,
+      "version": "202610142112",
+      "lastModified": "14 Oct 2026 21:12 UTC",
+      "fetchedAt": "2026-10-18T11:41:26.567Z"
+    },
+    {
+      "list": "regional-fr",
+      "url": "https://filters.adtidy.org/extension/ublock/filters/16.txt",
+      "sha256": "85d16e0ee485a02801297af234e65d42cf117f796d5c55f14640129316d8e1aa",
+      "bytes": 601045,
+      "version": "2.0.58.1",
+      "lastModified": "Sun, 18 Oct 2026 09:51:21 GMT",
+      "fetchedAt": "2026-10-18T11:41:26.681Z"
+    },
+    {
+      "list": "regional-it",
+      "url": "https://easylist-downloads.adblockplus.org/easylistitaly.txt",
+      "sha256": "c6f544a4df66bce619edab973ffab6c9e9cf7425fc626ac0332f93714375f7d4",
+      "bytes": 190501,
+      "version": "202610181632",
+      "lastModified": "18 Oct 2026 16:32 UTC",
+      "fetchedAt": "2026-10-18T16:42:21.511Z"
+    }
+  ]
+}
