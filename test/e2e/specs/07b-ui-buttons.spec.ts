@@ -60,7 +60,7 @@ test.describe('ui buttons', () => {
     await popup.emulateMedia({ reducedMotion: 'reduce' });
     await popup.goto(`${ext.origin}/ui/popup.html?tabId=${tabId}`);
     await expect(popup.locator('#pp-host')).toContainText(HOSTS.C);
-    // German by default, whatever the browser language; every label is filled in.
+    // German as set above, whatever the browser language; every label is filled in.
     await expect(popup.locator('#pp-toggle-state')).toHaveText('Schutz ein');
     await expect(popup.locator('#pp-cta-slot a[data-cta="incident"]')).toHaveText('Cyber-Vorfall?');
     for (const sel of ['.pp-stat__label', '.pp-count__label']) {

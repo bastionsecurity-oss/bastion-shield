@@ -227,14 +227,15 @@ test('incident CTA: on by default, user switch, policy showIncidentCta locks it'
   assert.deepEqual(locked.ignored, ['ui.incidentCta']);
 });
 
-test('ui language: German by default, only known values, lockable', () => {
-  assert.equal(defaultSettings().ui.language, 'de');
-  assert.equal(normalizeSettings({ ui: { language: 'es' } }).ui.language, 'de');
+test('ui language: browser language by default, only known values, lockable', () => {
+  assert.equal(defaultSettings().ui.language, 'auto');
+  assert.equal(normalizeSettings({ ui: { language: 'es' } }).ui.language, 'auto');
+  assert.equal(normalizeSettings({ ui: { language: 'de' } }).ui.language, 'de');
   assert.equal(normalizeSettings({ ui: { language: 'auto' } }).ui.language, 'auto');
   const en = applySettingsPatch(defaultSettings(), { ui: { language: 'en' } }, new Set());
   assert.equal(en.settings.ui.language, 'en');
   const bad = applySettingsPatch(defaultSettings(), { ui: { language: 'klingon' } }, new Set());
-  assert.equal(bad.settings.ui.language, 'de');
+  assert.equal(bad.settings.ui.language, 'auto');
   assert.deepEqual(bad.ignored, ['ui.language']);
   assert.ok(SETTING_PATHS.includes('ui.language'));
 });

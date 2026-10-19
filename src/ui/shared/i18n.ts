@@ -2,7 +2,7 @@
 // src/_locales/<lang>/messages.json; markup carries data-i18n keys and
 // translate() fills them in, so no visible string is hard-coded in the UI.
 // The UI language is the user's choice (Einstellungen › Sprache, default
-// German); initI18n() loads that bundle, chrome.i18n is the fallback.
+// the browser's); initI18n() loads that bundle, chrome.i18n is the fallback.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -70,8 +70,8 @@ export let uiLang: UiLang = (() => {
 /** BCP 47 tag for number/date formatting: Swiss conventions in every language (100’000). */
 export let formatLocale = `${uiLang}-CH`;
 
-/** Default when the user never chose: German (product of a Swiss company, German-first copy). */
-export const DEFAULT_UI_LANGUAGE: UiLanguagePref = 'de';
+/** Default when the user never chose: the browser's language (English when it is not de/fr/it). */
+export const DEFAULT_UI_LANGUAGE: UiLanguagePref = 'auto';
 
 /** Resolve a stored preference to a concrete language. */
 export function resolveLanguage(pref: unknown, browser: UiLang = browserLang()): UiLang {

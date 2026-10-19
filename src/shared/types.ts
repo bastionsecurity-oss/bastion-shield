@@ -263,7 +263,7 @@ export interface Settings {
     activityLog: boolean;
     /** «Cyber-Vorfall?» button (link to bastionsecurity.ch) in popup and navigation. Default true. */
     incidentCta: boolean;
-    /** UI language: 'de' | 'en' | 'fr' | 'it', or 'auto' (browser language). Default 'de'. */
+    /** UI language: 'de' | 'en' | 'fr' | 'it', or 'auto' (browser language; English when it is none of these). Default 'auto'. */
     language: 'auto' | 'de' | 'en' | 'fr' | 'it';
   };
   history: {

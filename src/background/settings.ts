@@ -49,7 +49,7 @@ export function defaultSettings(): Settings {
       disablePrivacySandboxAds: true,
       clipboardGuard: true,
     },
-    ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
+    ui: { badge: true, activityLog: true, incidentCta: true, language: 'auto' },
     history: { enabled: true, retentionDays: 30 },
     nerd: { enabled: false, contextMenu: true, filterHistory: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };

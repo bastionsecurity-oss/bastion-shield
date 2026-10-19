@@ -65,9 +65,10 @@ test('i18n: chrome.i18n message format with placeholders', () => {
   assert.equal(formatMessage({ message: '$UNKNOWN$ bleibt' }), '$UNKNOWN$ bleibt');
 });
 
-test('i18n: language preference, German by default', () => {
-  assert.equal(resolveLanguage(undefined, 'en'), 'de');
-  assert.equal(resolveLanguage('nonsense', 'fr'), 'de');
+test('i18n: language preference, browser language by default', () => {
+  assert.equal(resolveLanguage(undefined, 'en'), 'en');
+  assert.equal(resolveLanguage('nonsense', 'fr'), 'fr');
+  assert.equal(resolveLanguage('de', 'en'), 'de');
   assert.equal(resolveLanguage('en', 'de'), 'en');
   assert.equal(resolveLanguage('it', 'en'), 'it');
   assert.equal(resolveLanguage('auto', 'fr'), 'fr');
