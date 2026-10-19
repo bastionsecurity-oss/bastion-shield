@@ -756,17 +756,41 @@
       }
     }
   },
-  "nerdGuardClipBody": {
-    "message": "This page tried to put a command on your clipboard. Bastion Shield replaced it with a harmless note. Never paste commands from websites into Run, Terminal or PowerShell."
+  "noticeClose": {
+    "message": "Close"
   },
-  "nerdGuardClipTitle": {
-    "message": "Suspicious command removed from the clipboard (ClickFix)"
+  "noticeClipTitle": {
+    "message": "Bastion Shield blocked a possible ClickFix attack"
   },
-  "nerdGuardLookalikeHint": {
-    "message": "Check the address before you sign in or pay."
+  "noticeClipBody": {
+    "message": "This page tried to put a command on your clipboard. Never paste commands from websites into Run, Terminal or PowerShell."
   },
-  "nerdGuardLookalikeTitle": {
-    "message": "This looks like $P1$ but is $P2$",
+  "noticeClipCommandLabel": {
+    "message": "Blocked command"
+  },
+  "noticeClipCopyAnyway": {
+    "message": "Copy anyway"
+  },
+  "noticeClipCopied": {
+    "message": "Copied. Check the command before you paste it."
+  },
+  "noticeClipCopyFailed": {
+    "message": "Could not copy. Select the command to copy it yourself."
+  },
+  "noticeClipHighRisk": {
+    "message": "Clear attack pattern – copying is not offered. You can select the command if you need to inspect it."
+  },
+  "noticeSourceUbo": {
+    "message": "Detected by: uBlock filters"
+  },
+  "noticeSourceBastion": {
+    "message": "Detected by: Bastion ClickFix protection"
+  },
+  "noticeLookalikeTitle": {
+    "message": "Warning: possible phishing"
+  },
+  "noticeLookalikeBody": {
+    "message": "This address looks like $P1$, but it is not: $P2$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -776,14 +800,26 @@
       }
     }
   },
-  "nerdGuardReasonCombo": {
-    "message": "The address combines the brand name with other words (combosquatting)."
-  },
-  "nerdGuardReasonHomoglyph": {
+  "noticeLookalikeReasonHomoglyph": {
     "message": "The address uses look-alike characters (homoglyphs)."
   },
-  "nerdGuardReasonTypo": {
+  "noticeLookalikeReasonTypo": {
     "message": "The address differs by a typing error (typosquatting)."
+  },
+  "noticeLookalikeReasonCombo": {
+    "message": "The address combines the brand name with other words (combosquatting)."
+  },
+  "noticeLookalikeHint": {
+    "message": "Check the address before you sign in or pay."
+  },
+  "noticeLookalikeLeave": {
+    "message": "Leave site"
+  },
+  "noticeLookalikeProceed": {
+    "message": "Continue anyway"
+  },
+  "noticeSourceLookalike": {
+    "message": "Detected by: Bastion lookalike protection"
   },
   "ovByCategory": {
     "message": "By category"

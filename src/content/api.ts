@@ -1,11 +1,14 @@
 // Bastion Shield — globals shared by the isolated-world content scripts.
-// cosmetic.js (registered) and procedural.js (injected on demand by the SW)
-// run in the same isolated world of a frame, so they meet on `self`. The page
-// cannot see isolated-world globals.
+// cosmetic.js (registered), nerd-relay.js (registered in nerd mode) and
+// procedural.js (injected on demand by the SW) run in the same isolated
+// world of a frame, so they meet on `self`. The page cannot see
+// isolated-world globals.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ProceduralFilter } from '../shared/types.ts';
+import type { NoticeApi } from './notice.ts';
+import type { NoticeSource } from './notice-model.ts';
 
 /** Exposed by content/procedural.js. */
 export interface ProceduralApi {
@@ -24,6 +27,10 @@ export interface IsolatedGlobals {
   bastionProceduralPending?: ProceduralFilter[];
   /** Set by cosmetic.js to make a duplicate injection a no-op. */
   bastionCosmeticLoaded?: boolean;
+  /** Blocker notices, exposed by cosmetic.js (content/notice.ts). nerd-relay.js shows its clipboard notices through it. */
+  bastionNotice?: NoticeApi;
+  /** Clipboard notices that arrived before cosmetic.js exposed bastionNotice (it drains them on load). */
+  bastionNoticePending?: { text: string; source: NoticeSource }[];
 }
 
 export function isolatedGlobals(): IsolatedGlobals {

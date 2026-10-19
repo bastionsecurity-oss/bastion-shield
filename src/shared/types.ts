@@ -573,6 +573,25 @@ export interface NerdTabState {
   bisect: BisectView | null;
 }
 
+/**
+ * Blocker notices (content/notice.ts). A subframe's cosmetic.js sends a
+ * blocked clipboard text to the SW (`notice:clip`), which forwards it to the
+ * tab's top frame as `notice:show` (chrome.tabs.sendMessage, frameId 0):
+ * notices render in the top frame only.
+ */
+export interface MsgNoticeClip {
+  type: 'notice:clip';
+  text: string;
+  source: 'ubo' | 'bastion';
+}
+
+/** SW -> top frame (chrome.tabs.sendMessage); see MsgNoticeClip. */
+export interface MsgNoticeShow {
+  type: 'notice:show';
+  text: string;
+  source: 'ubo' | 'bastion';
+}
+
 /** Content relay (ISOLATED) -> SW. */
 export type MsgNerdSignal =
   | { type: 'nerd:signal'; kind: 'fp'; counts: Partial<Record<FpVector, number>> }
@@ -670,6 +689,7 @@ export type LivePortMessage =
  * - backup:export → BackupFile
  * - nerd:signal → { ok: true }; nerd:bisect → { bisect: BisectView | null } (action 'keep' turns the culprit into a custom exception filter),
  *   'hosts' → { hosts: NerdBlockedHost[] }, 'allow' → { added: string[] }
+ * - notice:clip → { ok: true } (forwarded to the tab's top frame as MsgNoticeShow)
  *
  * EffectiveConfig.locked paths: "defaultMode", "privacy.<key>", "ui.badge", "ui.activityLog",
  * "history.enabled", "history.retentionDays", "nerd.<key>", "lists.<id>", plus the pseudo-paths "lists"
@@ -698,7 +718,8 @@ export type Message =
   | MsgBackupExport
   | MsgBackupImport
   | MsgNerdSignal
-  | MsgNerdBisect;
+  | MsgNerdBisect
+  | MsgNoticeClip;
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 

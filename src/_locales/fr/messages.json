@@ -756,17 +756,41 @@
       }
     }
   },
-  "nerdGuardClipBody": {
-    "message": "Cette page a tenté de placer une commande dans votre presse-papiers. Bastion Shield l’a remplacée par une note inoffensive. Ne collez jamais de commandes provenant de sites web dans « Exécuter », le Terminal ou PowerShell."
+  "noticeClose": {
+    "message": "Fermer"
   },
-  "nerdGuardClipTitle": {
-    "message": "Commande suspecte retirée du presse-papiers (ClickFix)"
+  "noticeClipTitle": {
+    "message": "Bastion Shield a bloqué une possible attaque ClickFix"
   },
-  "nerdGuardLookalikeHint": {
-    "message": "Vérifiez l’adresse avant de vous connecter ou de payer."
+  "noticeClipBody": {
+    "message": "Cette page a tenté de placer une commande dans votre presse-papiers. Ne collez jamais de commandes provenant de sites web dans « Exécuter », le Terminal ou PowerShell."
   },
-  "nerdGuardLookalikeTitle": {
-    "message": "Ressemble à $P1$, mais c’est $P2$",
+  "noticeClipCommandLabel": {
+    "message": "Commande bloquée"
+  },
+  "noticeClipCopyAnyway": {
+    "message": "Copier quand même"
+  },
+  "noticeClipCopied": {
+    "message": "Copié. Vérifiez la commande avant de la coller."
+  },
+  "noticeClipCopyFailed": {
+    "message": "Copie impossible. Sélectionnez la commande pour la copier vous-même."
+  },
+  "noticeClipHighRisk": {
+    "message": "Schéma d’attaque évident – la copie n’est pas proposée. Vous pouvez sélectionner la commande si vous devez l’examiner."
+  },
+  "noticeSourceUbo": {
+    "message": "Détecté par : filtres uBlock"
+  },
+  "noticeSourceBastion": {
+    "message": "Détecté par : protection ClickFix de Bastion"
+  },
+  "noticeLookalikeTitle": {
+    "message": "Attention : phishing possible"
+  },
+  "noticeLookalikeBody": {
+    "message": "Cette adresse ressemble à $P1$, mais ce n’est pas elle : $P2$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -776,14 +800,26 @@
       }
     }
   },
-  "nerdGuardReasonCombo": {
-    "message": "L’adresse associe le nom de marque à d’autres mots (combosquatting)."
-  },
-  "nerdGuardReasonHomoglyph": {
+  "noticeLookalikeReasonHomoglyph": {
     "message": "L’adresse contient des caractères qui se ressemblent (homoglyphes)."
   },
-  "nerdGuardReasonTypo": {
+  "noticeLookalikeReasonTypo": {
     "message": "L’adresse diffère par une faute de frappe (typosquatting)."
+  },
+  "noticeLookalikeReasonCombo": {
+    "message": "L’adresse associe le nom de marque à d’autres mots (combosquatting)."
+  },
+  "noticeLookalikeHint": {
+    "message": "Vérifiez l’adresse avant de vous connecter ou de payer."
+  },
+  "noticeLookalikeLeave": {
+    "message": "Quitter le site"
+  },
+  "noticeLookalikeProceed": {
+    "message": "Continuer quand même"
+  },
+  "noticeSourceLookalike": {
+    "message": "Détecté par : protection Bastion contre les domaines lookalike"
   },
   "ovByCategory": {
     "message": "Par catégorie"

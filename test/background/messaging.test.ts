@@ -281,3 +281,25 @@ test('blocked records survive a worker restart and are forgotten on the next com
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(fake.session.get(SESSION_RECORDS_KEY), {});
 });
+
+// --- notice:clip (content/notice.ts) ------------------------------------------
+
+test('notice:clip from a subframe is forwarded to the top frame; the top frame and junk are not', async () => {
+  const { ctx } = await context();
+  const sent: { tabId: number; msg: unknown; opts: unknown }[] = [];
+  const c = (globalThis as unknown as { chrome: { tabs: Record<string, unknown> } }).chrome;
+  c.tabs.sendMessage = async (tabId: number, msg: unknown, opts: unknown) => {
+    sent.push({ tabId, msg, opts });
+  };
+  const sub = { tab: { id: 7 }, frameId: 3 };
+  assert.deepEqual(await send(ctx, { type: 'notice:clip', text: 'blocked text', source: 'ubo' }, sub), { ok: true });
+  assert.deepEqual(sent, [{ tabId: 7, msg: { type: 'notice:show', text: 'blocked text', source: 'ubo' }, opts: { frameId: 0 } }]);
+  assert.deepEqual(await send(ctx, { type: 'notice:clip', text: 'x', source: 'bastion' }, { tab: { id: 7 }, frameId: 0 }), { ok: true });
+  assert.equal(sent.length, 1, 'the top frame renders its own notices');
+  for (const bad of [{ text: '', source: 'ubo' }, { text: 'x', source: 'page' }, { text: 1, source: 'ubo' }]) {
+    assert.ok('error' in ((await send(ctx, { type: 'notice:clip', ...bad }, sub)) as object), JSON.stringify(bad));
+  }
+  assert.ok('error' in ((await send(ctx, { type: 'notice:clip', text: 'x', source: 'ubo' }, { frameId: 2 })) as object), 'needs a tab');
+  await send(ctx, { type: 'notice:clip', text: 'y'.repeat(30_000), source: 'ubo' }, sub);
+  assert.equal((sent[1]!.msg as { text: string }).text.length, 20_000);
+});

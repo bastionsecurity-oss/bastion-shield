@@ -29,7 +29,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { CLIP_REPLACEMENT } from './clip-detect.ts';
+import { CLIP_REPLACEMENT } from './clip-replacement.ts';
 import { encodeClipCheck } from './nerd-channel.ts';
 import type { ClipSource } from './nerd-channel.ts';
 import { setupNerdMain } from './nerd-main.ts';

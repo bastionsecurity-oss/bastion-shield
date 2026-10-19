@@ -36,7 +36,11 @@ export interface BundleResult {
   failed: { src: string; error: string }[];
 }
 
-export async function bundle(outDir: string, opts: { release: boolean; log: Logger }): Promise<BundleResult> {
+/**
+ * `define`: extra esbuild defines (identifier -> JS expression), e.g. the
+ * blocker-notice event name for content/cosmetic.js (tools/lib/notice-transform.ts).
+ */
+export async function bundle(outDir: string, opts: { release: boolean; log: Logger; define?: Record<string, string> }): Promise<BundleResult> {
   const esbuild = await import('esbuild');
   const result: BundleResult = { built: [], missing: [], failed: [] };
   for (const ep of ENTRY_POINTS) {
@@ -63,7 +67,7 @@ export async function bundle(outDir: string, opts: { release: boolean; log: Logg
         logLevel: 'silent',
         metafile: true,
         tsconfig: join(ROOT, 'tsconfig.json'),
-        define: { 'process.env.NODE_ENV': JSON.stringify(opts.release ? 'production' : 'development') },
+        define: { 'process.env.NODE_ENV': JSON.stringify(opts.release ? 'production' : 'development'), ...(opts.define ?? {}) },
       });
       for (const w of r.warnings) opts.log.warn(`esbuild ${ep.src}: ${w.text}`);
       const outputs = Object.entries(r.metafile?.outputs ?? {}).filter(([p]) => !p.endsWith('.map'));

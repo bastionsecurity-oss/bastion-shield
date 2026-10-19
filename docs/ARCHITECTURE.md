@@ -260,6 +260,7 @@ What follows from the bands:
    - `:has()` with a plain CSS argument is compiled to native CSS, not procedural.
    - Compiler output conventions: nested filters (`has`, `not`, `if`, `if-not`) may start with a combinator relative to the subject (a leading `:scope` is stripped); `spath` uses uBO's spelling; `raw` is set on every filter and is the dedupe and exception key; text arguments are raw filter text (see the comments at `ProceduralTask`).
 6. **De-AMP** (top frame only, if `response.deAmp`): on `<html amp>` / `<html ⚡>` (not `⚡4ads`), wait for `link[rel~=canonical i]`, then `location.replace(canonical)`: http(s) only, never https→http, never to the page itself or the referrer, with a 10 s `sessionStorage` loop guard.
+7. **Blocker notices** (`content/notice.ts`, top frame only; details in NERD-MODE.md «Blocker notices»): one Bastion-styled card component in a closed shadow root (top layer, top-right, at most three stacked) for «ClickFix blocked» and the nerd mode lookalike warning. ClickFix notices come from uBO's `prevent-clipboard-write` scriptlet (routed by a build-time transform, §6) through a synchronous window event whose name is a per-build token, and from the nerd mode relay through `self.bastionNotice` (shared isolated world). Subframes forward theirs via the SW (`notice:clip` → `notice:show` to frame 0). «Copy anyway» is offered only when `detectDangerousCommand` (bundled into cosmetic.js) does not rate the text 'high'.
 
 ## 6. Scriptlets
 
@@ -280,6 +281,7 @@ What follows from the bands:
 - **Duplicate cookie clicks.** Within one list, `trusted-click-element` entries with the same selectors and extra-match keep a host only in the entry with the longest delay, so the host gets one `MutationObserver` instead of several (review PERF-4). The click can then happen up to that delay later. Never across lists: lists are toggled independently.
 - **Why.** Host-sharded registrations (168 registrations with up to 400 `*://*.host/*` patterns each, about 49,000 patterns with the generic-high excludes) cost 9–13 ms of parser-blocking main-thread time per frame, the same again after DOMContentLoaded, and about 20 MB per renderer (review findings PERF-1/PERF-2). In-script lookup is uBO Lite's model. The trade-off is that every frame compiles the data of every enabled list, mostly as comment text.
 - **Budget.** The default configuration must stay below 2,500 `matches` + `excludeMatches` patterns and below 30 registrations in total (`REGISTRATION_BUDGET` in `tools/build.ts`); the build fails otherwise (`--keep-going` only reports it). `build-report.json` (`contentScripts`) lists the registrations, the pattern counts and the bytes of scriptlet files that every frame loads per world.
+- **Notice transform.** `prevent-clipboard-write.js` is emitted through `tools/lib/notice-transform.ts`: its beige DOM alert is replaced by a synchronous `CustomEvent` (`ubo|<text>`) to cosmetic.js, which shows the Bastion notice; the blocking is unchanged and `vendor/` stays untouched. The event name is random per build and also compiled into cosmetic.js (esbuild define `__BASTION_NOTICE_EVENT__`). Missing anchors fail the build (and `test/tools/notice-transform.test.ts`).
 - **Trust.** `requiresTrust` scriptlets are compiled only from trusted sources (§11.2). Custom filters cannot add scriptlets (no runtime code generation in MV3 without the userScripts toggle); this is documented in the UI.
 
 ## 7. Messages
@@ -287,7 +289,7 @@ What follows from the bands:
 All messages are defined in `src/shared/types.ts` (`Message`). The SW handles them in `src/background/messaging.ts`, with sender checks in `src/background/sender.ts`:
 
 - Only senders with `sender.id === chrome.runtime.id` are answered.
-- `cosmetic:frame`, `cosmetic:tokens`, `cosmetic:procedural` must come from a content script in a tab.
+- `cosmetic:frame`, `cosmetic:tokens`, `cosmetic:procedural`, `nerd:signal`, `notice:clip` must come from a content script in a tab. `notice:clip` from a subframe is forwarded to the tab's frame 0 as `notice:show` (`chrome.tabs.sendMessage`); the top frame accepts `notice:show` only from the extension itself (no `sender.tab`).
 - `blocked:info`, `blocked:proceed` must come from the top frame of `pages/blocked.html` in a tab: `sender.url` parses to the extension scheme, its host is the static or the dynamic (`use_dynamic_url`) extension id, its path is `/pages/blocked.html`, `frameId === 0` and the tab id is ≥ 0. A web renderer cannot commit an extension URL, so a page or a compromised content-script context cannot lift a strict block.
 - UI messages must come from an extension page (`sender.url` starts with the extension origin).
 - Unknown types get `{error}`. Every request receives a JSON reply; every handler may answer `{error: string}` instead of its normal shape.
@@ -298,7 +300,7 @@ All messages are defined in `src/shared/types.ts` (`Message`). The SW handles th
 |---|---|
 | `cosmetic:frame` | `MsgCosmeticFrameResponse` |
 | `cosmetic:tokens` | `MsgCosmeticTokensResponse` |
-| `cosmetic:procedural`, `blocked:proceed`, `history:clear` | `{ok: true}` (`history:clear` also resets `Totals`) |
+| `cosmetic:procedural`, `blocked:proceed`, `history:clear`, `notice:clip` | `{ok: true}` (`history:clear` also resets `Totals`) |
 | `blocked:info` | `MsgBlockedInfoResponse` |
 | `popup:state` | `PopupState` |
 | `site:set` | `{ok: true, ignored: string[], siteSettings}`; locked fields are dropped and listed in `ignored` |
@@ -486,11 +488,11 @@ Only when `vendor/` is missing or on `--update`: fetch the pinned commits listed
 5. drops the regexes recorded in `.cache/regex-unsupported.json` (§11.4);
 6. validates every rule against a port of Chromium's `indexed_rule.cc` checks (`tools/lib/dnr.ts`), assigns dense ids and writes `dist/rulesets/net/*.json`, the transparency maps `dist/rulesets/filters/*.json` (up to 20 filters plus "+N more") and `bastion-params`;
 7. writes the cosmetic shards / generic / generic-high data (§5.1);
-8. writes the scriptlet core, data, merged and end files plus `scriptlets/index.json` (§6); every file is parse-checked with `vm.Script`, release builds minify the core and end files;
+8. writes the scriptlet core, data, merged and end files plus `scriptlets/index.json` (§6), with uBO's `prevent-clipboard-write` routed to the Bastion notice (`tools/lib/notice-transform.ts`, per-build event name); every file is parse-checked with `vm.Script`, release builds minify the core and end files;
 9. copies the used redirect resources to `dist/war/`;
 10. writes the seed files (16 × 16 fresh random words) and the six config files (§9);
 11. writes `meta.json` (`BuildMeta`, with vendor commits and lock data) and `manifest.json` (rule_resources in §4.1 order, web_accessible_resources, version), then `rulesets/integrity.json` (`tools/integrity.ts`: SHA-256 of every file under `rulesets/`, keyed by package path, for the Lab's self-check; not a signature);
-12. bundles TS with esbuild (`background.js` as ESM; content, main, ui and pages as IIFE; target chrome128);
+12. bundles TS with esbuild (`background.js` as ESM; content, main, ui and pages as IIFE; target chrome128), defining `__BASTION_NOTICE_EVENT__` as the scriptlet core's notice event name;
 13. copies `_locales`, icons, fonts, pages, `data/debounce.json`, `managed_schema.json` and licences;
 14. checks the content-script budget of the default configuration (§6) and prints a report (rule counts, budgets, unsupported reasons) that it also writes to `dist/build-report.json`.
 

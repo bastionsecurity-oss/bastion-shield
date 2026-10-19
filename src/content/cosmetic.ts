@@ -10,8 +10,14 @@
 //      injects on request (`cosmetic:procedural`),
 //   3. runs the generic id/class surveyor when the response allows it,
 //   4. redirects AMP documents to their canonical URL (top frame only),
-//   5. shows the nerd mode lookalike-domain warning bar when the response
-//      carries one (top frame only; content/nerd-ui.ts).
+//   5. shows the blocker notices (content/notice.ts, top frame only): the
+//      nerd mode lookalike-domain warning when the response carries one,
+//      and «ClickFix blocked» for clipboard writes that uBO's
+//      prevent-clipboard-write scriptlet (nerd mode on or off) or the nerd
+//      mode clipboard guard stopped. The scriptlet reports through a
+//      synchronous window event whose name is a per-build token compiled
+//      into both files (tools/lib/notice-transform.ts); subframes forward
+//      their notices to the top frame through the service worker.
 // The isolated world has its own JS built-ins, so page prototype tampering
 // cannot reach this script; only the shared DOM is untrusted.
 //
@@ -22,12 +28,27 @@ import type {
   MsgCosmeticFrameResponse,
   MsgCosmeticTokens,
   MsgCosmeticTokensResponse,
+  MsgNerdSignal,
+  MsgNoticeClip,
+  MsgNoticeShow,
   MsgProceduralInject,
   ProceduralFilter,
 } from '../shared/types.ts';
+import { clipSample } from '../main/clip-detect.ts';
 import { isolatedGlobals } from './api.ts';
-import { showLookalikeBanner } from './nerd-ui.ts';
+import { createNotices } from './notice.ts';
+import type { NoticeApi } from './notice.ts';
+import { NOTICE_SOURCES, parseUboDetail } from './notice-model.ts';
+import type { NoticeSource } from './notice-model.ts';
 import { deAmpTarget, frameContext, hasQueuedAncestor, isAmpHtml, SURVEY, surveyTokens, throttleDelay } from './tokens.ts';
+
+// Per-build event name of uBO's clipboard scriptlet -> notice channel, set
+// by the build (esbuild define; tools/lib/notice-transform.ts). Unset when
+// the file is not built by tools/build.ts (unit tests): no listener then.
+declare const __BASTION_NOTICE_EVENT__: string | undefined;
+const NOTICE_EVENT: string = typeof __BASTION_NOTICE_EVENT__ === 'string' ? __BASTION_NOTICE_EVENT__ : '';
+/** uBO-blocked attempts reported to the nerd counter per page load. */
+const MAX_CLIP_REPORTS = 50;
 
 /** Delay before the single retry of a failed message (SW waking up / restarting). */
 const RETRY_MS = 120;
@@ -422,6 +443,81 @@ function startDeAmp(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Blocker notices (content/notice.ts)
+// ---------------------------------------------------------------------------
+
+/** Fire-and-forget message to the SW. */
+function post(msg: MsgNerdSignal | MsgNoticeClip): void {
+  if (!runtimeAlive()) return;
+  try {
+    const p = chrome.runtime.sendMessage(msg) as Promise<unknown> | undefined;
+    if (p !== undefined && typeof p.then === 'function') p.then(undefined, () => undefined);
+  } catch {
+    dead = true;
+  }
+}
+
+/**
+ * Creates the notice API, hands it to nerd-relay.js (shared isolated world)
+ * and listens for uBO's clipboard scriptlet. Registered synchronously at
+ * document_start, before any page script and before the scriptlet traps
+ * (which uBO installs on the first mousemove).
+ */
+function startNotices(isTop: boolean): NoticeApi {
+  const g = isolatedGlobals();
+  const api = createNotices({
+    isTop,
+    forward: (text: string, source: NoticeSource) => post({ type: 'notice:clip', text, source }),
+  });
+  g.bastionNotice = api;
+  const pending = g.bastionNoticePending;
+  g.bastionNoticePending = undefined;
+  if (pending !== undefined) for (const n of pending) api.clip(n.text, n.source);
+
+  if (NOTICE_EVENT !== '') {
+    let reports = 0;
+    window.addEventListener(
+      NOTICE_EVENT,
+      (ev: Event) => {
+        let detail: unknown;
+        try {
+          detail = (ev as CustomEvent<unknown>).detail;
+          // Page listeners never see the blocked text.
+          ev.stopImmediatePropagation();
+        } catch {
+          return;
+        }
+        const text = parseUboDetail(detail);
+        if (text === null) return;
+        // Nerd mode clip counter (the SW ignores it while nerd mode is off).
+        if (reports < MAX_CLIP_REPORTS) {
+          reports++;
+          post({ type: 'nerd:signal', kind: 'clip', sample: clipSample(text) });
+        }
+        api.clip(text, 'ubo');
+      },
+      true,
+    );
+  }
+
+  if (isTop) {
+    // Notices of subframes, forwarded by the SW (MsgNoticeShow).
+    chrome.runtime.onMessage.addListener((msg: unknown, sender: chrome.runtime.MessageSender) => {
+      try {
+        if (sender.id !== chrome.runtime.id || sender.tab !== undefined) return;
+        const m = msg as Partial<MsgNoticeShow> | null;
+        if (m === null || typeof m !== 'object' || m.type !== 'notice:show') return;
+        if (typeof m.text !== 'string' || typeof m.source !== 'string' || !NOTICE_SOURCES.has(m.source)) return;
+        api.clip(m.text, m.source as NoticeSource);
+      } catch {
+        // ignore
+      }
+    });
+  }
+  return api;
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -436,6 +532,12 @@ function main(): void {
     isTop = window.top === window;
   } catch {
     isTop = false;
+  }
+  let notices: NoticeApi | null = null;
+  try {
+    notices = startNotices(isTop);
+  } catch {
+    notices = null;
   }
   let ctx: ReturnType<typeof frameContext>;
   try {
@@ -468,7 +570,7 @@ function main(): void {
       // ignore
     }
     try {
-      if (isTop && r.lookalike) showLookalikeBanner(r.lookalike);
+      if (isTop && r.lookalike && notices !== null) notices.lookalike(r.lookalike);
     } catch {
       // ignore
     }

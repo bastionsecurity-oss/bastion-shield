@@ -50,6 +50,7 @@ import type { ScriptletBundle, ScriptletIndex, ScriptletMerged, ScriptletRegistr
 import { isIpAddress } from '../src/shared/hash.ts';
 import { specializeTemplate, type LibFunction, type LibScriptlet, type ResourceSet } from './resources.ts';
 import { createLogger, writeJson, writeText, type Logger } from './lib/util.ts';
+import { CLIPBOARD_SCRIPTLET, noticeEventName, transformClipboardScriptlet } from './lib/notice-transform.ts';
 
 export interface ScriptletListInput {
   listId: string;
@@ -79,6 +80,13 @@ export interface EmitScriptletsOptions {
    * fresh random name per call (per build).
    */
   globalName?: string;
+  /**
+   * Event name of the blocker-notice channel (tools/lib/notice-transform.ts):
+   * uBO's prevent-clipboard-write dispatches it instead of drawing its own
+   * alert. Default: a fresh random name per call (per build). The build
+   * compiles the same name into content/cosmetic.js.
+   */
+  noticeEvent?: string;
 }
 
 export interface ScriptletFileInfo {
@@ -120,6 +128,8 @@ export interface EmitScriptletsResult {
   files: ScriptletFileInfo[];
   perList: Record<string, ScriptletListStats>;
   globalName: string;
+  /** The notice event name compiled into the scriptlet core. */
+  noticeEvent: string;
 }
 
 type World = 'MAIN' | 'ISOLATED';
@@ -623,6 +633,9 @@ export async function emitScriptlets(opts: EmitScriptletsOptions): Promise<EmitS
   const log = opts.log ?? createLogger('scriptlets');
   const { resources } = opts;
   const globalName = opts.globalName ?? `__bastionSl${randomBytes(12).toString('hex')}`;
+  const noticeEvent = opts.noticeEvent ?? noticeEventName();
+  // uBO's clipboard scriptlet reports to the Bastion notice instead of drawing its own alert (throws when the anchors moved).
+  const codeOf = (f: LibFunction): string => (f.key === CLIPBOARD_SCRIPTLET ? transformClipboardScriptlet(f.code, noticeEvent) : f.code);
   if (!/^[A-Za-z_$][\w$]{11,}$/.test(globalName)) throw new Error(`emitScriptlets: invalid globalName ${JSON.stringify(globalName)}`);
   const resolveLib = (name: string): LibScriptlet | undefined => {
     const direct = resources.scriptlets.get(name);
@@ -764,7 +777,7 @@ export async function emitScriptlets(opts: EmitScriptletsOptions): Promise<EmitS
       '(function bastionScriptletCore() {',
       '// Read by uBO helpers (safeSelf, prevent-xhr): no logger, no WAR secret in MV3.',
       'const scriptletGlobals = {};',
-      ...fns.filter((f) => isClassDecl(f.code)).map((f) => f.code),
+      ...fns.filter((f) => isClassDecl(f.code)).map(codeOf),
       `const NAME = ${JSON.stringify(globalName)};`,
       '// Taken before any page script can run.',
       'const toStr = Function.prototype.toString;',
@@ -772,12 +785,15 @@ export async function emitScriptlets(opts: EmitScriptletsOptions): Promise<EmitS
       'try { Object.defineProperty(self, NAME, { value: B, configurable: true }); } catch (e) {}',
       RUNTIME_RUN,
       '',
-      ...fns.filter((f) => !isClassDecl(f.code)).map((f) => f.code),
+      ...fns.filter((f) => !isClassDecl(f.code)).map(codeOf),
       ...templateCode,
       '})();',
       '',
     ].join('\n');
     const end = `self[${JSON.stringify(globalName)}]?.r();\n`;
+    if (libKeys.has(CLIPBOARD_SCRIPTLET) && (!core.includes(noticeEvent) || core.includes('background-color:beige'))) {
+      throw new Error(`emitScriptlets: ${CLIPBOARD_SCRIPTLET} in the ${world} core is not routed to the Bastion notice`);
+    }
     const corePath = CORE_FILE(world);
     const endPath = END_FILE(world);
     const coreCode = await finalizeCode(coreHeader(world, brave) + core, opts.minify === true, corePath);
@@ -833,5 +849,5 @@ export async function emitScriptlets(opts: EmitScriptletsOptions): Promise<EmitS
     `scriptlets: ${bundles.length} bundle(s), ${registrations.length} data files, ${merged.length} merged; core ${(byKind('core') / 1024).toFixed(0)} KB, ` +
       `data ${(byKind('data') / 1024).toFixed(0)} KB, ${Object.values(perList).reduce((a, s) => a + s.collapsedClicks, 0)} duplicate click instance(s) collapsed`,
   );
-  return { index, files, perList, globalName };
+  return { index, files, perList, globalName, noticeEvent };
 }

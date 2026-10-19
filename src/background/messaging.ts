@@ -15,6 +15,8 @@ import type {
   ListsState,
   ManagedPolicy,
   Message,
+  MsgNoticeClip,
+  MsgNoticeShow,
   PopupState,
   Settings,
   SitesMap,
@@ -62,6 +64,28 @@ function frameSender(sender: SenderInfo): FrameSender {
     origin: sender.origin,
     tabUrl: sender.tab?.url,
   };
+}
+
+/** Longest blocked text forwarded to the top frame (content/notice-model.ts MAX_NOTICE_TEXT). */
+const MAX_NOTICE_TEXT = 20_000;
+
+/**
+ * A subframe's blocker notice goes to the tab's top frame, where notices are
+ * rendered (content/notice.ts). The top frame shows its own notices directly.
+ */
+function forwardNotice(msg: MsgNoticeClip, sender: SenderInfo): { ok: true } | { error: string } {
+  const tabId = sender.tab?.id;
+  if (typeof tabId !== 'number' || tabId < 0) return { error: 'no tab' };
+  if (sender.frameId === 0) return { ok: true };
+  if (typeof msg.text !== 'string' || msg.text.trim() === '' || (msg.source !== 'ubo' && msg.source !== 'bastion')) return { error: 'invalid notice' };
+  const show: MsgNoticeShow = { type: 'notice:show', text: msg.text.slice(0, MAX_NOTICE_TEXT), source: msg.source };
+  try {
+    const p = chrome.tabs.sendMessage(tabId, show, { frameId: 0 }) as Promise<unknown> | undefined;
+    if (p !== undefined && typeof p.then === 'function') p.then(undefined, () => undefined);
+  } catch {
+    // tab gone or no listener (protection off in the top frame)
+  }
+  return { ok: true };
 }
 
 function version(): string {
@@ -406,6 +430,8 @@ export async function handleMessage(ctx: MessageContext, msg: Message, sender: S
       return ctx.nerd.onSignal(msg, sender.tab?.id ?? -1);
     case 'nerd:bisect':
       return ctx.nerd.bisect(msg);
+    case 'notice:clip':
+      return forwardNotice(msg, sender);
     default:
       return { error: `unknown message type: ${String((msg as { type?: unknown }).type)}` };
   }

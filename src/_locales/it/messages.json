@@ -756,17 +756,41 @@
       }
     }
   },
-  "nerdGuardClipBody": {
-    "message": "Questa pagina ha tentato di inserire un comando negli appunti. Bastion Shield lo ha sostituito con una nota innocua. Non incollare mai comandi provenienti da siti web in «Esegui», nel Terminale o in PowerShell."
+  "noticeClose": {
+    "message": "Chiudi"
   },
-  "nerdGuardClipTitle": {
-    "message": "Comando sospetto rimosso dagli appunti (ClickFix)"
+  "noticeClipTitle": {
+    "message": "Bastion Shield ha bloccato un possibile attacco ClickFix"
   },
-  "nerdGuardLookalikeHint": {
-    "message": "Controllare l’indirizzo prima di accedere o pagare."
+  "noticeClipBody": {
+    "message": "Questa pagina ha tentato di inserire un comando negli appunti. Non incollare mai comandi provenienti da siti web in «Esegui», nel Terminale o in PowerShell."
   },
-  "nerdGuardLookalikeTitle": {
-    "message": "Sembra $P1$, ma è $P2$",
+  "noticeClipCommandLabel": {
+    "message": "Comando bloccato"
+  },
+  "noticeClipCopyAnyway": {
+    "message": "Copia comunque"
+  },
+  "noticeClipCopied": {
+    "message": "Copiato. Controllare il comando prima di incollarlo."
+  },
+  "noticeClipCopyFailed": {
+    "message": "Impossibile copiare. Selezionare il comando per copiarlo manualmente."
+  },
+  "noticeClipHighRisk": {
+    "message": "Schema di attacco evidente – la copia non viene offerta. È possibile selezionare il comando se occorre esaminarlo."
+  },
+  "noticeSourceUbo": {
+    "message": "Rilevato da: filtri uBlock"
+  },
+  "noticeSourceBastion": {
+    "message": "Rilevato da: protezione ClickFix di Bastion"
+  },
+  "noticeLookalikeTitle": {
+    "message": "Attenzione: possibile phishing"
+  },
+  "noticeLookalikeBody": {
+    "message": "Questo indirizzo assomiglia a $P1$, ma non lo è: $P2$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -776,14 +800,26 @@
       }
     }
   },
-  "nerdGuardReasonCombo": {
-    "message": "L’indirizzo combina il nome del marchio con altre parole (combosquatting)."
-  },
-  "nerdGuardReasonHomoglyph": {
+  "noticeLookalikeReasonHomoglyph": {
     "message": "L’indirizzo contiene caratteri che si somigliano (omoglifi)."
   },
-  "nerdGuardReasonTypo": {
+  "noticeLookalikeReasonTypo": {
     "message": "L’indirizzo differisce per un errore di battitura (typosquatting)."
+  },
+  "noticeLookalikeReasonCombo": {
+    "message": "L’indirizzo combina il nome del marchio con altre parole (combosquatting)."
+  },
+  "noticeLookalikeHint": {
+    "message": "Controllare l’indirizzo prima di accedere o pagare."
+  },
+  "noticeLookalikeLeave": {
+    "message": "Lascia il sito"
+  },
+  "noticeLookalikeProceed": {
+    "message": "Continua comunque"
+  },
+  "noticeSourceLookalike": {
+    "message": "Rilevato da: protezione Bastion dai domini lookalike"
   },
   "ovByCategory": {
     "message": "Per categoria"

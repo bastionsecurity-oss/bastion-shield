@@ -9,11 +9,13 @@
 //     allow/deny rule (main/clip-detect.ts) with this world's pristine
 //     built-ins, cancels the event to block, then reports
 //     {type:'nerd:signal', kind:'clip', sample} to the service worker and
-//     shows a toast (content/nerd-ui.ts);
+//     shows the Bastion notice «ClickFix blocked» through cosmetic.js
+//     (self.bastionNotice in the shared isolated world, content/notice.ts;
+//     parked in self.bastionNoticePending until cosmetic.js has loaded);
 //   * forwards fingerprinting counts as {kind:'fp', counts}, coalesced to at
 //     most one message per FP_FORWARD_MS.
 // The page can forge channel events if it knows the extension id: that only
-// adds to the counters (bounded by the service worker) or shows the toast.
+// adds to the counters (bounded by the service worker) or shows a notice.
 // The relay stops the event's propagation so page listeners never see the
 // clipboard text or the counts.
 //
@@ -22,11 +24,13 @@
 import type { FpVector, MsgNerdSignal } from '../shared/types.ts';
 import { clipSample, containsCollapsed, decideClip, detectDangerousCommand } from '../main/clip-detect.ts';
 import { nerdEventName, parseNerdDetail } from '../main/nerd-channel.ts';
-import { showClipToast } from './nerd-ui.ts';
+import { isolatedGlobals } from './api.ts';
 
 const FP_FORWARD_MS = 1000;
 /** Clipboard reports per page load (forged events cannot flood the service worker). */
 const MAX_CLIP_REPORTS = 50;
+/** Notices parked for cosmetic.js before it has loaded. */
+const MAX_PENDING_NOTICES = 10;
 /** Form fields inspected by the visible-text check. */
 const MAX_FIELDS = 500;
 
@@ -105,6 +109,17 @@ export function visibleOnPage(text: string): boolean {
   return false;
 }
 
+/** «ClickFix blocked» notice (source 'bastion'), shown by cosmetic.js. */
+function showNotice(text: string): void {
+  const g = isolatedGlobals();
+  if (g.bastionNotice !== undefined) {
+    g.bastionNotice.clip(text, 'bastion');
+    return;
+  }
+  const list = g.bastionNoticePending ?? (g.bastionNoticePending = []);
+  if (list.length < MAX_PENDING_NOTICES) list.push({ text, source: 'bastion' });
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -159,7 +174,7 @@ function main(): void {
     clipReports++;
     send({ type: 'nerd:signal', kind: 'clip', sample: clipSample(text) });
     try {
-      showClipToast();
+      showNotice(text);
     } catch {
       // the block itself already happened
     }

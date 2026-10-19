@@ -26,6 +26,7 @@ import { normalizeSettings } from '../src/background/settings.ts';
 import { fetchLists, loadCatalog, type FetchedList } from './fetch-lists.ts';
 import { loadResources, WAR_PREFIX, type ResourceSet } from './resources.ts';
 import { emitScriptlets, type EmitScriptletsResult } from './scriptlets.ts';
+import { NOTICE_EVENT_DEFINE } from './lib/notice-transform.ts';
 import { loadUnsupportedRegexes, regexKey } from './validate-dist.ts';
 import { vendor, vendorPresent } from './vendor.ts';
 import { bundle, copyStatic, type BundleResult } from './lib/bundle.ts';
@@ -609,7 +610,8 @@ export async function build(opts: BuildOptions = {}): Promise<{ meta: BuildMeta;
   let bundled: BundleResult = { built: [], missing: [], failed: [] };
   if (!opts.skipBundle) {
     log.step('Bundling');
-    bundled = await bundle(outDir, { release, log });
+    // The scriptlet core and cosmetic.js share the per-build notice event name (tools/lib/notice-transform.ts).
+    bundled = await bundle(outDir, { release, log, define: { [NOTICE_EVENT_DEFINE]: JSON.stringify(scriptlets.noticeEvent) } });
     if (bundled.failed.length && !opts.keepGoing) {
       throw new Error(`esbuild failed for ${bundled.failed.map((f) => f.src).join(', ')}`);
     }
