@@ -39,8 +39,6 @@ export interface CatalogList {
   licenseUrl?: string;
   /** Attribution line shown on the About page. */
   attribution: string;
-  /** Hidden lists are always on (user cannot toggle) unless an admin policy says otherwise. */
-  locked?: boolean;
 }
 
 export interface CatalogSource {

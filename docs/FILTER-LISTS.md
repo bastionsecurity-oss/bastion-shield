@@ -24,7 +24,7 @@ Each list becomes its own static ruleset (the list id is the ruleset id), so it 
 
 | Id | List | Category | Default | Standard-mode 1p protection¹ | Strict block² | Trusted³ | Sources |
 |---|---|---|---|---|---|---|---|
-| `bastion` | Bastion filters | ads | **on, locked** | no | yes | yes | [`filters/bastion.txt`](../filters/bastion.txt) |
+| `bastion` | Bastion filters | ads | on | no | yes | yes | [`filters/bastion.txt`](../filters/bastion.txt) |
 | `ublock` | uBlock filters | ads | on | yes | yes | yes | uAssets `filters.txt` (with its `!#include`s: filters-general, filters-2020…2026, link shorteners), `quick-fixes.txt`, `unbreak.txt` |
 | `easylist` | EasyList | ads | on | yes | yes | no | `easylist.to/easylist/easylist.txt` |
 | `brave` | Brave filters | ads | on | yes | yes | yes | brave/adblock-lists `brave-unbreak.txt`, `brave-specific.txt`, `brave-social.txt`, `brave-sugarcoat.txt` |
@@ -198,7 +198,7 @@ The activity view therefore shows the blocked hostname and the list that blocked
 
 ### The Bastion list
 
-[`filters/bastion.txt`](../filters/bastion.txt) is small and Swiss-focused: Swiss publishers and consent tools, and unbreak rules for customer environments (it keeps Microsoft Entra sign-in working, for example). It is licensed GPL-3.0-or-later, uses uBlock Origin syntax, and every filter is preceded by a comment linking the GitHub issue that motivated it. It is always on and cannot be switched off by users (administrators can).
+[`filters/bastion.txt`](../filters/bastion.txt) is small and Swiss-focused: Swiss publishers and consent tools, and unbreak rules for customer environments (it keeps Microsoft Entra sign-in working, for example). It is licensed GPL-3.0-or-later, uses uBlock Origin syntax, and every filter is preceded by a comment linking the GitHub issue that motivated it. It is on by default. Users can switch it off like any other list (Microsoft sign-in may then break if another list blocks it); administrators can force it on and lock it with the `lists` policy, for example `{"bastion": true}` (section 10.3 of [ARCHITECTURE.md](ARCHITECTURE.md#103-locks)).
 
 ### Upstream first
 

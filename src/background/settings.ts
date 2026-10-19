@@ -21,8 +21,6 @@ import { isPlainObject } from './util.ts';
 export interface ListInfo {
   id: string;
   default: boolean;
-  /** Catalog "locked" (hidden, always on unless the policy says otherwise). */
-  locked?: boolean;
 }
 
 const MODES: readonly BlockingMode[] = ['standard', 'aggressive'];
@@ -400,7 +398,6 @@ export function lockedPaths(managed: ManagedPolicy, lists: readonly ListInfo[]):
     for (const l of lists) out.add(`lists.${l.id}`);
   }
   for (const id of Object.keys(managed.lists ?? {})) out.add(`lists.${id}`);
-  for (const l of lists) if (l.locked) out.add(`lists.${l.id}`);
   if (managed.allowUserSiteToggle === false) out.add(LOCK_SITE_TOGGLE);
   if (customFiltersLocked(managed)) out.add(LOCK_CUSTOM_FILTERS);
   return Array.from(out).sort();
@@ -412,7 +409,6 @@ export function effectiveLists(lists: readonly ListInfo[], user: Settings, manag
   for (const l of lists) {
     const forced = managed.lists?.[l.id];
     if (forced !== undefined) out[l.id] = forced;
-    else if (l.locked) out[l.id] = true;
     else if (listsFullyLocked(managed)) out[l.id] = l.default;
     else out[l.id] = user.lists[l.id] ?? l.default;
   }

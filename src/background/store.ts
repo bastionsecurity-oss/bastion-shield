@@ -80,7 +80,6 @@ export function listInfos(meta: BuildMeta | null, languages: readonly string[] =
   return meta.lists.map((l) => ({
     id: l.id,
     default: l.default === true || languageMatches(l.langs, languages),
-    locked: l.locked === true,
   }));
 }
 

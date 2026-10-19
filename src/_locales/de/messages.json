@@ -523,9 +523,6 @@
   "listParams": {
     "message": "Tracking-Parameter (Brave)"
   },
-  "listsAlwaysOn": {
-    "message": "Immer aktiv"
-  },
   "listsBudgetAvailable": {
     "message": "Insgesamt verfügbar: $P1$.",
     "placeholders": {

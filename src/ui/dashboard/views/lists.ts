@@ -16,10 +16,9 @@ import { meter } from '../chart.ts';
 import { errorState, nextId, pageHead, panel, type View, mount } from '../common.ts';
 import { getConfig, getLists, setList } from '../store.ts';
 
-function listLocked(state: ListsState, l: BuiltList, policyLockAll: boolean): 'policy' | 'builtin' | null {
-  if (policyLockAll || state.locked.includes(l.id) || state.locked.includes(`lists.${l.id}`)) return 'policy';
-  if (l.locked) return 'builtin';
-  return null;
+/** Only an administrator's policy locks a list; otherwise every list is the user's choice. */
+function listLocked(state: ListsState, l: BuiltList, policyLockAll: boolean): boolean {
+  return policyLockAll || state.locked.includes(l.id) || state.locked.includes(`lists.${l.id}`);
 }
 
 /**
@@ -105,7 +104,7 @@ function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChan
     checked: enabled,
     labelledBy: nameId,
     describedBy: descId,
-    disabled: lock !== null,
+    disabled: lock,
     onChange: async (v) => {
       const r = await setList(l.id, v);
       if (!r.ok) {
@@ -174,7 +173,7 @@ function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChan
         'div',
         { class: 'lists-row__top' },
         h('h3', { class: 'lists-row__name', text: localized(l.name), attrs: { id: nameId } }),
-        lock === 'policy' ? lockIcon(t('lockedByPolicy')) : lock === 'builtin' ? h('span', { class: 'lists-row__badge mono-label', text: t('listsAlwaysOn') }) : null,
+        lock ? lockIcon(t('lockedByPolicy')) : null,
         h('span', { class: 'lists-row__count' }, h('span', { class: 'num', text: fmtNumber(filterCount) }), ' ', t(filterCount === 1 ? 'listsFilterOne' : 'listsFilters')),
       ),
       h('p', { class: 'lists-row__desc', text: localized(l.description), attrs: { id: descId } }),

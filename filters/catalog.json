@@ -17,7 +17,6 @@
       },
       "category": "ads",
       "default": true,
-      "locked": true,
       "firstPartyProtected": false,
       "trusted": true,
       "strictBlock": true,

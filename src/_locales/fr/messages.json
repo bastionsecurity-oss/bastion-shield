@@ -523,9 +523,6 @@
   "listParams": {
     "message": "Paramètres de pistage (Brave)"
   },
-  "listsAlwaysOn": {
-    "message": "Toujours active"
-  },
   "listsBudgetAvailable": {
     "message": "Disponible au total : $P1$.",
     "placeholders": {

@@ -21,7 +21,7 @@ import {
 import type { ListInfo } from '../../src/background/settings.ts';
 
 const LISTS: ListInfo[] = [
-  { id: 'bastion', default: true, locked: true },
+  { id: 'bastion', default: true },
   { id: 'easylist', default: true },
   { id: 'easyprivacy', default: true },
   { id: 'annoyances', default: false },
@@ -90,9 +90,9 @@ test('sanitizeManaged accepts registry-style values', () => {
   assert.equal((m as Record<string, unknown>).unknownKey, undefined);
 });
 
-test('effective lists: policy > catalog lock > lockLists default > user > default', () => {
+test('effective lists: policy > lockLists default > user > default', () => {
   const user = normalizeSettings({ lists: { easylist: false, annoyances: true, bastion: false } });
-  assert.deepEqual(effectiveLists(LISTS, user, {}), { bastion: true, easylist: false, easyprivacy: true, annoyances: true });
+  assert.deepEqual(effectiveLists(LISTS, user, {}), { bastion: false, easylist: false, easyprivacy: true, annoyances: true });
   assert.deepEqual(effectiveLists(LISTS, user, { lockLists: true }), { bastion: true, easylist: true, easyprivacy: true, annoyances: false });
   assert.deepEqual(effectiveLists(LISTS, user, { lists: { bastion: false, easyprivacy: false } }), {
     bastion: false,
@@ -110,10 +110,11 @@ test('policy overlays settings and reports locked paths', () => {
   assert.equal(cfg.settings.ui.badge, true);
   assert.equal(cfg.settings.history.retentionDays, 7);
   assert.equal(cfg.settings.lists.annoyances, true);
-  for (const p of ['privacy.gpc', 'privacy.fingerprinting', 'ui.badge', 'history.retentionDays', 'lists.annoyances', 'lists.bastion']) {
+  for (const p of ['privacy.gpc', 'privacy.fingerprinting', 'ui.badge', 'history.retentionDays', 'lists.annoyances']) {
     assert.ok(cfg.locked.includes(p), `expected ${p} to be locked`);
   }
   assert.ok(!cfg.locked.includes('defaultMode'));
+  assert.ok(!cfg.locked.includes('lists.bastion'), 'lists the policy does not name stay unlocked');
   // The user's own value is untouched (policy removal restores it).
   assert.equal(user.privacy.gpc, true);
 });
@@ -154,6 +155,15 @@ test('applySettingsPatch skips locked and invalid values', () => {
   assert.equal(user.defaultMode, 'standard');
 });
 
+test('the Bastion list is on by default, the user may switch it off, only a policy can force it', () => {
+  assert.deepEqual(lockedPaths({}, LISTS), []);
+  const off = normalizeSettings({ lists: { bastion: false } });
+  assert.equal(effectiveLists(LISTS, off, {}).bastion, false);
+  assert.equal(effectiveLists(LISTS, defaultSettings(), {}).bastion, true);
+  assert.equal(effectiveLists(LISTS, off, { lists: { bastion: true } }).bastion, true);
+  assert.ok(lockedPaths({ lists: { bastion: true } }, LISTS).includes('lists.bastion'));
+});
+
 test('lockLists blocks every list patch', () => {
   const { settings, ignored } = applySettingsPatch(defaultSettings(), { lists: { annoyances: true } }, new Set(['lists']));
   assert.equal(settings.lists.annoyances, undefined);
@@ -178,7 +188,7 @@ test('lockSettings also locks every list and the user filters (ENT-2)', () => {
   const open = lockedPaths({ lockSettings: true, lockLists: false, allowUserFilters: true }, LISTS);
   assert.ok(!open.includes('lists'));
   assert.ok(!open.includes('lists.easylist'));
-  assert.ok(open.includes('lists.bastion'), 'catalog-locked list stays locked');
+  assert.ok(!open.includes('lists.bastion'), 'no list is locked by the catalog');
   assert.ok(!open.includes('customFilters'));
   assert.equal(listsFullyLocked({}), false);
   assert.equal(customFiltersLocked({ allowUserFilters: false }), true);

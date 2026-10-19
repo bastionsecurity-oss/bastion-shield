@@ -420,14 +420,13 @@ The badge colour is Schiefer (#2A3134) with white text. Tabs with protection off
 |---|---|
 | a key that maps to a setting (`gpc`, `defaultMode`, `showBadge`, …) | that path: `defaultMode`, `privacy.<key>`, `ui.badge`, `ui.activityLog`, `ui.incidentCta`, `history.enabled`, `history.retentionDays` |
 | `lists: {id: bool}` | `lists.<id>` |
-| catalog `locked: true` | `lists.<id>` |
 | `lockLists: true` | pseudo-path `lists` plus every `lists.<id>`; lists not named in `lists` use their catalog default |
 | `allowUserSiteToggle: false` | pseudo-path `sites.enabled` (per-site protection switch) |
 | `allowUserFilters: false` | pseudo-path `customFilters` (user filters read-only) |
 | `lockSettings: true` | every setting path above; **and** `lists` + every `lists.<id>` unless `lockLists` is explicitly `false`; **and** `customFilters` unless `allowUserFilters` is explicitly `true`; **and** per-site mode, script blocking and fingerprinting (`site:set` drops them into `ignored`, `sites:set` answers `{error: "locked"}`) |
 | `disabledSites` / `aggressiveSites` | per host and its subdomains: `PopupState.locks.siteToggle` / `PopupState.locks.mode` |
 
-The SW enforces every lock in its handlers; the UI only mirrors them. `ListsState.locked` may contain `<id>` or `lists.<id>`.
+Only a managed policy locks anything: without one, every setting and every filter list (the Bastion list included) is the user's choice. The SW enforces every lock in its handlers; the UI only mirrors them. `ListsState.locked` may contain `<id>` or `lists.<id>`.
 
 ### 10.4 Apply
 
