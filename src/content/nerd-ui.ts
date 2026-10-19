@@ -17,12 +17,12 @@ import type { LookalikeHit } from '../shared/types.ts';
 
 const FALLBACK: Readonly<Record<string, string>> = {
   nerdGuardLookalikeTitle: 'This looks like $1 but is $2',
-  nerdGuardReasonHomoglyph: 'The address uses lookalike characters.',
-  nerdGuardReasonTypo: 'The address differs by a typing error.',
-  nerdGuardReasonCombo: 'The address combines the name with other words.',
+  nerdGuardReasonHomoglyph: 'The address uses look-alike characters (homoglyphs).',
+  nerdGuardReasonTypo: 'The address differs by a typing error (typosquatting).',
+  nerdGuardReasonCombo: 'The address combines the brand name with other words (combosquatting).',
   nerdGuardLookalikeHint: 'Check the address before you sign in or pay.',
   actionDismiss: 'Dismiss',
-  nerdGuardClipTitle: 'Suspicious clipboard command blocked',
+  nerdGuardClipTitle: 'Suspicious command removed from the clipboard (ClickFix)',
   nerdGuardClipBody: 'This page tried to put a command on your clipboard. Bastion Shield replaced it with a harmless note. Never paste commands from websites into Run, Terminal or PowerShell.',
   extName: 'Bastion Shield',
 };

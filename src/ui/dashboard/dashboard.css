@@ -804,17 +804,24 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 .lab-x:first-child { border-top: 0; padding-top: 0; }
 .lab-x__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
 .lab-x__url { flex: 1 1 320px; min-width: 0; color: var(--text-strong); font-size: 12.5px; overflow-wrap: anywhere; }
-.lab-x__meta { color: var(--text-2); font-size: var(--text-xs); white-space: nowrap; }
-.lab-x__verdict { margin: 4px 0 0; color: var(--text-strong); font-size: var(--text-sm); }
-.lab-x__verdict--none { color: var(--text-2); }
+.lab-x__meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--text-2); font-size: var(--text-xs); }
+.lab-x__type { width: auto; min-height: 26px; padding-top: 2px; padding-bottom: 2px; }
+.lab-x__guess { font-style: italic; }
+.lab-x__site { white-space: nowrap; }
+.lab-x__verdict { margin: 6px 0 0; color: var(--text-strong); font-size: var(--text-sm); font-weight: 600; }
+.lab-x__verdict--none { color: var(--text-2); font-weight: 400; }
+.lab-x__cf { margin: 2px 0 0; color: var(--text-2); font-size: var(--text-sm); }
 .lab-x .lab-int__scroll { margin-top: 8px; max-height: 360px; }
 .lab-x__table td { vertical-align: top; }
 .lab-x__mark { width: 18px; color: var(--text-strong); }
-.lab-x__action { color: var(--text-2); font-size: 11.5px; }
-.lab-x__win .lab-x__action, .lab-x__win .lab-x__src { color: var(--text-strong); font-weight: 600; }
+.lab-x__action { color: var(--text-2); }
+.lab-x__act { display: block; white-space: nowrap; }
+.lab-x__raw { display: block; color: var(--text-2); font-size: 10.5px; font-weight: 400; }
+.lab-x__win .lab-x__act, .lab-x__win .lab-x__src { color: var(--text-strong); font-weight: 600; }
 .lab-x__src { color: var(--text-2); }
 .act-table td.lab-x__filter { white-space: normal; min-width: 240px; }
 .lab-x__filter code { display: block; color: var(--text-strong); font-size: 11.5px; overflow-wrap: anywhere; }
+.lab-x__filter code.lab-x__hit { width: fit-content; margin: 1px 0; padding: 0 4px; border-radius: 4px; background: var(--bg-cool); font-weight: 600; }
 .lab-x__filter .act-history { margin: 2px 0 0; }
 .lab-x__more { margin-right: 6px; color: var(--text-2); font-family: var(--font-mono); font-size: 11px; }
 
@@ -859,3 +866,4 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 @media print {
   .db-nav, .act-toolbar, .act-bar__actions { display: none !important; }
 }
+.lab-x__derived { margin-left: 6px; color: var(--text-2); font-size: var(--text-xs); font-style: italic; }

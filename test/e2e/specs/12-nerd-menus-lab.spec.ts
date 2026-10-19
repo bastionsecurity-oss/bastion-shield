@@ -43,6 +43,12 @@ test.describe('nerd mode menus and Lab', () => {
       await expect(page.locator('.lab-play textarea').nth(1)).toHaveValue(`${target} image news.example.invalid`);
       // The installed rules are scanned and every probe gets a verdict.
       await expect(page.locator('.lab-x__verdict')).toHaveCount(1, { timeout: 20_000 });
+      // Plain-language verdict and the type the URL is checked as (changeable, reruns the check).
+      await expect(page.locator('.lab-x__verdict')).toContainText('Ergebnis:');
+      await expect(page.locator('.lab-x__type')).toHaveValue('image');
+      await page.locator('.lab-x__type').selectOption('script');
+      await expect(page.locator('.lab-play textarea').nth(1)).toHaveValue(`${target} script news.example.invalid`);
+      await expect(page.locator('.lab-x__type')).toHaveValue('script', { timeout: 20_000 });
 
       await page.goto(`${dash}#lab/blame?filter=${encodeURIComponent('||doubleclick.net^')}`);
       await page.reload();

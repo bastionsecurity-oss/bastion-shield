@@ -6,20 +6,27 @@ off by default (`settings.nerd.enabled`), and an admin can force it with the
 as before: no extra content scripts are registered, and the popup and dashboard
 show nothing new.
 
-Like everything else in Bastion, nothing leaves the device. The blame links
-are plain links the user chooses to open.
+Like everything else in Bastion, nothing leaves the device. The filter-history
+links («GitHub ↗») are plain links the user chooses to open.
+
+UI names (en / de): the dashboard section is "Developer tools" /
+«Entwicklertools» (hash `#lab`, command `lab`; called the Lab in code and
+below) with the tabs "Filter tester" / «Filter-Tester», "Checksums (SHA-256)"
+/ «Prüfsummen (SHA-256)» and "Filter history" / «Filter-Historie». The
+settings rows are "ClickFix protection (clipboard)", "Fingerprinting counter"
+and "Lookalike domains (typosquatting)" with "Protected domains".
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |
-| Filter bisect | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
+| Find the breaking filter (bisect) | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
 | Command line (`Ctrl+K`) | Popup | `nerd.enabled` |
-| Fingerprinting meter | Popup | `nerd.fingerprintMeter` |
-| Clipboard guard (ClickFix) | Page (toast), popup | `nerd.clipboardGuard` / `clipboardGuard` |
-| Lookalike-domain warning | Page (bar), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
-| Filter blame links | Popup matched rules, dashboard Activity and Lab | `nerd.enabled` |
-| Filter playground (dry run) | Dashboard › Lab | `nerd.enabled` |
-| Explain a URL against the installed rules | Dashboard › Lab | `nerd.enabled` |
-| Ruleset integrity self-check | Dashboard › Lab | `nerd.enabled` |
+| Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
+| ClickFix protection (clipboard) | Page (toast), popup | `nerd.clipboardGuard` / `clipboardGuard` |
+| Lookalike domains (typosquatting) | Page (bar), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
+| Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity and Developer tools | `nerd.enabled` |
+| Filter tester (dry run) | Dashboard › Developer tools | `nerd.enabled` |
+| Check URL against installed rules | Dashboard › Developer tools | `nerd.enabled` |
+| Checksums (SHA-256) self-check | Dashboard › Developer tools | `nerd.enabled` |
 | Context menu | Right-click on pages, links, media, selections, toolbar icon | `nerd.enabled` |
 
 ## Context menu
@@ -32,13 +39,13 @@ and browser start.
 
 | Item | Context | Action |
 | --- | --- | --- |
-| Explain this URL | link, image, video, audio, frame | Opens `ui/dashboard.html#lab?url=…&site=<tab host>&type=…` next to the tab |
-| Test selection as filter | selection | `#lab?filter=…` |
-| Blame selection as filter | selection | `#lab/blame?filter=…` |
-| Find the breaking filter | page | Starts the bisect for the tab (`NerdService.bisect`) and opens the popup |
-| Open Lab | toolbar icon | `#lab` |
+| Check URL: why blocked? | link, image, video, audio, frame | Opens `ui/dashboard.html#lab?url=…&site=<tab host>&type=…` next to the tab |
+| Test selection in the filter tester | selection | `#lab?filter=…` |
+| Filter history of the selection (GitHub) | selection | `#lab/blame?filter=…` |
+| Find the breaking filter (bisect) | page | Starts the bisect for the tab (`NerdService.bisect`) and opens the popup |
+| Open developer tools | toolbar icon | `#lab` |
 
-## Lab
+## Developer tools (Lab)
 
 The Lab follows deep links: `#lab?url=…` prefills the pasted-URL box
 (`URL type site`) and runs the playground plus an explain run against the
@@ -46,8 +53,8 @@ installed rules; `#lab?filter=…` prefills the playground and runs it;
 `#lab/blame?filter=…` looks the filter up. `/` focuses the main input,
 `Ctrl+Enter` (`⌘ Enter`) runs, `Esc` leaves the field.
 
-"Also check the installed rules" (`ui/dashboard/lab-explain.ts`) answers "why
-would this URL be blocked?". It reads the enabled static rulesets one at a
+"Check URL against installed rules" (`ui/dashboard/lab-explain.ts`) answers
+"why would this URL be blocked?". It reads the enabled static rulesets one at a
 time from the package (`getEnabledRulesets`, manifest `rule_resources`),
 scans them in chunks with a cheap pre-check (resource type, request domains,
 the longest literal of the `urlFilter`), compiles the user's and the admin's
@@ -57,6 +64,40 @@ source and filter text (transparency map) and names the rule that decides, in
 Chromium's order. A page-level `allowAllRequests` (for example a site with
 protection off) is evaluated against `https://<site>/`. At most 20 URLs and
 50 rules per URL are shown.
+
+Each result reads as follows:
+
+- **Type.** "checked as" shows the resource type the URL was checked as
+  (e.g. "Page navigation (main_frame)"); a small select changes it per URL and
+  reruns the check (the URL line in the box is rewritten). A line without a
+  type is guessed from the file extension (`guessType`, `other` when unknown)
+  and marked as guessed; context-menu links pass `main_frame`.
+- **Verdict.** One plain sentence: what happens, why, and the deciding rule,
+  e.g. "Result: Allowed – protection is off for this website (rule #8000000,
+  priority 1000)". Bastion's own allows (protection off, «proceed anyway»,
+  bisect, Standard mode) are named; other rules name their list ("by
+  EasyList"); custom and admin filters give the line instead of a rule id.
+- **Counterfactual.** When an `allow` or `allowAllRequests` decides, a second
+  line says what would happen without it: the deciding rule and every other
+  allow of the same kind are dropped and the rest is decided again in
+  Chromium's order (`counterfactual()`), e.g. "Without this exception: Block
+  page (strict block) by EasyList, priority 29", or "would load normally" when
+  nothing blocking remains.
+- **Action labels.** Each matching rule shows a human label with the raw DNR
+  action in small mono next to it: Blocked, Allowed (exception), Page allowed,
+  Block page (strict block) (redirect to `pages/blocked.html` or priority 29),
+  Surrogate script (redirect to a `war/` resource), Tracking parameters removed
+  (`queryTransform` / empty query), Bounce tracking skipped (debounce), Headers
+  modified (GPC header set for `Sec-GPC`), Upgraded to HTTPS (`actionKind()`).
+- **Merged rules.** The build merges filters that differ only in their domain
+  into one rule (one `requestDomains` list) and records at most 20 filter
+  texts plus "+N more". The filter cell shows the text(s) naming the request
+  host or a parent domain first, highlighted; when that text was not
+  recorded, it is rebuilt from a recorded sibling with the matched
+  `requestDomains` entry (e.g. `||000491b06a.com^` → `||googlesyndication.com^`,
+  marked as derived in its tooltip). Then "+N more". When nothing can be tied
+  to the request, the first recorded texts are shown. «GitHub ↗» opens the
+  filter history of the highlighted text.
 
 User and admin filters may use `@@…$important` (AdGuard syntax): it compiles to
 an `allow` at priority 50 (`PRIORITY.IMPORTANT_ALLOW`), above every
@@ -79,12 +120,12 @@ fuzzy subsequence matching, at most six suggestions, `↑`/`↓` or
 | Command | Does |
 | --- | --- |
 | `bisect` / `bisect cancel` | Start the filter bisect on this tab, or end it |
-| `why [url\|host]` | Open `#lab?url=…&site=…` (the page itself without an argument) |
-| `blame <filter>` | Open `#lab/blame?filter=…` |
+| `why [url\|host]` | Check a URL against the installed rules: open `#lab?url=…&site=…` (the page itself without an argument) |
+| `blame <filter>` | Filter history on GitHub: open `#lab/blame?filter=…` |
 | `allow <host>` | Add `@@\|\|host^$domain=<site>` to the user's filters (completes from the blocked hosts) |
 | `fp` | Fingerprinting calls per vector, inline |
 | `copy report` | JSON to the clipboard: `site, url, at, counts, blockedHosts[{host, count, rules, filters, lists}], fp, clipboardBlocked, lookalike, version` |
-| `lab` | Open the Lab |
+| `lab` | Open developer tools |
 | `nerd off` | Switch nerd mode off |
 
 Keyboard shortcuts (`chrome://extensions/shortcuts`): `Alt+Shift+B` opens the
@@ -105,8 +146,9 @@ alone when a half had to be pinned); the popup shows this bound as
 The activity badge leaves that tab alone until the test phase ends.
 
 In the popup the bisect replaces the statusline and is answered with single
-keys: `y` / `n` / `Esc` while testing; `k` (keep the exception), `b` (blame
-the filter in the Lab) / `Esc` once found. The result shows the culprit host,
+keys: `y` / `n` / `Esc` while testing ("does the page work now?"); `k` (keep
+the exception), `b` (filter history in the developer tools) / `Esc` once found
+("Found: <host>"). The result shows the culprit host,
 the filter text from the transparency map and the list it came from. "Keep"
 appends a narrow exception (`@@||host^$domain=site`) to the user's own
 filters; when the blocking filter is `$important`, the exception is
@@ -118,7 +160,7 @@ network block (it may be a cosmetic filter, a scriptlet or the site itself).
 The bisect then says so and stops. `allow` rules do not lift cosmetic
 filtering.
 
-## Fingerprinting meter
+## Fingerprinting counter
 
 `main/fpmeter.js` runs in the MAIN world and counts calls to fingerprinting
 APIs per vector (`FpVector`: canvas, webgl, audio, fonts, navigator, screen,
@@ -127,7 +169,7 @@ media, timing). It sends the counts in batches to the ISOLATED relay
 `nerd:signal`. Counts reset on every top-level navigation and live in memory
 only.
 
-## Clipboard guard
+## ClickFix protection (clipboard)
 
 `main/clipguard.js` checks text that a page writes to the clipboard
 (`navigator.clipboard.writeText`/`write`, `setData` in copy events,
@@ -136,13 +178,13 @@ pasted from a fake CAPTCHA ("ClickFix": PowerShell with encoded commands,
 `mshta`, `curl … | sh`, …) with a harmless note, and the relay shows a toast.
 A user copying text they selected on the page is not blocked.
 
-## Lookalike-domain warning
+## Lookalike domains (typosquatting)
 
 `shared/lookalike.ts` compares the top-frame host with the protected domains.
 These are the built-in list, the user's domains and the policy's
-`protectedDomains`. It flags three cases: homoglyphs (punycode and confusable
-characters such as `rn`→`m`), typos (small edit distance) and combo-squats
-(`paypal-login-secure.com`). The result is sent with the `cosmetic:frame`
+`protectedDomains`. It flags three cases: homoglyphs (punycode and look-alike
+characters such as `rn`→`m`), typosquatting (small edit distance) and
+combosquatting (`paypal-login-secure.com`). The result is sent with the `cosmetic:frame`
 reply, and the content script shows a dismissible bar in a closed shadow
 root. The protected domain itself and its subdomains are never flagged.
 
@@ -150,7 +192,7 @@ root. The protected domain itself and its subdomains are never flagged.
 
 Page scripts can forge the MAIN→ISOLATED events. The worst a forged event can
 do is inflate the meter or show a toast. The service worker accepts only known
-vectors and bounded counts (`background/nerd.ts`). The integrity check in the
-Lab hashes the packaged ruleset files with SHA-256 and compares them with
+vectors and bounded counts (`background/nerd.ts`). The checksum check in the
+developer tools («Prüfsummen (SHA-256)») hashes the packaged ruleset files with SHA-256 and compares them with
 `rulesets/integrity.json` from the same build. It is a self-check, not a
 signature.

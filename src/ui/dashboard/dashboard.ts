@@ -59,7 +59,7 @@ function viewName(): string {
 
 async function route(): Promise<void> {
   let name = viewName();
-  // «Labor» exists only while nerd mode is on.
+  // «Entwicklertools» (developer tools) exists only while nerd mode is on.
   if (name === 'lab' && !(await nerdOn())) {
     name = popupMode ? 'site' : 'overview';
     history.replaceState(null, '', `#${name}`);
@@ -127,7 +127,7 @@ async function nerdOn(): Promise<boolean> {
   return r.ok && r.data.settings.nerd?.enabled === true;
 }
 
-/** Show the «Labor» entry while nerd mode is on; leave the Lab when it is switched off. */
+/** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. */
 function syncNerdNav(on: boolean): void {
   const li = document.getElementById('db-nav-lab');
   if (li) li.hidden = !on;

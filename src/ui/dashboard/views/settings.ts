@@ -102,7 +102,7 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     return settingRow({ label: t(labelKey), desc: t(descKey), control: sw.el, locked, labelId, descId });
   };
 
-  // Master switch: the sub-settings and the «Labor» navigation entry follow it live.
+  // Master switch: the sub-settings and the «Entwicklertools» (developer tools) navigation entry follow it live.
   const masterLabel = nextId('set');
   const masterDesc = nextId('set-d');
   const masterLocked = isLocked(cfg, 'nerd.enabled');

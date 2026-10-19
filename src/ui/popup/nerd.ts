@@ -499,8 +499,8 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
         h(
           'div',
           { class: 'pp-sl__line pp-sl__wrap', attrs: { role: 'status' } },
-          many ? null : h('span', { class: 'pp-sl__host', text: v.culprit.host }),
           h('span', { class: 'pp-sl__note', text: t(many ? 'nerdBisectFoundMany' : 'nerdBisectFound') }),
+          many ? null : h('span', { class: 'pp-sl__host', text: v.culprit.host }),
         ),
         ...all.flatMap((c) => culpritRows(c, many)),
         ...(v.partial ? [h('div', { class: 'pp-sl__note', text: t('nerdBisectPartial') })] : []),

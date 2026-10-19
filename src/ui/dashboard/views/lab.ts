@@ -1,4 +1,4 @@
-// Bastion Shield — dashboard «Labor» (nerd mode only): three tools for people
+// Bastion Shield — dashboard «Entwicklertools» (developer tools) (nerd mode only): three tools for people
 // who want to see the machinery.
 //   1. Filter playground: compile filters with the custom-filter compiler and
 //      dry-run the resulting DNR rules against recorded requests (history)
@@ -30,6 +30,7 @@ import { dir, getConfig, getCustom, getMeta, historyEvents } from '../store.ts';
 import {
   blameFor,
   compilePlayground,
+  EXPLAIN_TYPES,
   dryRun,
   filtersOfRule,
   groupHits,
@@ -43,6 +44,7 @@ import {
   parseUrlList,
   provenance,
   requestsFromEvents,
+  setRequestType,
   settleRow,
   toHex,
   type BlameGroup,
@@ -53,7 +55,7 @@ import {
   type LabSection,
   type PlaygroundFilter,
 } from '../lab-core.ts';
-import { EXPLAIN_MAX_HITS, EXPLAIN_MAX_REQUESTS, explainInstalled, relevantFilters, type ExplainHit, type ExplainResult, type ExplainRule } from '../lab-explain.ts';
+import { allowReason, EXPLAIN_MAX_HITS, EXPLAIN_MAX_REQUESTS, explainInstalled, filterDisplay, type ActionKind, type ExplainHit, type ExplainResult, type ExplainRule } from '../lab-explain.ts';
 
 type Section = LabSection;
 type Source = 'history' | 'urls' | 'both';
@@ -125,22 +127,28 @@ function linkDialog(title: string, content: Child): void {
 const sourceMaps = new Map<string, Promise<RuleSourceMap | null>>();
 
 /**
- * «history ↗» of an attributed Activity row: resolve "rulesetId:ruleId" to its
- * filter text through the transparency map, then open the upstream history
- * (one link directly, several in a dialog).
+ * «GitHub ↗» of an attributed Activity row or an explain row: resolve
+ * "rulesetId:ruleId" to its filter text through the transparency map (or take
+ * the given texts, e.g. the one filter of a merged rule that matched), then
+ * open the upstream history (one link directly, several in a dialog).
  */
-export async function openRuleHistory(rule: string, meta: BuildMeta | null): Promise<void> {
+export async function openRuleHistory(rule: string, meta: BuildMeta | null, texts?: readonly string[]): Promise<void> {
   const ref = parseRuleRef(rule);
   if (!ref || !meta) {
     toast(t('nerdLabBlameNone'), icon('info', 15));
     return;
   }
-  let p = sourceMaps.get(ref.rulesetId);
-  if (!p) {
-    p = fetchPackaged<RuleSourceMap>(`rulesets/filters/${ref.rulesetId}.json`);
-    sourceMaps.set(ref.rulesetId, p);
+  let filters: string[];
+  if (texts?.length) {
+    filters = [...texts];
+  } else {
+    let p = sourceMaps.get(ref.rulesetId);
+    if (!p) {
+      p = fetchPackaged<RuleSourceMap>(`rulesets/filters/${ref.rulesetId}.json`);
+      sourceMaps.set(ref.rulesetId, p);
+    }
+    filters = filtersOfRule(await p, ref.ruleId);
   }
-  const filters = filtersOfRule(await p, ref.ruleId);
   const listId = meta.rulesetToList?.[ref.rulesetId] ?? ref.rulesetId;
   const groups = filters.flatMap((f) => blameFor(meta, listId, f));
   const links = groups.flatMap((g) => g.links);
@@ -280,46 +288,141 @@ function rulesetPath(id: string): string | null {
   }
 }
 
-const VERDICT: Partial<Record<ExplainResult['outcome'], string>> = {
-  block: 'nerdLabExplainBlock',
-  allow: 'nerdLabExplainAllow',
-  redirect: 'nerdLabExplainRedirect',
-  upgradeScheme: 'nerdLabExplainUpgrade',
-  modifyHeaders: 'nerdLabExplainHeaders',
+const ACTION_KEYS: Record<ActionKind, string> = {
+  block: 'nerdLabActBlock',
+  allow: 'nerdLabActAllow',
+  page: 'nerdLabActPage',
+  strict: 'nerdLabActStrict',
+  surrogate: 'nerdLabActSurrogate',
+  params: 'nerdLabActParams',
+  debounce: 'nerdLabActDebounce',
+  redirect: 'nerdLabActRedirect',
+  headers: 'nerdLabActHeaders',
+  gpc: 'nerdLabActGpc',
+  upgrade: 'nerdLabActUpgrade',
 };
 
-function explainItem(r: ExplainResult, meta: BuildMeta | null): HTMLElement {
-  const w = r.winner;
+/** «Blockiert», «Sperrseite (Strict Block)», … for a matching rule. */
+const actionLabel = (x: ExplainHit): string => t(ACTION_KEYS[x.kind] ?? 'nerdLabActRedirect');
+
+const REASON_KEYS: Record<string, string> = {
+  siteOff: 'nerdLabReasonSiteOff',
+  proceed: 'nerdLabReasonProceed',
+  bisect: 'nerdLabReasonBisect',
+  standard1p: 'nerdLabReasonStandard1p',
+};
+
+/**
+ * The words of a decision: what happens and why. An allow from Bastion's own
+ * rules (protection off, «proceed anyway», bisect, Standard mode) says why in
+ * plain words; everything else names its source.
+ */
+function decisionWords(x: ExplainHit, meta: BuildMeta | null): { what: string; why: string } {
+  if (x.action === 'allow' || x.action === 'allowAllRequests') {
+    const key = REASON_KEYS[allowReason(x)];
+    if (key) return { what: t('nerdLabVerdictAllowed'), why: t(key) };
+  }
+  return { what: actionLabel(x), why: t('nerdLabReasonBy', sourceName(x, meta)) };
+}
+
+const isLineSource = (x: ExplainHit): boolean => x.source === 'custom' || x.source === 'admin';
+
+/** «Ergebnis: Erlaubt – Schutz für diese Website ist ausgeschaltet (Regel #8000000, Priorität 1000)». */
+function verdictText(r: ExplainResult, meta: BuildMeta | null): string {
   // The verdict follows the deciding rule; header rules that also apply
-  // (e.g. the GPC header on every request) are only listed.
+  // (e.g. the GPC header on every request) only decide when nothing else does.
+  const decider = r.winner ?? r.headers[0];
+  if (!decider) return t('nerdLabExplainNone');
+  const { what, why } = decisionWords(decider, meta);
+  return t(isLineSource(decider) ? 'nerdLabVerdictLine' : 'nerdLabVerdict', [what, why, String(decider.ruleId), String(decider.priority)]);
+}
+
+/** «Ohne diese Ausnahme: Sperrseite (Strict Block) durch EasyList, Priorität 29», or null when no exception decides. */
+function counterfactualText(r: ExplainResult, meta: BuildMeta | null): string | null {
+  const cf = r.counterfactual;
+  if (!cf) return null;
+  if (!cf.winner || cf.outcome === 'none' || cf.outcome === 'modifyHeaders') return t('nerdLabCounterfactualNone');
+  const { what, why } = decisionWords(cf.winner, meta);
+  return t('nerdLabCounterfactual', [what, why, String(cf.winner.priority)]);
+}
+
+const TYPE_KEYS: Record<string, string> = {
+  main_frame: 'nerdLabTypeMainFrame',
+  sub_frame: 'nerdLabTypeSubFrame',
+  script: 'nerdLabTypeScript',
+  image: 'nerdLabTypeImage',
+  stylesheet: 'nerdLabTypeStylesheet',
+  font: 'nerdLabTypeFont',
+  xmlhttprequest: 'nerdLabTypeXhr',
+  ping: 'nerdLabTypePing',
+  media: 'nerdLabTypeMedia',
+  websocket: 'nerdLabTypeWebsocket',
+  other: 'nerdLabTypeOther',
+};
+
+/** «Seitennavigation (main_frame)»: readable name and the DNR type. */
+const requestTypeLabel = (type: string): string => (TYPE_KEYS[type] ? `${t(TYPE_KEYS[type]!)} (${type})` : type);
+
+/** The type a pasted URL is checked as, changeable per URL (reruns the check). */
+function typeControl(r: ExplainResult, onType: ((req: DryRequest, type: string) => void) | null): HTMLElement {
+  const req = r.request;
+  const id = nextId('lab-type');
+  const label = h('label', { class: 'lab-x__type-label', attrs: { for: id }, text: t('nerdLabExplainCheckedAs') });
+  const types: string[] = [...EXPLAIN_TYPES];
+  if (!types.includes(req.type)) types.push(req.type);
+  const sel = h('select', { class: 'select select--sm lab-x__type', attrs: { id } }, ...types.map((ty) => h('option', { attrs: { value: ty }, text: requestTypeLabel(ty) })));
+  sel.value = req.type;
+  if (onType && req.line !== undefined) sel.addEventListener('change', () => onType(req, sel.value));
+  else sel.disabled = true;
+  return h(
+    'span',
+    { class: 'lab-x__meta' },
+    label,
+    sel,
+    req.typeGuessed ? h('span', { class: 'lab-x__guess', text: t('nerdLabExplainTypeGuessed') }) : null,
+    h('span', { class: 'lab-x__site', text: req.initiator ? t('nerdLabExplainOnPage', req.initiator) : t('nerdLabExplainNoPage') }),
+  );
+}
+
+function explainItem(r: ExplainResult, meta: BuildMeta | null, onType: ((req: DryRequest, type: string) => void) | null): HTMLElement {
+  const w = r.winner;
   const decider = w ?? r.headers[0];
   const outcome = !w ? r.outcome : w.action === 'allowAllRequests' ? 'allow' : (w.action as ExplainResult['outcome']);
-  const key = VERDICT[outcome];
-  const verdict = decider && key ? t(key, [sourceName(decider, meta), String(decider.priority)]) : t('nerdLabExplainNone');
-  const head = h(
-    'div',
-    { class: 'lab-x__head' },
-    h('code', { class: 'lab-x__url', text: r.request.url, attrs: { title: r.request.url } }),
-    h('span', { class: 'lab-x__meta', text: `${typeLabel(r.request.type)} · ${r.request.initiator ?? t('nerdLabExplainNoPage')}` }),
-  );
+  const cf = counterfactualText(r, meta);
+  const head = h('div', { class: 'lab-x__head' }, h('code', { class: 'lab-x__url', text: r.request.url, attrs: { title: r.request.url } }), typeControl(r, onType));
   const rows = r.hits.map((x) => {
     const win = !!w && x.source === w.source && x.ruleId === w.ruleId && x.action === w.action && x.page === w.page;
     const isStatic = !x.source.startsWith('_') && x.source !== 'custom' && x.source !== 'admin';
-    const { shown, more } = relevantFilters(x.filters, r.request.url);
+    const fd = filterDisplay(x, x.page && r.request.initiator ? `https://${r.request.initiator}/` : r.request.url);
+    const derivedTitle = t('nerdLabExplainDerived', fmtNumber(Math.max(x.filterCount, 2)));
+    const codes: HTMLElement[] = fd.shown.map((f, i) =>
+      h('code', { class: i < fd.relevant ? 'lab-x__hit' : '', text: f, attrs: fd.derived && i === 0 ? { title: derivedTitle } : {} }),
+    );
+    // A rebuilt text is not a line read from the list: say so visibly, not only in the tooltip.
+    if (fd.derived && codes.length > 0) codes.splice(1, 0, h('span', { class: 'lab-x__derived', text: t('nerdLabExplainDerivedTag'), attrs: { title: derivedTitle } }));
     return h(
       'tr',
       { class: win ? 'lab-x__win' : '' },
       h('td', { class: 'lab-x__mark' }, win ? icon('check', 12) : null, win ? h('span', { class: 'sr-only', text: t('nerdLabExplainWinner') }) : null),
-      h('td', { class: 'mono lab-x__action', text: x.page ? `${x.action} (${t('nerdLabExplainPage')})` : x.action }),
+      h('td', { class: 'lab-x__action' }, h('span', { class: 'lab-x__act', text: actionLabel(x) }), h('span', { class: 'mono lab-x__raw', text: x.action })),
       h('td', { class: 'num', text: String(x.priority) }),
       h('td', { class: 'lab-x__src', text: sourceName(x, meta) }),
       h(
         'td',
         { class: 'lab-x__filter' },
-        ...(shown.length ? shown.map((f) => h('code', { text: f })) : [h('span', { class: 'mono db-muted', text: `#${x.ruleId}` })]),
-        more ? h('span', { class: 'lab-x__more', text: `+${fmtNumber(more)}` }) : null,
-        isStatic && shown.length
-          ? h('button', { class: 'act-history', attrs: { type: 'button', title: t('nerdLabHistoryTitle'), 'aria-label': t('nerdLabHistoryTitle') }, on: { click: () => void openRuleHistory(`${x.source}:${x.ruleId}`, meta) } }, t('nerdLabHistory'), icon('external', 10))
+        ...(codes.length ? codes : [h('span', { class: 'mono db-muted', text: `#${x.ruleId}` })]),
+        fd.more ? h('span', { class: 'lab-x__more', text: t('nerdLabExplainMore', fmtNumber(fd.more)) }) : null,
+        isStatic && fd.shown.length
+          ? h(
+              'button',
+              {
+                class: 'act-history',
+                attrs: { type: 'button', title: t('nerdLabHistoryTitle'), 'aria-label': `${t('nerdLabHistory')}: ${t('nerdLabHistoryTitle')}` },
+                on: { click: () => void openRuleHistory(`${x.source}:${x.ruleId}`, meta, fd.relevant ? fd.shown.slice(0, fd.relevant) : undefined) },
+              },
+              t('nerdLabHistory'),
+              icon('external', 10),
+            )
           : null,
       ),
     );
@@ -328,7 +431,8 @@ function explainItem(r: ExplainResult, meta: BuildMeta | null): HTMLElement {
     'li',
     { class: 'lab-x' },
     head,
-    h('p', { class: `lab-x__verdict lab-x__verdict--${decider ? outcome : 'none'}`, text: verdict }),
+    h('p', { class: `lab-x__verdict lab-x__verdict--${decider ? outcome : 'none'}`, text: verdictText(r, meta) }),
+    cf ? h('p', { class: 'lab-x__cf', text: cf }) : null,
     rows.length
       ? h(
           'div',
@@ -404,6 +508,13 @@ function playgroundSection(meta: BuildMeta | null, cfg: EffectiveConfig): Tool {
   resultsPanel.hidden = true;
   let runs = 0;
 
+  /** The type select of an explain result: rewrite that line of the URL box and run again. */
+  const onType = (req: DryRequest, type: string): void => {
+    if (req.line === undefined) return;
+    urlsArea.value = setRequestType(urlsArea.value, req.line, req, type);
+    void run();
+  };
+
   /** Pasted URLs against the enabled lists, custom and dynamic rules; progress goes to `status`. */
   const explain = async (requests: DryRequest[], token: number): Promise<HTMLElement | null> => {
     const dnr = chrome.declarativeNetRequest;
@@ -431,7 +542,7 @@ function playgroundSection(meta: BuildMeta | null, cfg: EffectiveConfig): Tool {
       { class: 'lab-xs' },
       h('h3', { class: 'lab-xs__title', text: t('nerdLabExplainTitle') }),
       requests.length > EXPLAIN_MAX_REQUESTS ? h('p', { class: 'lab-res__note', text: t('nerdLabExplainMax', fmtNumber(EXPLAIN_MAX_REQUESTS)) }) : null,
-      h('ul', { class: 'lab-xs__list' }, ...out.map((r) => explainItem(r, meta))),
+      h('ul', { class: 'lab-xs__list' }, ...out.map((r) => explainItem(r, meta, onType))),
     );
   };
 

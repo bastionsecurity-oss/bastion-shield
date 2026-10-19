@@ -760,7 +760,7 @@
     "message": "Cette page a tenté de placer une commande dans votre presse-papiers. Bastion Shield l’a remplacée par une note inoffensive. Ne collez jamais de commandes provenant de sites web dans « Exécuter », le Terminal ou PowerShell."
   },
   "nerdGuardClipTitle": {
-    "message": "Commande suspecte bloquée dans le presse-papiers"
+    "message": "Commande suspecte retirée du presse-papiers (ClickFix)"
   },
   "nerdGuardLookalikeHint": {
     "message": "Vérifiez l’adresse avant de vous connecter ou de payer."
@@ -777,13 +777,13 @@
     }
   },
   "nerdGuardReasonCombo": {
-    "message": "L’adresse associe le nom à d’autres mots."
+    "message": "L’adresse associe le nom de marque à d’autres mots (combosquatting)."
   },
   "nerdGuardReasonHomoglyph": {
-    "message": "L’adresse utilise des caractères qui se confondent facilement."
+    "message": "L’adresse contient des caractères qui se ressemblent (homoglyphes)."
   },
   "nerdGuardReasonTypo": {
-    "message": "L’adresse diffère par une faute de frappe."
+    "message": "L’adresse diffère par une faute de frappe (typosquatting)."
   },
   "ovByCategory": {
     "message": "Par catégorie"
@@ -1734,25 +1734,25 @@
     "message": "Comme le navigateur"
   },
   "nerdPopupLookalikeHomoglyph": {
-    "message": "caractères trompeurs"
+    "message": "homoglyphes (caractères semblables)"
   },
   "nerdPopupLookalikeTypo": {
-    "message": "domaine avec faute de frappe"
+    "message": "faute de frappe (typosquatting)"
   },
   "nerdPopupLookalikeCombo": {
-    "message": "nom de marque avec ajout"
+    "message": "marque avec mots ajoutés (combosquatting)"
   },
   "nerdPopupFpNoise": {
-    "message": "répondu avec du bruit"
+    "message": "réponses avec des valeurs aléatoires"
   },
   "nerdPopupHistory": {
-    "message": "historique"
+    "message": "GitHub"
   },
   "nerdBisectNeedsLog": {
     "message": "le bisect nécessite le journal d’activité (paramètres)"
   },
   "nerdBisectNeedsProtection": {
-    "message": "le bisect nécessite la protection sur ce site"
+    "message": "bisect : activez d’abord la protection pour ce site"
   },
   "nerdBisectYes": {
     "message": "oui"
@@ -1761,13 +1761,13 @@
     "message": "non"
   },
   "nerdBisectFound": {
-    "message": "casse la page"
+    "message": "Trouvé :"
   },
   "nerdBisectFoundMany": {
-    "message": "ces hôtes cassent la page ensemble"
+    "message": "Trouvé : ces hôtes cassent la page seulement ensemble"
   },
   "nerdBisectPartial": {
-    "message": "pas entièrement séparables ; ensemble, la page fonctionne"
+    "message": "pas clairement séparables – avec tous ensemble, la page fonctionne"
   },
   "nerdBisectKeep": {
     "message": "garder l’exception"
@@ -1782,13 +1782,13 @@
     "message": "les filtres personnels sont verrouillés par votre organisation"
   },
   "nerdBisectError": {
-    "message": "étape du bisect échouée, réessayez"
+    "message": "étape du bisect échouée, veuillez réessayer"
   },
   "nerdBisectNoFilterText": {
     "message": "Texte du filtre inconnu"
   },
   "nerdBisectRuleLabel": {
-    "message": "Test de bissection (mode nerd)"
+    "message": "Test bisect (mode nerd)"
   },
   "nerdSlLabel": {
     "message": "Mode nerd"
@@ -1800,7 +1800,7 @@
     "message": "Appels de fingerprinting sur cette page"
   },
   "nerdSlClipTitle": {
-    "message": "Écritures dangereuses dans le presse-papiers remplacées"
+    "message": "Commandes du presse-papiers remplacées (ClickFix)"
   },
   "nerdSlHostsTitle": {
     "message": "Hôtes bloqués sur cette page"
@@ -1839,7 +1839,7 @@
     "message": "copié"
   },
   "nerdSlAllowed": {
-    "message": "exception pour $P1$ ajoutée, rechargez pour l’appliquer",
+    "message": "exception pour $P1$ ajoutée – rechargez la page",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -1853,7 +1853,7 @@
     "message": "le mode nerd est imposé par votre organisation"
   },
   "nerdSlFpOff": {
-    "message": "compteur de fingerprinting désactivé"
+    "message": "le compteur de fingerprinting est désactivé"
   },
   "nerdSlFpNone": {
     "message": "aucun appel de fingerprinting"
@@ -1871,16 +1871,16 @@
     "message": "hôte ou URL non valide"
   },
   "nerdCmdBisect": {
-    "message": "trouver le filtre qui casse cette page"
+    "message": "trouver le filtre fautif"
   },
   "nerdCmdBisectCancel": {
     "message": "arrêter le bisect, bloquer comme avant"
   },
   "nerdCmdWhy": {
-    "message": "expliquer une URL dans le bac à sable du Labo"
+    "message": "vérifier une URL avec les règles installées"
   },
   "nerdCmdBlame": {
-    "message": "historique d’une ligne de filtre dans le Labo"
+    "message": "historique d’un filtre sur GitHub"
   },
   "nerdCmdAllow": {
     "message": "exception pour un hôte sur ce site"
@@ -1892,7 +1892,7 @@
     "message": "rapport de la page en JSON dans le presse-papiers"
   },
   "nerdCmdLab": {
-    "message": "ouvrir le Labo"
+    "message": "ouvrir les outils de développement"
   },
   "nerdCmdNerdOff": {
     "message": "désactiver le mode nerd"
@@ -1914,7 +1914,7 @@
     }
   },
   "nerdBisectAsk": {
-    "message": "$P1$ hôtes laissés passer – la page fonctionne ?",
+    "message": "$P1$ hôtes laissés passer – la page fonctionne-t-elle maintenant ?",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -1922,7 +1922,7 @@
     }
   },
   "nerdBisectAskOne": {
-    "message": "$P1$ hôte laissé passer – la page fonctionne ?",
+    "message": "$P1$ hôte laissé passer – la page fonctionne-t-elle maintenant ?",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -1950,40 +1950,40 @@
     "message": "ok"
   },
   "cmdNerdBisect": {
-    "message": "Mode nerd : lancer ou arrêter le bisect des filtres sur cet onglet"
+    "message": "Mode nerd : lancer ou arrêter le bisect (trouver le filtre fautif) dans cet onglet"
   },
   "nerdSettingsTitle": {
     "message": "Mode nerd"
   },
   "nerdSettingsEnabled": {
-    "message": "Labo et outils pour développeurs"
+    "message": "Activer le mode nerd"
   },
   "nerdSettingsEnabledDesc": {
-    "message": "Labo, menu contextuel et recherche du filtre fautif, plus trois gardes expérimentales. Rien ne quitte cet appareil."
+    "message": "Outils de développement, ligne de commande (Ctrl+K), menu contextuel et bisect. Rien ne quitte cet appareil."
   },
   "nerdSettingsClipboard": {
-    "message": "Protection du presse-papiers"
+    "message": "Protection ClickFix (presse-papiers)"
   },
   "nerdSettingsClipboardDesc": {
     "message": "Remplace les commandes dangereuses qu’un site écrit dans le presse-papiers (ClickFix : PowerShell, mshta, curl | sh)."
   },
   "nerdSettingsFpMeter": {
-    "message": "Compteur d’empreinte numérique"
+    "message": "Compteur de fingerprinting"
   },
   "nerdSettingsFpMeterDesc": {
-    "message": "Compte par page combien de fois canvas, WebGL, l’audio et d’autres interfaces d’empreinte sont lus."
+    "message": "Compte par page combien de fois canvas, WebGL, l’audio et d’autres API de fingerprinting sont lus."
   },
   "nerdSettingsLookalike": {
-    "message": "Alerte de domaine sosie"
+    "message": "Domaines similaires (typosquatting)"
   },
   "nerdSettingsLookalikeDesc": {
-    "message": "Avertit lorsqu’une adresse ressemble à s’y méprendre à un domaine protégé (lettres inversées, caractères semblables)."
+    "message": "Avertit lorsqu’une adresse ressemble à s’y méprendre à un domaine protégé (faute de frappe, caractères semblables, nom de marque avec mots ajoutés)."
   },
   "nerdSettingsDomains": {
     "message": "Domaines protégés"
   },
   "nerdSettingsDomainsHint": {
-    "message": "Un domaine par ligne, p. ex. celui de votre banque. Les sosies de ces domaines déclenchent l’alerte."
+    "message": "Un domaine par ligne, p. ex. celui de votre banque. Les domaines similaires déclenchent l’alerte."
   },
   "nerdSettingsDomainsPolicy": {
     "message": "Définis par votre organisation"
@@ -2013,37 +2013,37 @@
     }
   },
   "nerdLabNav": {
-    "message": "Labo"
+    "message": "Outils de développement"
   },
   "nerdLabTitle": {
-    "message": "Labo"
+    "message": "Outils de développement"
   },
   "nerdLabLead": {
-    "message": "Essayer des filtres, vérifier les jeux de règles, retrouver l’origine d’un filtre."
+    "message": "Tester des filtres, vérifier des URL avec les règles installées, contrôler les sommes de contrôle et ouvrir l’historique d’un filtre sur GitHub."
   },
   "nerdLabOffTitle": {
     "message": "Le mode nerd est désactivé"
   },
   "nerdLabOffText": {
-    "message": "Activez-le dans « Paramètres » pour ouvrir le labo."
+    "message": "Activez-le dans « Paramètres » pour ouvrir les outils de développement."
   },
   "nerdLabTabsLabel": {
     "message": "Outil"
   },
   "nerdLabTabPlayground": {
-    "message": "Bac à sable"
+    "message": "Testeur de filtres"
   },
   "nerdLabTabIntegrity": {
-    "message": "Intégrité"
+    "message": "Sommes de contrôle (SHA-256)"
   },
   "nerdLabTabBlame": {
-    "message": "Origine"
+    "message": "Historique des filtres"
   },
   "nerdLabPlayTitle": {
-    "message": "Bac à sable de filtres"
+    "message": "Testeur de filtres"
   },
   "nerdLabPlayLead": {
-    "message": "Compilés comme vos filtres personnels et testés sur des requêtes. Rien n’est bloqué ni enregistré."
+    "message": "Testez des filtres sur de vraies requêtes. Simulation (dry run) : rien n’est bloqué ni enregistré."
   },
   "nerdLabFiltersLabel": {
     "message": "Filtres"
@@ -2093,7 +2093,7 @@
     "message": "URL"
   },
   "nerdLabUrlsHint": {
-    "message": "Une requête par ligne : URL [type] [page], p. ex. https://ads.example/a.js script news.ch. Sans type, il est déduit de l’extension ; sans page, la requête compte comme tierce."
+    "message": "Une requête par ligne : URL [type] [page], p. ex. https://ads.example/a.js script news.ch. Sans type, il est déduit de l’extension (modifiable dans le résultat) ; sans page, la requête compte comme tierce."
   },
   "nerdLabUrlsInvalid": {
     "message": "URL non valides ignorées (ligne $P1$).",
@@ -2251,7 +2251,7 @@
     "message": "Tronqué : seules les premières correspondances sont listées."
   },
   "nerdLabOverridden": {
-    "message": "Supplanté, résultat : $P1$",
+    "message": "Supplanté par un autre filtre, résultat : $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -2259,10 +2259,10 @@
     }
   },
   "nerdLabIntegrityTitle": {
-    "message": "Intégrité des jeux de règles"
+    "message": "Sommes de contrôle des fichiers de règles (SHA-256)"
   },
   "nerdLabIntegrityLead": {
-    "message": "Calcule ici, dans le navigateur, le SHA-256 de chaque fichier de règles livré et le compare aux valeurs du build."
+    "message": "Calcule ici, dans le navigateur, la somme de contrôle SHA-256 de chaque fichier de règles installé et la compare à la valeur du build."
   },
   "nerdLabVerify": {
     "message": "Vérifier"
@@ -2331,13 +2331,13 @@
     "message": "Cette version ne contient pas de rulesets/integrity.json ; les builds plus récents l’écrivent."
   },
   "nerdLabIntegrityCaption": {
-    "message": "Un autocontrôle, pas une signature : qui peut modifier les fichiers de règles peut aussi modifier les sommes de contrôle. La signature du store garantit le paquet entier."
+    "message": "Autocontrôle : compare les fichiers installés aux sommes de contrôle du build. Ce n’est pas une signature : qui peut modifier les fichiers peut aussi modifier les sommes de contrôle. La signature du store garantit le paquet entier."
   },
   "nerdLabProvTitle": {
-    "message": "Provenance des listes"
+    "message": "Sources des listes de filtres"
   },
   "nerdLabProvLead": {
-    "message": "Exactement ce que le build du $P1$ a récupéré (version $P2$) : source, SHA-256, taille et version de chaque liste.",
+    "message": "Ce que le build du $P1$ (version $P2$) a téléchargé : source, SHA-256, taille et version de chaque liste.",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -2363,10 +2363,10 @@
     "message": "Copié dans le presse-papiers"
   },
   "nerdLabBlameTitle": {
-    "message": "Origine d’un filtre"
+    "message": "Historique des filtres"
   },
   "nerdLabBlameLead": {
-    "message": "Pour chaque filtre, son historique dans la source sur GitHub : qui l’a ajouté, quand et pourquoi."
+    "message": "Montre quand et pourquoi une ligne de filtre a été ajoutée à sa liste (GitHub)."
   },
   "nerdLabBlameInput": {
     "message": "Texte du filtre"
@@ -2396,7 +2396,7 @@
     "message": "Aucun texte de filtre n’est enregistré pour cette règle."
   },
   "nerdLabBlameDialogTitle": {
-    "message": "Historique du filtre"
+    "message": "Historique du filtre (GitHub)"
   },
   "nerdLabBlameCaption": {
     "message": "Ouvre github.com dans un nouvel onglet. Seul le texte du filtre est transmis, jamais une adresse visitée."
@@ -2405,31 +2405,31 @@
     "message": "Fermer"
   },
   "nerdLabHistory": {
-    "message": "historique"
+    "message": "GitHub"
   },
   "nerdLabHistoryTitle": {
-    "message": "Ouvrir l’historique de ce filtre sur GitHub"
+    "message": "Montre quand et pourquoi une ligne de filtre a été ajoutée à sa liste (GitHub)"
   },
   "nerdMenuExplain": {
-    "message": "Expliquer cette URL"
+    "message": "Vérifier l’URL : pourquoi bloquée ?"
   },
   "nerdMenuTestFilter": {
-    "message": "Tester la sélection comme filtre"
+    "message": "Tester la sélection dans le testeur de filtres"
   },
   "nerdMenuBlameFilter": {
-    "message": "Chercher l’origine de la sélection comme filtre"
+    "message": "Historique du filtre sélectionné (GitHub)"
   },
   "nerdMenuBisect": {
-    "message": "Trouver le filtre qui casse la page"
+    "message": "Trouver le filtre fautif (bisect)"
   },
   "nerdMenuOpenLab": {
-    "message": "Ouvrir le labo"
+    "message": "Ouvrir les outils de développement"
   },
   "nerdLabExplainToggle": {
-    "message": "Vérifier aussi avec les règles installées"
+    "message": "Vérifier l’URL avec les règles installées"
   },
   "nerdLabExplainTitle": {
-    "message": "Règles installées"
+    "message": "Vérification avec les règles installées"
   },
   "nerdLabExplainProgress": {
     "message": "Vérification $P1$ sur $P2$ : $P3$",
@@ -2445,63 +2445,8 @@
       }
     }
   },
-  "nerdLabExplainBlock": {
-    "message": "Bloquée par $P1$ (priorité $P2$)",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      }
-    }
-  },
-  "nerdLabExplainAllow": {
-    "message": "Autorisée par $P1$ (priorité $P2$)",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      }
-    }
-  },
-  "nerdLabExplainRedirect": {
-    "message": "Redirigée par $P1$ (priorité $P2$)",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      }
-    }
-  },
-  "nerdLabExplainUpgrade": {
-    "message": "Passée en HTTPS par $P1$ (priorité $P2$)",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      }
-    }
-  },
-  "nerdLabExplainHeaders": {
-    "message": "En-têtes modifiés par $P1$ (priorité $P2$)",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      }
-    }
-  },
   "nerdLabExplainNone": {
-    "message": "Aucune règle installée ne correspond : la requête serait chargée."
+    "message": "Résultat : chargement normal – aucune règle installée ne correspond."
   },
   "nerdLabExplainCapped": {
     "message": "Seules les $P1$ premières règles correspondantes sont listées.",
@@ -2522,11 +2467,8 @@
   "nerdLabExplainFailed": {
     "message": "Les règles installées n’ont pas pu être lues."
   },
-  "nerdLabExplainPage": {
-    "message": "page"
-  },
   "nerdLabExplainNoPage": {
-    "message": "aucune page"
+    "message": "sans page (tiers)"
   },
   "nerdLabExplainWinner": {
     "message": "Décide"
@@ -2542,6 +2484,179 @@
   },
   "nerdLabExplainColFilter": {
     "message": "Filtre"
+  },
+  "nerdLabVerdict": {
+    "message": "Résultat : $P1$ $P2$ (règle #$P3$, priorité $P4$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "nerdLabVerdictLine": {
+    "message": "Résultat : $P1$ $P2$ (ligne $P3$, priorité $P4$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "nerdLabVerdictAllowed": {
+    "message": "Autorisée"
+  },
+  "nerdLabReasonBy": {
+    "message": "par $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabReasonSiteOff": {
+    "message": "– la protection est désactivée pour ce site"
+  },
+  "nerdLabReasonProceed": {
+    "message": "– vous avez choisi « Continuer quand même » sur la page de blocage"
+  },
+  "nerdLabReasonBisect": {
+    "message": "– laissée passer par le bisect en cours"
+  },
+  "nerdLabReasonStandard1p": {
+    "message": "– le mode standard autorise le contenu du site lui-même"
+  },
+  "nerdLabCounterfactual": {
+    "message": "Sans cette exception : $P1$ $P2$, priorité $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "nerdLabCounterfactualNone": {
+    "message": "Sans cette exception : chargement normal (aucune règle de blocage)"
+  },
+  "nerdLabActBlock": {
+    "message": "Blocage"
+  },
+  "nerdLabActAllow": {
+    "message": "Autorisation (exception)"
+  },
+  "nerdLabActPage": {
+    "message": "Page autorisée"
+  },
+  "nerdLabActStrict": {
+    "message": "Page de blocage (strict block)"
+  },
+  "nerdLabActSurrogate": {
+    "message": "Script de substitution (surrogate)"
+  },
+  "nerdLabActParams": {
+    "message": "Paramètres de suivi supprimés"
+  },
+  "nerdLabActDebounce": {
+    "message": "Bounce tracking évité"
+  },
+  "nerdLabActRedirect": {
+    "message": "Redirection"
+  },
+  "nerdLabActHeaders": {
+    "message": "En-têtes modifiés"
+  },
+  "nerdLabActGpc": {
+    "message": "En-tête GPC défini"
+  },
+  "nerdLabActUpgrade": {
+    "message": "Passage en HTTPS"
+  },
+  "nerdLabExplainCheckedAs": {
+    "message": "vérifiée comme"
+  },
+  "nerdLabExplainTypeGuessed": {
+    "message": "déduit de l’extension"
+  },
+  "nerdLabExplainOnPage": {
+    "message": "sur $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabExplainMore": {
+    "message": "+$P1$ autres",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabExplainDerived": {
+    "message": "Cette règle regroupe $P1$ filtres ; le texte pour ce domaine est déduit de la liste de domaines de la règle.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabExplainDerivedTag": {
+    "message": "déduit"
+  },
+  "nerdLabTypeMainFrame": {
+    "message": "Navigation de page"
+  },
+  "nerdLabTypeSubFrame": {
+    "message": "Iframe"
+  },
+  "nerdLabTypeScript": {
+    "message": "Script"
+  },
+  "nerdLabTypeImage": {
+    "message": "Image"
+  },
+  "nerdLabTypeStylesheet": {
+    "message": "Feuille de style"
+  },
+  "nerdLabTypeFont": {
+    "message": "Police"
+  },
+  "nerdLabTypeXhr": {
+    "message": "XHR/Fetch"
+  },
+  "nerdLabTypePing": {
+    "message": "Ping"
+  },
+  "nerdLabTypeMedia": {
+    "message": "Média"
+  },
+  "nerdLabTypeWebsocket": {
+    "message": "WebSocket"
+  },
+  "nerdLabTypeOther": {
+    "message": "Autre"
   },
   "nerdLabKeyFocus": {
     "message": "aller à la saisie"

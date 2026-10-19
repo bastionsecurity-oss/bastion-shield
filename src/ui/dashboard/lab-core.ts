@@ -1,4 +1,4 @@
-// Bastion Shield — the logic behind the nerd-mode «Labor» (views/lab.ts),
+// Bastion Shield — the logic behind the nerd-mode «Entwicklertools» (developer tools) (views/lab.ts),
 // free of DOM so node:test can cover it:
 //   - filter playground: compile filters exactly like custom filters
 //     (compileCustom, same redirect resources, no scriptlets), one filter at a
@@ -109,6 +109,10 @@ export interface DryRequest {
   kind?: ActivityKind;
   /** The list that handled it (history only). */
   list?: string;
+  /** 0-based line in the pasted-URL box (pasted only). */
+  line?: number;
+  /** The line named no type: guessed from the file extension (pasted only). */
+  typeGuessed?: boolean;
 }
 
 /** History events → requests. The initiator is approximated by the tab's top-level site. */
@@ -203,7 +207,9 @@ export function parseUrlList(text: string): { requests: DryRequest[]; invalid: n
       if (alias && type === null) type = alias;
       else if (page === null) page = hostOfInput(p);
     }
-    requests.push({ url, type: type ?? guessType(url), initiator: page, source: 'pasted' });
+    const req: DryRequest = { url, type: type ?? guessType(url), initiator: page, source: 'pasted', line: i };
+    if (type === null) req.typeGuessed = true;
+    requests.push(req);
   });
   return { requests, invalid };
 }
@@ -469,6 +475,20 @@ export function parseLabHash(hash: string): LabLink {
   if (filter) link.filter = filter;
   return link;
 }
+
+/**
+ * `text` with line `line` (0-based) of the pasted-URL box rewritten as
+ * `URL type [page]`: the explain result's type select changes one request.
+ */
+export function setRequestType(text: string, line: number, req: Pick<DryRequest, 'url' | 'initiator'>, type: string): string {
+  const lines = text.split('\n');
+  if (line < 0 || line >= lines.length) return text;
+  lines[line] = [req.url, type, req.initiator ?? ''].filter(Boolean).join(' ');
+  return lines.join('\n');
+}
+
+/** DNR resource types offered in the explain result's type select, in display order. */
+export const EXPLAIN_TYPES = ['main_frame', 'sub_frame', 'script', 'image', 'stylesheet', 'font', 'xmlhttprequest', 'ping', 'media', 'websocket', 'other'] as const;
 
 /** A pasted-request line (`URL [type] [page]`, see parseUrlList) for a deep link. */
 export function linkRequestLine(link: LabLink): string {
