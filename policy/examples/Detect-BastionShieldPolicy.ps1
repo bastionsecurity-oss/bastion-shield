@@ -142,6 +142,9 @@ $PolicySchema = [ordered]@{
     historyEnabled           = 'bool'
     historyRetentionDays     = 'int:0:3650'
     reportBrokenSite         = 'enum:github,email,none'
+    nerdMode                 = 'bool'
+    clipboardGuard           = 'bool'
+    protectedDomains         = 'string[]'
     protectionEnabled        = 'bool'
 }
 

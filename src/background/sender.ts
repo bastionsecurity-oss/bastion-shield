@@ -20,7 +20,7 @@ export interface SenderInfo {
 export type SenderKind = 'content' | 'extension';
 
 /** Messages from content scripts in web frames. */
-export const CONTENT_TYPES: ReadonlySet<string> = new Set(['cosmetic:frame', 'cosmetic:tokens', 'cosmetic:procedural']);
+export const CONTENT_TYPES: ReadonlySet<string> = new Set(['cosmetic:frame', 'cosmetic:tokens', 'cosmetic:procedural', 'nerd:signal']);
 /** Messages from pages/blocked.html only (privileged: proceeding lifts a strict block). */
 export const BLOCKED_TYPES: ReadonlySet<string> = new Set(['blocked:info', 'blocked:proceed']);
 export const UI_TYPES: ReadonlySet<string> = new Set([
@@ -39,6 +39,7 @@ export const UI_TYPES: ReadonlySet<string> = new Set([
   'history:clear',
   'backup:export',
   'backup:import',
+  'nerd:bisect',
 ]);
 
 export function isKnownType(type: string): boolean {

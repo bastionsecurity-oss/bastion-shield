@@ -93,6 +93,7 @@ The install prompt summarises these permissions in the browser's own words (the 
 | `alarms` | none | Prune old history once a day. |
 | `privacy` | "Change your privacy-related settings" | Turn off hyperlink auditing and the Privacy Sandbox ad APIs; optionally WebRTC and third-party cookie settings. |
 | `contentSettings` | "Change your settings that control websites' access to features such as cookies, JavaScript, …" | The per-site "Block scripts" switch. |
+| `contextMenus` | none | Nerd mode only: right-click entries that open a link, image or selected filter in the Lab, and start the filter bisect. Nothing is read until you click an entry. |
 | Host access `<all_urls>` | "Read and change all your data on all websites" | Needed for cosmetic filtering and scriptlets on every site, for redirect rules (replacing ad scripts with harmless stand-ins) and header rules (Global Privacy Control), and for observing blocked requests. The extension does not read page content beyond what filtering needs, and sends nothing anywhere. |
 | `incognito: "split"` | none | Lets the extension's warning and bounce pages work in private windows when you allow the extension there. |
 | `storage.managed_schema` | none | Declares the settings an administrator may set (`policy/managed_schema.json`). |

@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { compileList, collectBadfilters } from '../../src/compiler/index.ts';
 import type { CompileOptions, DnrRule } from '../../src/compiler/types.ts';
 import { opts, ruleProblems, rulesOf } from './helpers.ts';
+import { PRIORITY } from '../../src/shared/constants.ts';
 
 function compile(text: string, over: Partial<CompileOptions> = {}): DnrRule[] {
   const out = compileList(text, opts(over));
@@ -223,8 +224,13 @@ describe('priorities and actions', () => {
       condition: { requestDomains: ['site.example'], resourceTypes: ['main_frame', 'sub_frame'] },
     });
   });
-  test('$important on an exception is invalid', () => {
+  test('$important on an exception is invalid in lists', () => {
     assert.deepEqual(reasons('@@/ads.$important'), { 'invalid-option': 1 });
+    assert.deepEqual(reasons('@@||site.example^$document,important'), { 'invalid-option': 1 });
+  });
+  test('important allow band sits above every $important block and redirect', () => {
+    assert.ok(PRIORITY.IMPORTANT_ALLOW > PRIORITY.IMPORTANT_REDIRECT + 8);
+    assert.ok(PRIORITY.IMPORTANT_ALLOW < PRIORITY.SITE_USER_BLOCK);
   });
   test('unknown and duplicate options reject the filter', () => {
     assert.deepEqual(reasons('/ads.$script,sitekey=abc'), { 'unknown-option:sitekey': 1 });

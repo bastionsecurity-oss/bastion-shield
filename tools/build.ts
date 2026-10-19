@@ -592,6 +592,8 @@ export async function build(opts: BuildOptions = {}): Promise<{ meta: BuildMeta;
     },
   };
   await writeJson(join(outDir, 'rulesets', 'meta.json'), meta, true);
+  // 10b. SHA-256 of every file under rulesets/ for the dashboard's self-check (nerd-mode Lab).
+  await (await import('./integrity.ts')).writeIntegrity(outDir, meta.builtAt);
 
   // 11. Manifest.
   const ruleResources: ManifestRuleResource[] = [];

@@ -17,7 +17,7 @@ import { startReport } from '../../popup/report.ts';
 import { normalisePopupState } from '../../popup/state.ts';
 import { errorState, nextId, popupTabId, type View, mount } from '../common.ts';
 import { readHandoff } from '../../shared/handoff.ts';
-import { dir, getMeta } from '../store.ts';
+import { dir, getConfig, getMeta, onStoreChange } from '../store.ts';
 import { ListDirectory } from '../../shared/labels.ts';
 
 interface SiteSetReply {
@@ -55,6 +55,8 @@ export let collapseState: (() => PopupState) | null = null;
 
 export function siteView(): View {
   let live: LiveConnection | null = null;
+  // Nerd mode: blame links in the matched-rules panel follow the switch live.
+  let unsubscribe: (() => void) | null = null;
   return {
     async render(root) {
       // From the compact popup: its hand-off lets this view draw in the first frame (no
@@ -246,6 +248,13 @@ export function siteView(): View {
       void getMeta().then((meta) => {
         if (meta) matched.setDirectory(new ListDirectory(meta));
       });
+      // Nerd mode: upstream history links next to each filter, live with the switch.
+      const nerdOn = async (): Promise<boolean> => {
+        const c = await getConfig();
+        return c.ok && c.data.settings.nerd?.enabled === true;
+      };
+      void nerdOn().then((on) => matched.setBlame(on));
+      unsubscribe = onStoreChange(() => void nerdOn().then((on) => matched.setBlame(on)));
       const rules = h(
         'details',
         { class: 'site-rules' },
@@ -295,6 +304,8 @@ export function siteView(): View {
       // collapseState stays: «Verkleinern» from another section still hands over the last numbers.
       live?.close();
       live = null;
+      unsubscribe?.();
+      unsubscribe = null;
       delete document.body.dataset.site;
     },
   };

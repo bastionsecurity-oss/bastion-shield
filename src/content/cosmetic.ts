@@ -9,7 +9,9 @@
 //   2. hands procedural filters to content/procedural.js, which the SW
 //      injects on request (`cosmetic:procedural`),
 //   3. runs the generic id/class surveyor when the response allows it,
-//   4. redirects AMP documents to their canonical URL (top frame only).
+//   4. redirects AMP documents to their canonical URL (top frame only),
+//   5. shows the nerd mode lookalike-domain warning bar when the response
+//      carries one (top frame only; content/nerd-ui.ts).
 // The isolated world has its own JS built-ins, so page prototype tampering
 // cannot reach this script; only the shared DOM is untrusted.
 //
@@ -24,6 +26,7 @@ import type {
   ProceduralFilter,
 } from '../shared/types.ts';
 import { isolatedGlobals } from './api.ts';
+import { showLookalikeBanner } from './nerd-ui.ts';
 import { deAmpTarget, frameContext, hasQueuedAncestor, isAmpHtml, SURVEY, surveyTokens, throttleDelay } from './tokens.ts';
 
 /** Delay before the single retry of a failed message (SW waking up / restarting). */
@@ -461,6 +464,11 @@ function main(): void {
     }
     try {
       if (r.deAmp === true && isTop) startDeAmp();
+    } catch {
+      // ignore
+    }
+    try {
+      if (isTop && r.lookalike) showLookalikeBanner(r.lookalike);
     } catch {
       // ignore
     }

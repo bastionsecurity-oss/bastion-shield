@@ -126,6 +126,77 @@ body[data-site="off"] .pp-count__value { color: var(--text-3); }
 .pp-mode__lock { padding-right: 10px; }
 body[data-site="off"] .pp-mode { opacity: 0.55; }
 
+/* ------------------------------------------------------- Nerd statusline --
+ * Nerd mode only (nerd.ts): one mono row on the popup ground under a
+ * hairline, no tile. The lookalike marker is the only emphasis (strong text,
+ * never colour). The command line and the bisect replace the row in place. */
+.pp-sl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 2px 0;
+  border-top: 1px solid var(--line-soft);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-xs);
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.pp-sl button { padding: 0; border: 0; background: none; color: inherit; font: inherit; }
+.pp-sl button:disabled { opacity: 0.5; }
+.pp-sl :focus-visible { outline-offset: 1px; border-radius: 4px; }
+.pp-sl kbd {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 14px;
+}
+.pp-sl__line { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+/* Sentences flow as text and wrap between words. */
+.pp-sl__wrap { display: block; }
+.pp-sl__wrap > * + * { margin-left: 6px; }
+.pp-sl__items { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: baseline; gap: 0 12px; min-width: 0; }
+.pp-sl__item { white-space: nowrap; }
+.pp-sl__item--btn:hover, .pp-sl__item--btn[aria-expanded="true"] { color: var(--text-strong); }
+.pp-sl__sep { color: var(--text-3); }
+.pp-sl__warn { color: var(--text-strong); font-weight: 600; }
+.pp-sl__hint { flex: 0 0 auto; margin-left: auto; }
+.pp-sl__hint:hover kbd { color: var(--text-strong); border-color: var(--line-strong); }
+.pp-sl__flash { flex: 0 1 auto; margin-left: auto; min-width: 0; color: var(--text-strong); text-align: right; }
+.pp-sl__flash--line { margin-left: 0; text-align: left; }
+.pp-sl__strong { color: var(--text-strong); }
+.pp-sl__host { color: var(--text); overflow-wrap: anywhere; }
+.pp-sl__note { color: var(--text-2); }
+.pp-sl__trunc, .pp-sl__code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-sl__code { color: var(--text); }
+.pp-sl__rows { display: grid; grid-template-columns: max-content max-content; gap: 0 18px; }
+.pp-sl__num { text-align: right; color: var(--text); }
+.pp-sl__keys { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; }
+.pp-sl__key { display: inline-flex; align-items: baseline; gap: 5px; }
+.pp-sl__key:hover:not(:disabled) { color: var(--text-strong); }
+.pp-sl__key:hover:not(:disabled) kbd { color: var(--text-strong); border-color: var(--line-strong); }
+
+/* Command line: "> input", then up to six suggestions. */
+.pp-sl__cmd { display: flex; align-items: baseline; gap: 8px; }
+.pp-sl__prompt { color: var(--text-strong); }
+.pp-sl__input { flex: 1 1 auto; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--text-strong); font: inherit; caret-color: var(--text-strong); }
+.pp-sl__input:focus-visible { outline: none; }
+.pp-sl__input::placeholder { color: var(--text-3); opacity: 1; }
+.pp-sl__list { display: flex; flex-direction: column; margin: 0 -6px; }
+.pp-sl__opt { display: flex; align-items: baseline; gap: 10px; min-width: 0; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
+.pp-sl__opt[aria-selected="true"] { background: var(--pp-tile); }
+.pp-sl__name { flex: 0 1 auto; max-width: 60%; overflow: hidden; color: var(--text-strong); text-overflow: ellipsis; white-space: nowrap; }
+.pp-sl__desc { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--text-2); font-family: var(--font-sans); text-overflow: ellipsis; white-space: nowrap; }
+.pp-sl__opt kbd { flex: 0 0 auto; margin-left: auto; }
+.pp-sl__empty { padding: 2px 0; color: var(--text-3); }
+
+/* Blame links in the matched-rules panel (nerd mode). */
+.pp-rl__blame { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 2px; }
+
 /* -------------------------------------------------------------- Actions -- */
 .pp-actions { display: flex; align-items: center; gap: 10px; }
 .pp-round {

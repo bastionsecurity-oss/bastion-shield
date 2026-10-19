@@ -60,6 +60,7 @@ export function normalisePopupState(raw: unknown, fallbackTabId: number): PopupS
       reportBrokenSite: channel === 'github' || channel === 'email' || channel === 'none' ? channel : supportEmail ? 'email' : 'github',
     },
     incidentCta: r.incidentCta !== false,
+    nerd: r.nerd && typeof r.nerd === 'object' ? r.nerd : null,
     version: typeof r.version === 'string' ? r.version : '',
   };
 }

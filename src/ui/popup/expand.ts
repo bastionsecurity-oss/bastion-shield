@@ -42,7 +42,7 @@ function pairEl(p: (typeof MORPH_PAIRS)[number]): HTMLElement | null {
 
 /** Compact elements without a counterpart: they fade with a small drift. */
 function loners(): HTMLElement[] {
-  return Array.from(document.querySelectorAll<HTMLElement>('#pp-org, #pp-report, .pp-calm:not([hidden])')).filter((el) => !el.hidden);
+  return Array.from(document.querySelectorAll<HTMLElement>('#pp-org, #pp-report, .pp-calm:not([hidden]), #pp-nerd:not([hidden])')).filter((el) => !el.hidden);
 }
 
 export function setupExpand(opts: ExpandOptions): { expand: () => void } {

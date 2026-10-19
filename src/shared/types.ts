@@ -270,6 +270,22 @@ export interface Settings {
     /** Days to keep history. Default 30. 0 = keep only today's aggregate. */
     retentionDays: number;
   };
+  /**
+   * Nerd mode: power-user tools and experimental guards. Every feature below
+   * runs only while `enabled` is true (docs/NERD-MODE.md).
+   */
+  nerd: {
+    /** Master switch. Default false. */
+    enabled: boolean;
+    /** Replace dangerous clipboard writes (ClickFix: powershell, mshta, curl | sh …). Default true. */
+    clipboardGuard: boolean;
+    /** Count fingerprinting API calls per page (MAIN-world meter). Default true. */
+    fingerprintMeter: boolean;
+    /** Warn on lookalike domains of protected domains. Default true. */
+    lookalike: boolean;
+    /** User's protected domains (registrable domains, lower-case, punycode). Policy adds its own. */
+    protectedDomains: string[];
+  };
 }
 
 export interface SiteSettings {
@@ -331,6 +347,12 @@ export interface ManagedPolicy {
    * Default: 'email' when supportEmail is set, otherwise 'github'.
    */
   reportBrokenSite?: 'github' | 'email' | 'none';
+  /** Forces nerd mode on or off (nerd.enabled). */
+  nerdMode?: boolean;
+  /** Forces the clipboard guard on or off (nerd.clipboardGuard). */
+  clipboardGuard?: boolean;
+  /** Registrable domains protected by the lookalike warning, added to the user's own. */
+  protectedDomains?: string[];
   /**
    * Fleet-wide emergency switch. false = all filtering, cosmetic and privacy
    * scripts off everywhere (allowAllRequests for every site, registrations
@@ -422,6 +444,8 @@ export interface MsgCosmeticFrameResponse {
   generic: boolean;
   /** Redirect AMP documents to canonical. */
   deAmp: boolean;
+  /** Top frame only, nerd mode: this host looks like a protected domain. */
+  lookalike?: LookalikeHit | null;
 }
 
 /** Content script -> SW: newly seen id/class tokens ("#foo", ".bar"). */
@@ -484,7 +508,96 @@ export interface PopupState {
   managed: { organizationName?: string; reportBrokenSite: 'github' | 'email' | 'none'; supportEmail?: string; supportUrl?: string };
   /** Show the «Cyber-Vorfall?» button (settings ui.incidentCta). */
   incidentCta: boolean;
+  /** Nerd mode data for this tab; null while nerd mode is off. */
+  nerd: NerdTabState | null;
   version: string;
+}
+
+// ---------------------------------------------------------------------------
+// Nerd mode (docs/NERD-MODE.md)
+// ---------------------------------------------------------------------------
+
+/** Fingerprinting vectors counted by the MAIN-world meter. */
+export type FpVector = 'canvas' | 'webgl' | 'audio' | 'fonts' | 'navigator' | 'screen' | 'media' | 'timing';
+
+export interface LookalikeHit {
+  /** The visited hostname. */
+  host: string;
+  /** The protected registrable domain it imitates. */
+  target: string;
+  /** Why: 'homoglyph' (confusable characters / punycode), 'typo' (edit distance), 'combo' (target label plus extra words). */
+  reason: 'homoglyph' | 'typo' | 'combo';
+}
+
+/** One bisect candidate: a hostname blocked on the tab, with the rules that blocked it. */
+export interface BisectCandidate {
+  host: string;
+  /** "rulesetId:ruleId" attributions seen for this host (may be empty). */
+  rules: string[];
+  /** Requests blocked for this host on the page load the bisect started from. */
+  count: number;
+}
+
+/** What the popup shows for a running or finished bisect. */
+export interface BisectView {
+  tabId: number;
+  site: string;
+  /** testing: waiting for "works now?"; found: one candidate left; clean: still broken with everything allowed (not a network block); cancelled. */
+  phase: 'testing' | 'found' | 'clean' | 'cancelled';
+  /** 1-based step and the worst-case number of steps. */
+  step: number;
+  maxSteps: number;
+  /** Candidates still in play. */
+  remaining: number;
+  /** Hosts currently let through on this tab for the test reload. */
+  allowed: string[];
+  /** Set when phase is 'found'. */
+  culprit?: BisectCandidate & { filters: string[]; lists: string[] };
+  /**
+   * Further hosts the page needs let through together with the culprit
+   * (interacting blocks), phase 'found' only. "Keep" adds an exception for each.
+   */
+  also?: (BisectCandidate & { filters: string[]; lists: string[] })[];
+  /** The interacting hosts could not be fully separated: `culprit` + `also` is a working superset. */
+  partial?: boolean;
+}
+
+export interface NerdTabState {
+  /** Fingerprinting API calls on the current page load, per vector (meter on). */
+  fp: Partial<Record<FpVector, number>> | null;
+  /** Dangerous clipboard writes replaced on this tab since the last navigation. */
+  clipboardBlocked: number;
+  /** Lookalike warning shown on this page. */
+  lookalike: LookalikeHit | null;
+  /** Running or last bisect on this tab. */
+  bisect: BisectView | null;
+}
+
+/** Content relay (ISOLATED) -> SW. */
+export type MsgNerdSignal =
+  | { type: 'nerd:signal'; kind: 'fp'; counts: Partial<Record<FpVector, number>> }
+  | { type: 'nerd:signal'; kind: 'clip'; sample: string };
+
+/**
+ * Popup / commands -> SW. `works` answers "does the page work now?" for
+ * action 'answer'. Two helpers share the bisect's data: 'hosts' lists the
+ * hosts blocked on the tab's page load (filter texts with `describe`), and
+ * 'allow' adds a narrow exception for `host` on the tab's site.
+ */
+export interface MsgNerdBisect {
+  type: 'nerd:bisect';
+  action: 'start' | 'answer' | 'cancel' | 'state' | 'keep' | 'allow' | 'hosts';
+  tabId: number;
+  works?: boolean;
+  host?: string;
+  describe?: boolean;
+}
+
+/** One host blocked on a tab's page load (nerd:bisect 'hosts'). */
+export interface NerdBlockedHost extends BisectCandidate {
+  /** Filter texts (transparency map), only with `describe`. */
+  filters: string[];
+  lists: string[];
 }
 
 export interface MsgSiteSet {
@@ -555,9 +668,11 @@ export type LivePortMessage =
  * - sites:get, sites:set → { sites: SitesMap } (the user's own map; policy entries are reported via EffectiveConfig)
  * - history:query → HistoryResult; history:events → { events: ActivityEvent[] }
  * - backup:export → BackupFile
+ * - nerd:signal → { ok: true }; nerd:bisect → { bisect: BisectView | null } (action 'keep' turns the culprit into a custom exception filter),
+ *   'hosts' → { hosts: NerdBlockedHost[] }, 'allow' → { added: string[] }
  *
  * EffectiveConfig.locked paths: "defaultMode", "privacy.<key>", "ui.badge", "ui.activityLog",
- * "history.enabled", "history.retentionDays", "lists.<id>", plus the pseudo-paths "lists"
+ * "history.enabled", "history.retentionDays", "nerd.<key>", "lists.<id>", plus the pseudo-paths "lists"
  * (all lists locked), "sites.enabled" (users may not switch protection off) and
  * "customFilters" (user filters read-only).
  */
@@ -581,7 +696,9 @@ export type Message =
   | MsgHistoryEvents
   | MsgHistoryClear
   | MsgBackupExport
-  | MsgBackupImport;
+  | MsgBackupImport
+  | MsgNerdSignal
+  | MsgNerdBisect;
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 

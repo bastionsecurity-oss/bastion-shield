@@ -7,6 +7,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ListCategory, RuleSourceMap } from '../../shared/types.ts';
+import { blameLinks } from '../../shared/blame.ts';
 import { isSystemAllowRuleId } from '../../shared/constants.ts';
 import { h, replace } from '../shared/dom.ts';
 import { fmtNumber, plural, t } from '../shared/i18n.ts';
@@ -120,7 +121,29 @@ const LINES_PER_RULE = 4;
 /** Max rules listed per list (most frequent first). */
 const RULES_PER_LIST = 40;
 
-async function fillGroup(body: HTMLElement, g: Group): Promise<void> {
+/**
+ * Nerd mode: "history ↗" links to the upstream blame view or code search of
+ * each shown filter line (shared/blame.ts), from the list's source URLs.
+ */
+export function blameRow(lines: readonly string[], sourceUrls: readonly string[]): HTMLElement | null {
+  const links: HTMLElement[] = [];
+  lines.forEach((line, i) => {
+    const link = blameLinks(sourceUrls, line)[0];
+    if (!link) return;
+    const label = lines.length > 1 ? `${t('nerdPopupHistory')} ${i + 1}` : t('nerdPopupHistory');
+    links.push(
+      h(
+        'a',
+        { class: 'pp-rl__blame-link', attrs: { href: link.url, target: '_blank', rel: 'noopener noreferrer', title: `${link.repo}: ${line}` } },
+        h('span', { text: label }),
+        icon('external', 12),
+      ),
+    );
+  });
+  return links.length ? h('div', { class: 'pp-rl__blame' }, ...links) : null;
+}
+
+async function fillGroup(body: HTMLElement, g: Group, dir: ListDirectory, blame: boolean): Promise<void> {
   if (g.system) {
     replace(
       body,
@@ -151,6 +174,7 @@ async function fillGroup(body: HTMLElement, g: Group): Promise<void> {
   await Promise.all(rulesets.map(async (id) => maps.set(id, await loadSources(id))));
 
   const rows: HTMLElement[] = [];
+  const sources = blame ? (dir.get(g.key.startsWith('list:') ? g.key.slice(5) : '')?.sources ?? []).map((src) => src.url) : [];
   for (const hit of g.hits.slice(0, RULES_PER_LIST)) {
     const texts = maps.get(hit.rulesetId)?.[hit.ruleId] ?? null;
     const lines = texts && texts.length ? texts : null;
@@ -163,7 +187,15 @@ async function fillGroup(body: HTMLElement, g: Group): Promise<void> {
     } else {
       pre.append(h('span', { class: 'pp-rl__more', text: t('popupRuleNoText') }));
     }
-    rows.push(h('div', { class: 'pp-rl__rule' }, pre, h('div', { class: 'pp-rl__meta', text: t('popupRuleMeta', [fmtNumber(hit.n), String(hit.ruleId)]) })));
+    rows.push(
+      h(
+        'div',
+        { class: 'pp-rl__rule' },
+        pre,
+        lines && sources.length ? blameRow(lines.slice(0, LINES_PER_RULE), sources) : null,
+        h('div', { class: 'pp-rl__meta', text: t('popupRuleMeta', [fmtNumber(hit.n), String(hit.ruleId)]) }),
+      ),
+    );
   }
   if (g.hits.length > RULES_PER_LIST) rows.push(h('div', { class: 'pp-rl__meta', text: plural(g.hits.length - RULES_PER_LIST, 'popupRuleMoreRulesOne', 'popupRuleMoreRules') }));
   replace(body, ...rows);
@@ -173,10 +205,18 @@ export interface MatchedPanel {
   refresh(): Promise<void>;
   /** Re-render names once meta.json has loaded. */
   setDirectory(dir: ListDirectory): void;
+  /** Nerd mode: show upstream history links under filter texts. */
+  setBlame(on: boolean): void;
 }
 
-export function createMatchedPanel(container: HTMLElement, countEl: HTMLElement, tabId: number, initialDir: ListDirectory): MatchedPanel {
+export interface MatchedPanelOptions {
+  /** Nerd mode: "history ↗" links under each filter text. Default off. */
+  blame?: boolean;
+}
+
+export function createMatchedPanel(container: HTMLElement, countEl: HTMLElement, tabId: number, initialDir: ListDirectory, opts: MatchedPanelOptions = {}): MatchedPanel {
   let dir = initialDir;
+  let blame = opts.blame === true;
   let last: FetchResult | null = null;
   let inflight: Promise<void> | null = null;
   const openKeys = new Set<string>();
@@ -218,7 +258,7 @@ export function createMatchedPanel(container: HTMLElement, countEl: HTMLElement,
         else openKeys.delete(g.key);
         if (el.open && !filled) {
           filled = true;
-          void fillGroup(body, g);
+          void fillGroup(body, g, dir, blame);
         }
       });
       if (openKeys.has(g.key)) el.open = true;
@@ -247,6 +287,11 @@ export function createMatchedPanel(container: HTMLElement, countEl: HTMLElement,
     refresh,
     setDirectory(d: ListDirectory) {
       dir = d;
+      render();
+    },
+    setBlame(on: boolean) {
+      if (on === blame) return;
+      blame = on;
       render();
     },
   };

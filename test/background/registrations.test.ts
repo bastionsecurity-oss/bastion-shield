@@ -11,8 +11,11 @@ import assert from 'node:assert/strict';
 import type { CosmeticMeta, ScriptletIndex } from '../../src/shared/types.ts';
 import { SEED_FILES_PER_SET, SEED_SETS } from '../../src/shared/constants.ts';
 import {
+  CLIPGUARD_ID,
   COSMETIC_SCRIPT_ID,
+  FPMETER_SCRIPT_FILE,
   GENERIC_HIGH_ID,
+  NERD_RELAY_ID,
   computeRegistrations,
   diffRegistrations,
   genericHighExcludedUnion,
@@ -284,4 +287,106 @@ test('seed picks: one file per set, stable paths, validation', () => {
   const r = pickSeeds();
   assert.ok(r.files.every((n) => n >= 0 && n < SEED_FILES_PER_SET));
   assert.equal(typeof currentSeedFiles, 'function');
+});
+
+// ---------------------------------------------------------------------------
+// Nerd mode (clipboard guard, fingerprinting meter, relay)
+// ---------------------------------------------------------------------------
+
+const nerd = (nerdPatch: Record<string, unknown>, privacy: Record<string, unknown> = {}) =>
+  normalizeSettings({ nerd: nerdPatch, privacy });
+const planWith = (settings: ReturnType<typeof normalizeSettings>, sites = {}) =>
+  computeRegistrations({
+    settings,
+    sites,
+    enabledListIds: new Set(['easylist', 'ublock']),
+    cosmeticMeta: META,
+    scriptletIndex: INDEX,
+    seedFiles: SEEDS,
+  });
+
+test('nerd mode off (default): no nerd registrations, privacy unchanged', () => {
+  const out = planWith(nerd({}));
+  assert.ok(!out.some((d) => d.id === CLIPGUARD_ID || d.id.startsWith(NERD_RELAY_ID)));
+  assert.ok(!out.some((d) => d.js?.includes(FPMETER_SCRIPT_FILE)));
+  // The feature flags alone do nothing while the master switch is off.
+  assert.deepEqual(planWith(nerd({ enabled: false, clipboardGuard: true, fingerprintMeter: true })), out);
+});
+
+test('nerd mode on: clipboard guard (MAIN), relay (ISOLATED), meter after privacy.js', () => {
+  const out = planWith(nerd({ enabled: true }));
+  const m = byId(out);
+  assert.deepEqual(m.get(CLIPGUARD_ID), {
+    id: CLIPGUARD_ID,
+    js: ['main/clipguard.js'],
+    matches: ['<all_urls>'],
+    world: 'MAIN',
+    runAt: 'document_start',
+    allFrames: true,
+    matchOriginAsFallback: true,
+    persistAcrossSessions: true,
+  });
+  assert.deepEqual(m.get(NERD_RELAY_ID), {
+    id: NERD_RELAY_ID,
+    js: ['content/nerd-relay.js'],
+    matches: ['<all_urls>'],
+    world: 'ISOLATED',
+    runAt: 'document_start',
+    allFrames: true,
+    matchOriginAsFallback: true,
+    persistAcrossSessions: true,
+  });
+  // The meter rides on the privacy registration, right after privacy.js.
+  assert.deepEqual(m.get('bs-privacy')!.js, [...SEEDS, 'main/cfg-standard-gpc1.js', 'main/privacy.js', FPMETER_SCRIPT_FILE]);
+});
+
+test('nerd feature flags select the scripts', () => {
+  const clipOnly = byId(planWith(nerd({ enabled: true, fingerprintMeter: false })));
+  assert.ok(clipOnly.has(CLIPGUARD_ID) && clipOnly.has(NERD_RELAY_ID));
+  assert.ok(!clipOnly.get('bs-privacy')!.js!.includes(FPMETER_SCRIPT_FILE));
+
+  const meterOnly = byId(planWith(nerd({ enabled: true, clipboardGuard: false })));
+  assert.ok(!meterOnly.has(CLIPGUARD_ID));
+  assert.ok(meterOnly.has(NERD_RELAY_ID));
+  assert.ok(meterOnly.get('bs-privacy')!.js!.includes(FPMETER_SCRIPT_FILE));
+
+  const none = planWith(nerd({ enabled: true, clipboardGuard: false, fingerprintMeter: false }));
+  assert.ok(!none.some((d) => d.id === CLIPGUARD_ID || d.id === NERD_RELAY_ID || d.js?.includes(FPMETER_SCRIPT_FILE)));
+});
+
+test('meter without a privacy script (fingerprinting and GPC off) gets its own MAIN registration', () => {
+  const out = privacyScripts(nerd({ enabled: true }, { fingerprinting: 'off', gpc: false }), { 'x.ch': { fingerprinting: 'strict' }, 'y.ch': { enabled: false } }, SEEDS, true);
+  const root = out.find((d) => d.id === 'bs-privacy')!;
+  assert.deepEqual(root.js, [FPMETER_SCRIPT_FILE]);
+  assert.equal(root.world, 'MAIN');
+  assert.deepEqual(root.excludeMatches, ['*://*.x.ch/*', '*://*.y.ch/*']);
+  const strict = out.find((d) => d.js!.includes('main/cfg-strict-gpc0.js'))!;
+  assert.deepEqual(strict.js!.slice(-2), ['main/privacy.js', FPMETER_SCRIPT_FILE]);
+  assert.deepEqual(strict.matches, ['*://*.x.ch/*']);
+  // Protection off: nothing at all.
+  assert.ok(!out.some((d) => d.matches.includes('*://*.y.ch/*')));
+});
+
+test('nerd scripts are excluded where protection is off, with companions for re-enabled subtrees', () => {
+  const sites = { 'example.com': { enabled: false }, 'shop.example.com': { enabled: true } };
+  const m = byId(planWith(nerd({ enabled: true }), sites));
+  for (const id of [CLIPGUARD_ID, NERD_RELAY_ID, 'bs-privacy']) {
+    assert.ok(m.get(id)!.excludeMatches?.includes('*://*.example.com/*'), id);
+  }
+  assert.deepEqual(m.get(`${CLIPGUARD_ID}~1`)!.matches, ['*://*.shop.example.com/*']);
+  assert.deepEqual(m.get(`${NERD_RELAY_ID}~1`)!.matches, ['*://*.shop.example.com/*']);
+  assert.ok(m.get('bs-privacy-1')!.js!.includes(FPMETER_SCRIPT_FILE));
+});
+
+test('toggling nerd mode is a small diff: register/unregister nerd scripts, update privacy in place', () => {
+  const off = planWith(nerd({}));
+  const on = planWith(nerd({ enabled: true }));
+  const up = diffRegistrations(off.map((d) => ({ ...d })), on);
+  assert.deepEqual(up.register.map((d) => d.id).sort(), [CLIPGUARD_ID, NERD_RELAY_ID]);
+  assert.deepEqual(up.update.map((d) => d.id), ['bs-privacy']);
+  assert.deepEqual(up.unregister, []);
+  const down = diffRegistrations(on.map((d) => ({ ...d })), off);
+  assert.deepEqual(down.unregister.sort(), [CLIPGUARD_ID, NERD_RELAY_ID]);
+  assert.deepEqual(down.update.map((d) => d.id), ['bs-privacy']);
+  assert.deepEqual(down.register, []);
 });

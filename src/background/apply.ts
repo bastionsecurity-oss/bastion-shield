@@ -40,6 +40,7 @@ import { adaptRuleToBrowser, buildSystemDynamicRules, diffRules, DYNAMIC_BUDGET,
 import type { RuleSource } from './rules.ts';
 import { countRules, LIST_ERROR, planRulesets, wantedRulesets } from './rulesets.ts';
 import { isProceedRuleId } from './blocked.ts';
+import { isBisectRuleId } from '../shared/bisect.ts';
 import { explicitField, layerScopes } from './sites.ts';
 import { canonicalJson, createDebouncedRunner, errMsg } from './util.ts';
 
@@ -332,8 +333,12 @@ async function applyDynamic(plan: DynamicPlan, report: ApplyReport): Promise<voi
 async function applySession(plan: DynamicPlan, reason: string, report: ApplyReport): Promise<void> {
   const dnr = chrome.declarativeNetRequest;
   const current = (await log.attempt('session', () => dnr.getSessionRules(), [] as chrome.declarativeNetRequest.Rule[])) as unknown as DnrRule[];
-  // Proceed-anyway rules belong to live tabs; keep them except on a fresh install.
-  const keep = current.filter((r) => isProceedRuleId(r.id as number) && reason !== 'install');
+  // Proceed-anyway and bisect rules belong to live tabs; keep them except on a
+  // fresh install. Bisect state lives in storage.session, which an update
+  // clears, so its rules go then too.
+  const keep = current.filter(
+    (r) => reason !== 'install' && (isProceedRuleId(r.id as number) || (isBisectRuleId(r.id as number) && reason !== 'update')),
+  );
   const managed = current.filter((r) => !keep.includes(r));
   const diff = diffRules(managed, plan.session);
   if (diff.addRules.length === 0 && diff.removeRuleIds.length === 0) return;

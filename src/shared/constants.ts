@@ -48,10 +48,29 @@ export const PRIORITY = {
   IMPORTANT: 40,
   /** $important redirect rules: 41 + min(8, N). */
   IMPORTANT_REDIRECT: 41,
-  /** Per-site "block scripts" fallback rules and other per-site user blocks. */
-  SITE_USER_BLOCK: 50,
+  /**
+   * `@@…$important` exceptions, user and admin custom filters only
+   * (AdGuard-style; the list compiler rejects them). Above IMPORTANT (40) and
+   * the whole IMPORTANT_REDIRECT band (41–49), so the user's important
+   * exception beats any list block or redirect; below the per-site user
+   * blocks and everything from PROCEED_ANYWAY up. `@@…$document,important`
+   * becomes allowAllRequests at this priority.
+   */
+  IMPORTANT_ALLOW: 50,
+  /**
+   * Per-site "block scripts" fallback rules and other per-site user blocks
+   * (reserved). Moved from 50 to 60 to make room for IMPORTANT_ALLOW.
+   */
+  SITE_USER_BLOCK: 60,
   /** Session allow after the user clicked "proceed anyway" on the blocked page. */
   PROCEED_ANYWAY: 900,
+  /**
+   * Nerd-mode filter bisect: session `allow` for the hosts let through in one
+   * test reload (requestDomains + tabIds). Above every block, redirect and
+   * $important band, below protection off and the GPC header (which still
+   * applies). Does not lift cosmetic filters or scriptlets.
+   */
+  BISECT_ALLOW: 950,
   /** Per-site "protection off" (allowAllRequests, dynamic) and its tabId -1 companion (session). */
   SITE_DISABLED: 1000,
   /** Global Privacy Control request header (modifyHeaders set) — applies everywhere. */
@@ -90,6 +109,13 @@ export const RULE_ID = {
   /** Session: proceed-anyway allows, one per (tab, host): 9_100_000 + n. */
   SESSION_PROCEED_START: 9_100_000,
   SESSION_PROCEED_END: 9_199_999,
+  /**
+   * Session: nerd-mode filter bisect test allows (background/nerd-bisect.ts),
+   * a few per bisecting tab, ids picked from the free slots. apply.ts keeps
+   * them like proceed rules, except on install and update.
+   */
+  SESSION_BISECT_START: 9_200_000,
+  SESSION_BISECT_END: 9_209_999,
 } as const;
 
 /** Static ruleset id of the built-in Brave query-filter (tracking parameter stripping). */
@@ -127,15 +153,16 @@ export const SEED_FILES_PER_SET = 16;
 
 /**
  * True for Bastion's own dynamic/session "system" rules (protection off,
- * Standard first-party allow, GPC header, proceed-anyway). They are not
- * filter-list matches and must not count as "blocked" or "rules triggered".
+ * Standard first-party allow, GPC header, proceed-anyway, bisect tests).
+ * They are not filter-list matches and must not count as "blocked" or
+ * "rules triggered".
  */
 export function isSystemAllowRuleId(rulesetId: string, ruleId: number): boolean {
   if (rulesetId === '_dynamic') {
     return ruleId >= RULE_ID.SITES_DISABLED && ruleId <= RULE_ID.GPC_HEADER;
   }
   if (rulesetId === '_session') {
-    return ruleId >= RULE_ID.SESSION_SITES_DISABLED_NO_TAB && ruleId <= RULE_ID.SESSION_PROCEED_END;
+    return ruleId >= RULE_ID.SESSION_SITES_DISABLED_NO_TAB && ruleId <= RULE_ID.SESSION_BISECT_END;
   }
   return false;
 }

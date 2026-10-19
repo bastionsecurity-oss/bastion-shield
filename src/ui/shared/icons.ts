@@ -24,6 +24,7 @@ const ICONS = {
   privacy: `<svg viewBox="0 0 16 16"><path ${P} d="M8 2.25 13.25 4.25v3.5c0 3.25-2.25 5.25-5.25 6-3-.75-5.25-2.75-5.25-6v-3.5z"/><path ${P} d="M8 6.5v3"/></svg>`,
   settings: `<svg viewBox="0 0 16 16"><path ${P} d="M2.25 4.5h5.25M11 4.5h2.75M8.25 2.75h2v3.5h-2zM2.25 11.5h3M8.5 11.5h5.25M5.75 9.75h2v3.5h-2z"/></svg>`,
   about: `<svg viewBox="0 0 16 16"><path ${P} d="M2.75 2.75h10.5v10.5H2.75z"/><path ${P} d="M8 7.25v3.5M8 5v.5"/></svg>`,
+  lab: `<svg viewBox="0 0 16 16"><path ${P} d="M6 2.25h4M6.75 2.25v4.25l-3.5 6.75h9.5l-3.5-6.75V2.25M4.75 10.5h6.5"/></svg>`,
   close: `<svg viewBox="0 0 16 16"><path ${P} d="m3.75 3.75 8.5 8.5M12.25 3.75l-8.5 8.5"/></svg>`,
   download: `<svg viewBox="0 0 16 16"><path ${P} d="M8 2.25v8M4.75 7 8 10.25 11.25 7M2.75 13.25h10.5"/></svg>`,
   upload: `<svg viewBox="0 0 16 16"><path ${P} d="M8 10.25v-8M4.75 5.5 8 2.25l3.25 3.25M2.75 13.25h10.5"/></svg>`,

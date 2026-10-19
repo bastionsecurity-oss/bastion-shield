@@ -25,6 +25,10 @@ import { clearSessionRules, currentSeedFiles, openWelcome, recordInstall, renewS
 import * as log from './log.ts';
 import { createMessageListener } from './messaging.ts';
 import type { MessageContext } from './messaging.ts';
+import { NerdService } from './nerd.ts';
+import { registerNerdCommands } from './nerd-commands.ts';
+import { chromeMenus, NerdMenus } from './nerd-menus.ts';
+import { LOCK_CUSTOM_FILTERS } from './settings.ts';
 import { explicitField, resolveSite } from './sites.ts';
 import { Store, storageChangePlan } from './store.ts';
 import { dayKey, deferred, isPlainObject, startOfDayOffset, webHostOf } from './util.ts';
@@ -104,7 +108,11 @@ const activity = new ActivityService({
   history,
   loadTotals: async () => (await chrome.storage.local.get(STORAGE.TOTALS))[STORAGE.TOTALS],
   saveTotals: async (t) => chrome.storage.local.set({ [STORAGE.TOTALS]: t }),
-  setBadge: async (tabId, text) => chrome.action.setBadgeText({ tabId, text: text as string }),
+  setBadge: async (tabId, text) => {
+    // A running bisect shows its step on this tab's badge (nerd-bisect.ts).
+    if (nerd.bisector.holdsBadge(tabId)) return;
+    await chrome.action.setBadgeText({ tabId, text: text as string });
+  },
   setTimeout: (fn, ms) => setTimeout(fn, ms),
 });
 
@@ -170,9 +178,83 @@ async function pruneHistory(): Promise<void> {
   await history.prune(days === 0 ? now + 1 : cutoff, dayKey(cutoff)).catch((e: unknown) => log.warn('history', 'prune', e));
 }
 
+/** Transparency maps (dist/rulesets/filters/<rulesetId>.json), loaded on demand for bisect results. */
+const ruleMaps = new Map<string, Promise<(string[] | null)[]>>();
+function ruleMap(rulesetId: string): Promise<(string[] | null)[]> {
+  let p = ruleMaps.get(rulesetId);
+  if (!p) {
+    p = fetch(chrome.runtime.getURL(`rulesets/filters/${encodeURIComponent(rulesetId)}.json`))
+      .then((r) => (r.ok ? (r.json() as Promise<(string[] | null)[]>) : []))
+      .catch(() => []);
+    ruleMaps.set(rulesetId, p);
+  }
+  return p;
+}
+
+const nerd = new NerdService({
+  settings,
+  blockedOnTab: async (tabId) => {
+    const { recent } = await activity.tabSummary(tabId, 1000);
+    return recent.filter((e) => e.kind === 'blocked' || e.kind === 'redirected').map((e) => ({ host: e.host, rule: e.rule, list: e.list }));
+  },
+  siteOf: async (tabId) => {
+    const tab = await log.attempt('nerd', () => chrome.tabs.get(tabId), null as chrome.tabs.Tab | null);
+    return tab?.url ? webHostOf(tab.url)?.replace(/^www\./, '') ?? null : null;
+  },
+  describeRules: async (rules) => {
+    const filters = new Set<string>();
+    const lists = new Set<string>();
+    for (const r of rules) {
+      const i = r.lastIndexOf(':');
+      if (i <= 0) continue;
+      const rulesetId = r.slice(0, i);
+      const ruleId = Number(r.slice(i + 1));
+      const list = store.meta?.rulesetToList[rulesetId];
+      if (list) lists.add(list);
+      const texts = (await ruleMap(rulesetId))[ruleId];
+      for (const t of texts ?? []) filters.add(t);
+    }
+    return { filters: Array.from(filters), lists: Array.from(lists) };
+  },
+  addCustomFilters: async (lines) => {
+    // Same rule as custom:set: policy may make the user's filters read-only.
+    if (store.lockedSet().has(LOCK_CUSTOM_FILTERS)) throw new Error('locked');
+    const text = store.customText.replace(/\s*$/, '');
+    await store.saveCustom(`${text}${text === '' ? '' : '\n'}${lines.join('\n')}\n`);
+    recompileCustom();
+    await applier.now();
+  },
+  badge: (tabId, text) => {
+    void log.attempt('badge', async () => {
+      await chrome.action.setBadgeText({ tabId, text: text as string });
+      // Back to the normal badge: our own counter repaints it, the browser's counter shows through null.
+      if (text === null && badgeModeFor(settings()) === 'self') activity.refreshBadges();
+    });
+  },
+});
+
+/** Nerd-mode context menu: follows settings.nerd.enabled through syncListeners(). */
+const nerdMenus = new NerdMenus({
+  menus: chromeMenus(),
+  msg: (key) => chrome.i18n.getMessage(key),
+  dashboardUrl: chrome.runtime.getURL('ui/dashboard.html'),
+  nerdOn: () => settings().nerd.enabled,
+  bisect: (msg) => nerd.bisect(msg),
+  openTab: async (url, tab) => {
+    const next = typeof tab?.index === 'number' && typeof tab.windowId === 'number' && tab.windowId >= 0;
+    await log.attempt('menus', () =>
+      chrome.tabs.create(next ? { url, index: tab!.index! + 1, windowId: tab!.windowId, openerTabId: tab!.id } : { url }),
+    );
+  },
+  // The bisect asks its questions in the popup (Chrome 127+, may need a focused window).
+  openPopup: async () => {
+    await log.attempt('menus', () => chrome.action.openPopup());
+  },
+});
+
 const ready = deferred<MessageContext>();
 let isReady = false;
-const ctx: MessageContext = { store, applier, cosmetic, activity, blocked, history, custom, recompileCustom, pruneHistory };
+const ctx: MessageContext = { store, applier, cosmetic, activity, blocked, history, nerd, custom, recompileCustom, pruneHistory };
 
 // ---------------------------------------------------------------------------
 // Toolbar icon for tabs with protection off
@@ -266,6 +348,8 @@ function onCommitted(d: chrome.webNavigation.WebNavigationTransitionCallbackDeta
     // Any other top-level document than the blocked page makes its record stale.
     if (!isBlockedPageUrl(d.url)) blocked.forget(d.tabId);
     activity.onCommitted(d.tabId, d.url);
+    nerd.onCommitted(d.tabId, d.frameId);
+    nerd.bisector.onCommitted(d.tabId, d.url);
     void updateTabIcon(d.tabId, d.url);
   };
   if (isReady) run();
@@ -302,10 +386,27 @@ function syncListeners(): void {
     store.protectionOff() || Array.from(explicitField(store.effectiveSites(), 'enabled').values()).some((v) => v === false) || greyTabs.size > 0;
   setListener(chrome.webRequest?.onErrorOccurred, onErrorOccurred, needActivity, ALL_URLS_FILTER);
   setListener(chrome.webRequest?.onBeforeRedirect, onSubresourceRedirect, needActivity, ALL_URLS_FILTER);
-  setListener(chrome.webNavigation?.onCommitted, onCommitted, needActivity || anyDisabled || blocked.hasRecords());
+  setListener(chrome.webNavigation?.onCommitted, onCommitted, needActivity || anyDisabled || blocked.hasRecords() || s.nerd.enabled);
+  void nerdMenus.sync(s.nerd.enabled);
+  nerd.onSettingsChanged();
 }
 
 // --- top-level registration (synchronous) -----------------------------------
+
+registerNerdCommands({
+  ready: ready.promise,
+  bisect: (msg) => nerd.bisect(msg),
+  canBisect: () => settings().nerd.enabled && settings().ui.activityLog,
+  activeTabId: async () => (await log.attempt('commands', () => chrome.tabs.query({ active: true, lastFocusedWindow: true }), [] as chrome.tabs.Tab[]))[0]?.id ?? null,
+});
+
+try {
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    void ready.promise.then(() => nerdMenus.onClicked(info, tab)).catch((e: unknown) => log.warn('menus', e));
+  });
+} catch (e) {
+  log.error('listeners', 'contextMenus unavailable', e);
+}
 
 try {
   chrome.webRequest.onErrorOccurred.addListener(onErrorOccurred, ALL_URLS_FILTER);
@@ -370,6 +471,8 @@ chrome.runtime.onInstalled.addListener((details) => {
     } catch (e) {
       log.error('install', e);
     }
+    // Context menus are rebuilt from scratch on install and update.
+    await nerdMenus.sync(settings().nerd.enabled, true);
   });
 });
 
@@ -377,6 +480,7 @@ chrome.runtime.onStartup.addListener(() => {
   void ready.promise.then(async () => {
     await renewSeeds();
     await applier.now('startup');
+    await nerdMenus.sync(settings().nerd.enabled, true);
   });
 });
 
@@ -405,6 +509,7 @@ chrome.alarms?.onAlarm.addListener((alarm) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   void ready.promise.then(() => {
     activity.onTabRemoved(tabId);
+    nerd.onTabRemoved(tabId);
     void blocked.onTabRemoved(tabId);
     if (greyTabs.delete(tabId)) persistGreyTabs();
   });

@@ -17,6 +17,7 @@ import { EMPTY_COMPILED } from '../../src/background/custom.ts';
 import type { CustomCompiled } from '../../src/background/custom.ts';
 import { activityFlags, handleMessage, planSiteSet, reportBrokenSiteFor, userSitesFromInput } from '../../src/background/messaging.ts';
 import type { MessageContext } from '../../src/background/messaging.ts';
+import { NerdService } from '../../src/background/nerd.ts';
 import { defaultSettings, normalizeSettings } from '../../src/background/settings.ts';
 import { Store } from '../../src/background/store.ts';
 
@@ -110,6 +111,13 @@ async function context(
     applier,
     activity,
     blocked: new BlockedPages({ meta: () => null, resourceTypes: () => ['main_frame', 'sub_frame', 'script'] }),
+    nerd: new NerdService({
+      settings: () => store.settings(),
+      blockedOnTab: async () => [],
+      siteOf: async () => null,
+      describeRules: async () => ({ filters: [], lists: [] }),
+      addCustomFilters: async () => undefined,
+    }),
     custom: () => custom,
     recompileCustom: () => undefined,
     pruneHistory: async () => undefined,

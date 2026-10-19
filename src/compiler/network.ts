@@ -243,7 +243,9 @@ export function analyzeNetFilter(f: ParsedNetFilter): AnalyzeResult {
         break;
       }
       case 'important':
-        if (f.exception || o.negated || hasValue) return invalid();
+        // `@@…$important` is accepted here; compileNetFilter() allows it only
+        // in custom filters (AdGuard-style important exceptions).
+        if (o.negated || hasValue) return invalid();
         a.important = true;
         break;
       case 'match-case':
@@ -260,6 +262,8 @@ export function analyzeNetFilter(f: ParsedNetFilter): AnalyzeResult {
   }
   if (a.denyallow !== null && a.from === null) return invalid('denyallow-without-domain');
   const mod = a.modifier;
+  // An important exception lifts blocks; it has no meaning for modifier exceptions.
+  if (a.exception && a.important && mod !== null) return invalid();
   if (mod !== null) {
     if (mod.kind === 'csp' || mod.kind === 'permissions') {
       if (abstractCount || a.behavior.size || requestTypeCount) return invalid();
@@ -637,6 +641,9 @@ export function compileResponseHeaderFilter(
 
 /** Compile one analyzed network filter into DNR rules (emitted through ctx). */
 export function compileNetFilter(f: ParsedNetFilter, a: NetAnalysis, ctx: NetCompileContext): NetCompileResult {
+  // `@@…$important` only in user and admin filters: a third-party list must
+  // not be able to override $important blocks (uBO rejects it everywhere).
+  if (a.exception && a.important && !ctx.custom) return { ok: false, reason: 'invalid-option' };
   if (a.unsupported !== null) return { ok: false, reason: a.unsupported };
   const mod = a.modifier;
 
@@ -845,7 +852,7 @@ export function compileNetFilter(f: ParsedNetFilter, a: NetAnalysis, ctx: NetCom
     action = { type: 'redirect', redirect: { extensionPath: res.path } };
     ctx.usedRedirectResources.add(res.path);
   } else if (a.exception) {
-    priority = PRIORITY.ALLOW;
+    priority = a.important ? PRIORITY.IMPORTANT_ALLOW : PRIORITY.ALLOW;
     action = { type: 'allow' };
   } else {
     isBlock = true;

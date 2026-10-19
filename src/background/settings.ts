@@ -50,7 +50,25 @@ export function defaultSettings(): Settings {
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
+    nerd: { enabled: false, clipboardGuard: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
+}
+
+/** Most protected domains kept (user list; the policy list has its own cap). */
+export const MAX_PROTECTED_DOMAINS = 200;
+const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/;
+
+/** Lower-case, trimmed, no scheme/path/leading www., valid hostname syntax; deduplicated. */
+export function domainList(v: unknown, max = MAX_PROTECTED_DOMAINS): string[] {
+  if (!Array.isArray(v)) return [];
+  const out = new Set<string>();
+  for (const x of v) {
+    if (typeof x !== 'string') continue;
+    const d = x.trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/[/:?#].*$/, '').replace(/^www\./, '').replace(/\.$/, '');
+    if (DOMAIN_RE.test(d)) out.add(d);
+    if (out.size >= max) break;
+  }
+  return Array.from(out);
 }
 
 function bool(v: unknown, fallback: boolean): boolean {
@@ -82,6 +100,7 @@ export function normalizeSettings(raw: unknown): Settings {
   const p = isPlainObject(raw.privacy) ? raw.privacy : {};
   const ui = isPlainObject(raw.ui) ? raw.ui : {};
   const h = isPlainObject(raw.history) ? raw.history : {};
+  const n = isPlainObject(raw.nerd) ? raw.nerd : {};
   const cookies = p.blockThirdPartyCookies;
   return {
     version: 1,
@@ -107,6 +126,13 @@ export function normalizeSettings(raw: unknown): Settings {
     history: {
       enabled: bool(h.enabled, d.history.enabled),
       retentionDays: retention(h.retentionDays, d.history.retentionDays),
+    },
+    nerd: {
+      enabled: bool(n.enabled, d.nerd.enabled),
+      clipboardGuard: bool(n.clipboardGuard, d.nerd.clipboardGuard),
+      fingerprintMeter: bool(n.fingerprintMeter, d.nerd.fingerprintMeter),
+      lookalike: bool(n.lookalike, d.nerd.lookalike),
+      protectedDomains: domainList(n.protectedDomains),
     },
   };
 }
@@ -257,6 +283,8 @@ export function sanitizeManaged(raw: unknown): ManagedPolicy {
     'showIncidentCta',
     'historyEnabled',
     'protectionEnabled',
+    'nerdMode',
+    'clipboardGuard',
   ] as const;
   for (const k of bools) {
     const b = policyBool(raw[k]);
@@ -272,6 +300,8 @@ export function sanitizeManaged(raw: unknown): ManagedPolicy {
   const rawDays = raw.historyRetentionDays;
   const days = typeof rawDays === 'string' ? (rawDays.trim() === '' ? Number.NaN : Number(rawDays)) : rawDays;
   if (typeof days === 'number' && Number.isFinite(days)) out.historyRetentionDays = retention(days, 30);
+  const pd = domainList(policyStrings(raw.protectedDomains), 1000);
+  if (pd.length > 0) out.protectedDomains = pd;
   if (raw.reportBrokenSite === 'github' || raw.reportBrokenSite === 'email' || raw.reportBrokenSite === 'none') {
     out.reportBrokenSite = raw.reportBrokenSite;
   }
@@ -300,6 +330,11 @@ export const SETTING_PATHS = [
   'ui.language',
   'history.enabled',
   'history.retentionDays',
+  'nerd.enabled',
+  'nerd.clipboardGuard',
+  'nerd.fingerprintMeter',
+  'nerd.lookalike',
+  'nerd.protectedDomains',
 ] as const;
 
 /** Lock pseudo-paths for things outside Settings (documented for the UI). */
@@ -324,6 +359,8 @@ const POLICY_PATHS: [keyof ManagedPolicy, (typeof SETTING_PATHS)[number]][] = [
   ['showIncidentCta', 'ui.incidentCta'],
   ['historyEnabled', 'history.enabled'],
   ['historyRetentionDays', 'history.retentionDays'],
+  ['nerdMode', 'nerd.enabled'],
+  ['clipboardGuard', 'nerd.clipboardGuard'],
 ];
 
 /**
@@ -395,6 +432,9 @@ export function effectiveSettings(user: Settings, managed: ManagedPolicy, lists:
   if (managed.showIncidentCta !== undefined) s.ui.incidentCta = managed.showIncidentCta;
   if (managed.historyEnabled !== undefined) s.history.enabled = managed.historyEnabled;
   if (managed.historyRetentionDays !== undefined) s.history.retentionDays = retention(managed.historyRetentionDays, s.history.retentionDays);
+  if (managed.nerdMode !== undefined) s.nerd.enabled = managed.nerdMode;
+  if (managed.clipboardGuard !== undefined) s.nerd.clipboardGuard = managed.clipboardGuard;
+  if (managed.protectedDomains) s.nerd.protectedDomains = domainList([...managed.protectedDomains, ...s.nerd.protectedDomains], 1000 + MAX_PROTECTED_DOMAINS);
   s.lists = effectiveLists(lists, user, managed);
   return s;
 }
@@ -467,6 +507,16 @@ export function applySettingsPatch(
     if ('language' in u) {
       const v = u.language;
       set('ui.language', typeof v === 'string' && (UI_LANGUAGES as readonly string[]).includes(v), () => (next.ui.language = v as Settings['ui']['language']));
+    }
+  }
+  if (isPlainObject(patch.nerd)) {
+    const np = patch.nerd;
+    for (const k of ['enabled', 'clipboardGuard', 'fingerprintMeter', 'lookalike'] as const) {
+      if (k in np) set(`nerd.${k}`, typeof np[k] === 'boolean', () => (next.nerd[k] = np[k] as boolean));
+    }
+    if ('protectedDomains' in np) {
+      const v = np.protectedDomains;
+      set('nerd.protectedDomains', Array.isArray(v), () => (next.nerd.protectedDomains = domainList(v)));
     }
   }
   if (isPlainObject(patch.history)) {

@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { collectBadfilters, compileCustom } from '../../src/compiler/index.ts';
 import { REDIRECTS, SCRIPTLETS, ruleProblems } from './helpers.ts';
+import { PRIORITY } from '../../src/shared/constants.ts';
 
 const base = { redirectResources: REDIRECTS, scriptlets: SCRIPTLETS };
 
@@ -15,6 +16,21 @@ test('custom filters use the always-apply band and never strict-block', () => {
   assert.deepEqual(prio, { block: 21, allow: 30, redirect: 22, 'block!': 40 });
   assert.ok(out.rules.every((r) => r.priority !== 29));
   for (const r of out.rules) assert.deepEqual(ruleProblems(r), []);
+});
+
+test('@@…$important in custom filters: allow at IMPORTANT_ALLOW, above $important blocks', () => {
+  const out = compileCustom('||imp.example^$important\n@@||imp.example/ok.js^$important\n@@||site.example^$document,important', base);
+  assert.deepEqual(out.errors, []);
+  const allows = out.rules.filter((r) => r.action.type !== 'block');
+  assert.deepEqual(allows.map((r) => [r.action.type, r.priority]), [['allow', PRIORITY.IMPORTANT_ALLOW], ['allowAllRequests', PRIORITY.IMPORTANT_ALLOW]]);
+  assert.ok(PRIORITY.IMPORTANT_ALLOW > (out.rules.find((r) => r.action.type === 'block')?.priority ?? Infinity));
+  for (const r of out.rules) assert.deepEqual(ruleProblems(r), []);
+});
+
+test('@@…$important cannot be combined with modifiers', () => {
+  const out = compileCustom('@@||a.example^$removeparam=x,important\n@@||a.example^$csp=script-src none,important', base);
+  assert.deepEqual(out.errors.map((e) => e.reason), ['invalid-option', 'invalid-option']);
+  assert.equal(out.rules.length, 0);
 });
 
 test('regex rules are included in the rules array', () => {

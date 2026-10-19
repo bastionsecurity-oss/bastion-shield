@@ -108,6 +108,7 @@ export class ListDirectory {
 export function dynamicRuleLabel(rulesetId: string, ruleId: number): string {
   if (rulesetId === '_session') {
     if (ruleId >= RULE_ID.SESSION_PROCEED_START && ruleId <= RULE_ID.SESSION_PROCEED_END) return t('ruleProceed');
+    if (ruleId >= RULE_ID.SESSION_BISECT_START && ruleId <= RULE_ID.SESSION_BISECT_END) return t('nerdBisectRuleLabel');
     if (ruleId >= RULE_ID.SESSION_SITES_DISABLED_NO_TAB && ruleId < RULE_ID.SESSION_PROCEED_START) return t('ruleSiteOff');
     return t('ruleSession');
   }

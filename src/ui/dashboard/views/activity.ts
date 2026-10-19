@@ -1,11 +1,13 @@
 // Bastion Shield — dashboard «Aktivität»: live log across all tabs (port
 // subscription 'all') and the persisted history (history:events), with
 // filters by site / host / type / kind, pause, clear and CSV / JSON export.
+// In nerd mode, rows with an attributed rule get a «history» link to the
+// filter's upstream history (views/lab.ts openRuleHistory).
 // Everything stays local; exports are files the user saves themselves.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ActivityEvent } from '../../../shared/types.ts';
+import type { ActivityEvent, BuildMeta } from '../../../shared/types.ts';
 import { debounce, downloadText, h, replace, toast } from '../../shared/dom.ts';
 import { fmtDate, fmtNumber, fmtTime, plural, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
@@ -14,6 +16,7 @@ import { confirmDialog, notice, segmented } from '../../shared/controls.ts';
 import { KINDS, kindLabel, RESOURCE_TYPES, typeLabel } from '../../shared/labels.ts';
 import { emptyState, pageHead, type View, mount } from '../common.ts';
 import { dir, getConfig, getMeta, historyEvents } from '../store.ts';
+import { openRuleHistory } from './lab.ts';
 
 type Mode = 'live' | 'history';
 
@@ -63,6 +66,9 @@ export function activityView(): View {
   let histLoading = false;
   const filters: Filters = { site: '', host: '', type: '', kind: '' };
   let paintQueued = false;
+  // Nerd mode: «history ↗» on rows attributed to a static ruleset rule.
+  let nerd = false;
+  let meta: BuildMeta | null = null;
 
   const tbody = h('tbody');
   const countEl = h('span', { class: 'act-count num', attrs: { 'aria-live': 'polite' } });
@@ -83,8 +89,20 @@ export function activityView(): View {
       h('td', { class: 'act-host mono', attrs: { title: e.url } }, e.host),
       h('td', { class: 'act-type' }, typeLabel(e.type)),
       h('td', { class: 'act-site mono' }, e.site ?? ''),
-      h('td', { class: 'act-list' }, e.list ? dir().name(e.list) : h('span', { class: 'db-muted', text: '–' })),
+      h('td', { class: 'act-list' }, e.list ? dir().name(e.list) : h('span', { class: 'db-muted', text: '–' }), nerd ? historyLink(e) : null),
     );
+
+  const historyLink = (e: ActivityEvent): HTMLElement | null => {
+    const rule = e.rule;
+    // Dynamic and session rules (custom filters, Bastion's own) have no upstream history.
+    if (!rule || rule.startsWith('_')) return null;
+    return h(
+      'button',
+      { class: 'act-history', attrs: { type: 'button', title: t('nerdLabHistoryTitle'), 'aria-label': t('nerdLabHistoryTitle') }, on: { click: () => void openRuleHistory(rule, meta) } },
+      t('nerdLabHistory'),
+      icon('external', 11),
+    );
+  };
 
   const paintPause = (): void => {
     replace(pauseBtn, icon(paused ? 'play' : 'pause', 14), paused ? (pending.length ? t('actResumeN', fmtNumber(pending.length)) : t('actResume')) : t('actPause'));
@@ -185,8 +203,10 @@ export function activityView(): View {
 
   return {
     async render(root) {
-      const [cfgR] = await Promise.all([getConfig(), getMeta()]);
+      const [cfgR, metaR] = await Promise.all([getConfig(), getMeta()]);
       const cfg = cfgR.ok ? cfgR.data : null;
+      nerd = cfg?.settings.nerd?.enabled === true;
+      meta = metaR;
 
       const modeSeg = segmented<Mode>({
         options: [

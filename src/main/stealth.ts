@@ -265,7 +265,10 @@ export function realmAlreadyPatched(sentinel: string, sentinelReply: string): bo
   try {
     const current = ObjGetDesc(FnProto, 'toString');
     if (current === undefined || typeof current.value !== 'function') return false;
-    if (current.value === fnToString) return false;
+    // No "=== fnToString means unpatched" shortcut: a second copy of this
+    // script loads after the first one patched the realm and captures the
+    // first copy's proxy as fnToString. The native toString throws a
+    // TypeError for the string receiver, which reads as "not patched".
     return RApply(current.value, sentinel, []) === sentinelReply;
   } catch {
     return false;

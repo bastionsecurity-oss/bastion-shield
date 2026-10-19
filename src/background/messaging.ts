@@ -27,6 +27,7 @@ import type { CosmeticService, FrameSender } from './cosmetic.ts';
 import { customReport } from './custom.ts';
 import type { CustomCompiled } from './custom.ts';
 import type { HistoryDb } from './history-db.ts';
+import type { NerdService } from './nerd.ts';
 import * as log from './log.ts';
 import { PROCEDURAL_SCRIPT_FILE } from './registrations.ts';
 import { classifySender, isAllowed, isKnownType } from './sender.ts';
@@ -44,6 +45,7 @@ export interface MessageContext {
   activity: ActivityService;
   blocked: BlockedPages;
   history: HistoryDb;
+  nerd: NerdService;
   custom(): CustomCompiled;
   /** Recompile custom filters after the text or policy changed. */
   recompileCustom(): void;
@@ -127,6 +129,7 @@ async function popupState(ctx: MessageContext, tabId: number): Promise<PopupStat
       supportUrl: managed.supportUrl,
     },
     incidentCta: settings.ui.incidentCta,
+    nerd: ctx.nerd.tabState(tabId),
     version: version(),
   };
 }
@@ -336,8 +339,14 @@ async function proceduralInject(sender: SenderInfo): Promise<unknown> {
 export async function handleMessage(ctx: MessageContext, msg: Message, sender: SenderInfo): Promise<unknown> {
   switch (msg.type) {
     case 'cosmetic:frame':
+    {
       if (typeof msg.url !== 'string') return { error: 'invalid url' };
-      return ctx.cosmetic.onFrame(msg, frameSender(sender));
+      const fs = frameSender(sender);
+      const res = await ctx.cosmetic.onFrame(msg, fs);
+      if (res.off || fs.frameId !== 0) return res;
+      const lookalike = ctx.nerd.lookalikeFor(msg.url, fs.tabId, fs.frameId);
+      return lookalike ? { ...res, lookalike } : res;
+    }
     case 'cosmetic:tokens':
       if (typeof msg.url !== 'string' || !Array.isArray(msg.tokens)) return { error: 'invalid request' };
       return ctx.cosmetic.onTokens(msg, frameSender(sender));
@@ -393,6 +402,10 @@ export async function handleMessage(ctx: MessageContext, msg: Message, sender: S
       return backupExport(ctx);
     case 'backup:import':
       return backupImport(ctx, msg);
+    case 'nerd:signal':
+      return ctx.nerd.onSignal(msg, sender.tab?.id ?? -1);
+    case 'nerd:bisect':
+      return ctx.nerd.bisect(msg);
     default:
       return { error: `unknown message type: ${String((msg as { type?: unknown }).type)}` };
   }

@@ -1,7 +1,8 @@
 // Bastion Shield — toolbar popup (compact). Shows the current site with its
 // protection switch, live counters for the current page load, an estimate of
 // data and time saved, the blocking mode, and actions: report a broken site,
-// open the expanded view (panel.html, same popup) and the «Cyber-Vorfall?» CTA.
+// open the expanded view (panel.html, same popup) and the «Cyber-Vorfall?»
+// CTA. In nerd mode a statusline sits at the bottom (nerd.ts).
 // Budget: well under 30 ms of script before first meaningful paint, so the
 // static skeleton is in popup.html and everything here is incremental.
 //
@@ -17,6 +18,7 @@ import { lockIcon, segmented, type SegHandle } from '../shared/controls.ts';
 import { orgNameEl } from '../shared/org.ts';
 import { ctaOrBrand } from '../shared/incident.ts';
 import { estimateFromSample, fmtBytes, fmtDuration } from '../shared/savings.ts';
+import { createNerdStatusline, type NerdStatusline } from './nerd.ts';
 import { startReport } from './report.ts';
 import { setupExpand } from './expand.ts';
 import { normalisePopupState, tabIdFromSearch } from './state.ts';
@@ -34,6 +36,7 @@ let shownTotal = -1;
 let paintQueued = false;
 
 let modeSeg: SegHandle<BlockingMode> | null = null;
+let nerd: NerdStatusline | null = null;
 
 const evKey = (e: ActivityEvent): string => `${e.t}|${e.kind}|${e.frameId}|${e.url}`;
 const SAMPLE_MAX = 400;
@@ -318,7 +321,7 @@ function startLive(s: PopupState): void {
   window.addEventListener('pagehide', () => live?.close(), { once: true });
 }
 
-async function refreshState(): Promise<void> {
+async function refreshState(poll = false): Promise<void> {
   const res = await call<PopupState>({ type: 'popup:state', tabId });
   if (!res.ok || !res.data || typeof res.data !== 'object') return;
   const prev = state;
@@ -332,6 +335,29 @@ async function refreshState(): Promise<void> {
   renderHeader(next);
   if (!prev || next.site !== prev.site) renderControls();
   else renderCountMode();
+  renderNerd(next, !poll);
+}
+
+/** Fingerprinting and clipboard counters are not streamed: poll while the statusline is shown. */
+const NERD_POLL_MS = 2500;
+let nerdPoll: ReturnType<typeof setInterval> | undefined;
+
+/** Nerd statusline: created on first use, so a popup with nerd mode off never touches it. */
+function renderNerd(s: PopupState, askBisect: boolean): void {
+  if (!s.nerd && !nerd) return;
+  nerd ??= createNerdStatusline($('#pp-nerd'), {
+    tabId,
+    logging: () => state?.logging !== false,
+    counts: () => ({ ...counts }),
+    refresh: () => void refreshState(),
+    close: closeSoon,
+  });
+  nerd.update(s);
+  if (askBisect) void nerd.refreshBisect();
+  if (s.nerd && nerdPoll === undefined && s.filterable && !s.globallyDisabled) {
+    nerdPoll = setInterval(() => void refreshState(true), NERD_POLL_MS);
+    window.addEventListener('pagehide', () => clearInterval(nerdPoll), { once: true });
+  }
 }
 
 // --------------------------------------------------------------------- main --
@@ -418,6 +444,7 @@ function render(s: PopupState): void {
 
   const channel = s.managed.reportBrokenSite;
   $('#pp-report').hidden = channel === 'none' || (channel === 'email' && !s.managed.supportEmail);
+  renderNerd(s, true);
 }
 
 async function main(): Promise<void> {

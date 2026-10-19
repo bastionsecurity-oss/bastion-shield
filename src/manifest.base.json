@@ -21,6 +21,15 @@
     "default_title": "__MSG_extName__",
     "default_popup": "ui/popup.html"
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+B" }
+    },
+    "nerd-bisect": {
+      "suggested_key": { "default": "Alt+Shift+X" },
+      "description": "__MSG_cmdNerdBisect__"
+    }
+  },
   "options_page": "ui/dashboard.html",
   "background": {
     "service_worker": "background.js",
@@ -37,7 +46,8 @@
     "webNavigation",
     "privacy",
     "contentSettings",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "host_permissions": ["<all_urls>"],
   "incognito": "split",

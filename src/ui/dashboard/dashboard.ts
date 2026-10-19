@@ -1,7 +1,8 @@
 // Bastion Shield — dashboard entry point: hash router (#overview, #activity,
-// #lists, #filters, #sites, #privacy, #settings, #about, #welcome, and #site in
-// the expanded popup), the navigation footer (organisation, «Cyber-Vorfall?»)
-// and view lifecycle (dispose / unsaved-changes guard). The same app runs as
+// #lists, #filters, #sites, #privacy, #settings, #about, #welcome, #site in the
+// expanded popup, and #lab while nerd mode is on), the navigation footer
+// (organisation, «Cyber-Vorfall?»), the nerd-mode navigation entry and view
+// lifecycle (dispose / unsaved-changes guard). The same app runs as
 // the dashboard tab (dashboard.html) and as the expanded popup (panel.html).
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -25,6 +26,7 @@ import { privacyView } from './views/privacy.ts';
 import { settingsView } from './views/settings.ts';
 import { aboutView } from './views/about.ts';
 import { welcomeView } from './views/welcome.ts';
+import { labView } from './views/lab.ts';
 
 const VIEWS: Record<string, { make: () => View; titleKey: string }> = {
   site: { make: siteView, titleKey: 'navSite' },
@@ -37,6 +39,7 @@ const VIEWS: Record<string, { make: () => View; titleKey: string }> = {
   settings: { make: settingsView, titleKey: 'navSettings' },
   about: { make: aboutView, titleKey: 'navAbout' },
   welcome: { make: welcomeView, titleKey: 'welcomeTitle' },
+  lab: { make: labView, titleKey: 'nerdLabTitle' },
 };
 
 let current: { name: string; view: View } | null = null;
@@ -44,7 +47,7 @@ let navToken = 0;
 let firstRoute = true;
 
 /** In the expanded popup these open the dashboard tab instead (closing the popup would lose work). */
-const TAB_ONLY = new Set(['filters', 'welcome']);
+const TAB_ONLY = new Set(['filters', 'welcome', 'lab']);
 
 function viewName(): string {
   const raw = location.hash.replace(/^#/, '').split(/[?&/]/)[0].toLowerCase();
@@ -55,7 +58,12 @@ function viewName(): string {
 }
 
 async function route(): Promise<void> {
-  const name = viewName();
+  let name = viewName();
+  // «Labor» exists only while nerd mode is on.
+  if (name === 'lab' && !(await nerdOn())) {
+    name = popupMode ? 'site' : 'overview';
+    history.replaceState(null, '', `#${name}`);
+  }
   if (current && current.name === name && !firstRoute) return;
   if (popupMode && TAB_ONLY.has(name)) {
     history.replaceState(null, '', `#${current?.name ?? 'site'}`);
@@ -114,6 +122,18 @@ async function route(): Promise<void> {
   firstRoute = false;
 }
 
+async function nerdOn(): Promise<boolean> {
+  const r = await getConfig();
+  return r.ok && r.data.settings.nerd?.enabled === true;
+}
+
+/** Show the «Labor» entry while nerd mode is on; leave the Lab when it is switched off. */
+function syncNerdNav(on: boolean): void {
+  const li = document.getElementById('db-nav-lab');
+  if (li) li.hidden = !on;
+  if (!on && current?.name === 'lab') location.hash = popupMode ? '#site' : '#overview';
+}
+
 /** Navigation footer: managing organisation (if any) and the «Cyber-Vorfall?» CTA or the brand plate. */
 async function renderFoot(): Promise<void> {
   const foot = $('#db-nav-foot');
@@ -134,6 +154,7 @@ async function renderFoot(): Promise<void> {
   const globalOff = cfg?.managed.protectionEnabled === false;
   document.body.dataset.protection = globalOff ? 'off' : 'on';
   document.getElementById('db-mark')?.classList.toggle('mark--off', globalOff);
+  syncNerdNav(cfg?.settings.nerd?.enabled === true);
   replace(
     foot,
     cfg?.managed.organizationName

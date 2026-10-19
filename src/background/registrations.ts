@@ -10,6 +10,10 @@
 //   sl-main/-isolated  one scriptlet bundle per world: [core, data files of
 //                   the enabled lists, end]; hostnames are matched in-script
 //   bs-privacy*     MAIN-world privacy script, one per fingerprinting level
+//                   (+ main/fpmeter.js after it while the nerd mode
+//                   fingerprinting meter is on)
+//   bs-nerd-clip    nerd mode: MAIN-world clipboard guard
+//   bs-nerd-relay   nerd mode: ISOLATED relay for clipguard/fpmeter
 //
 // Every script is excluded where protection is off. Nested overrides (a
 // subdomain switched back on below a disabled site, or a different
@@ -33,6 +37,11 @@ export const GENERIC_HIGH_ID_PREFIX = 'bs-gh-';
 export const GENERIC_HIGH_ID = `${GENERIC_HIGH_ID_PREFIX}all`;
 export const SCRIPTLET_ID_PREFIX = 'sl-';
 export const PRIVACY_ID_PREFIX = 'bs-privacy';
+export const FPMETER_SCRIPT_FILE = 'main/fpmeter.js';
+export const CLIPGUARD_SCRIPT_FILE = 'main/clipguard.js';
+export const NERD_RELAY_SCRIPT_FILE = 'content/nerd-relay.js';
+export const CLIPGUARD_ID = 'bs-nerd-clip';
+export const NERD_RELAY_ID = 'bs-nerd-relay';
 const ALL_URLS = '<all_urls>';
 
 export interface DesiredScript {
@@ -182,8 +191,14 @@ export function privacyCfgFile(level: FingerprintLevel, gpc: boolean): string {
  * file. Sites with protection off get nothing. Sites with fingerprinting off
  * still get the script while GPC is on (cfg-off-gpc1 only sets
  * navigator.globalPrivacyControl, matching the Sec-GPC header they receive).
+ *
+ * With `fpMeter` (nerd mode fingerprinting meter) main/fpmeter.js is listed
+ * right after privacy.js, so in every frame the meter runs second and wraps
+ * privacy's proxies: page calls are counted once and privacy's internal
+ * calls not at all (fpmeter.ts). Groups that need no privacy script then
+ * get a registration with the meter alone.
  */
-export function privacyScripts(settings: Settings, sites: SitesMap, seedFiles: readonly string[]): DesiredScript[] {
+export function privacyScripts(settings: Settings, sites: SitesMap, seedFiles: readonly string[], fpMeter = false): DesiredScript[] {
   type Value = FingerprintLevel | 'disabled';
   const explicit = new Map<string, Value>();
   for (const [k, r] of explicitResolved(sites, settings, ['enabled', 'fingerprinting'])) {
@@ -194,11 +209,15 @@ export function privacyScripts(settings: Settings, sites: SitesMap, seedFiles: r
   const out: DesiredScript[] = [];
   let n = 0;
   for (const g of groups) {
-    if (g.value === 'disabled' || (g.value === 'off' && !gpc)) continue;
+    if (g.value === 'disabled') continue;
+    const privacy = !(g.value === 'off' && !gpc);
+    if (!privacy && !fpMeter) continue;
     const id = g.include === null ? PRIVACY_ID_PREFIX : `${PRIVACY_ID_PREFIX}-${++n}`;
+    const js = privacy ? [...seedFiles, privacyCfgFile(g.value, settings.privacy.gpc), PRIVACY_SCRIPT_FILE] : [];
+    if (fpMeter) js.push(FPMETER_SCRIPT_FILE);
     const s: DesiredScript = {
       id,
-      js: [...seedFiles, privacyCfgFile(g.value, settings.privacy.gpc), PRIVACY_SCRIPT_FILE],
+      js,
       matches: g.include === null ? [ALL_URLS] : patterns(g.include),
       world: 'MAIN',
       runAt: 'document_start',
@@ -208,6 +227,31 @@ export function privacyScripts(settings: Settings, sites: SitesMap, seedFiles: r
     };
     out.push(withExclude(s, patterns(g.exclude)));
   }
+  return out;
+}
+
+/**
+ * Nerd mode registrations besides the meter (which rides on the privacy
+ * registrations): the MAIN-world clipboard guard and the ISOLATED relay both
+ * MAIN scripts report to. Like the cosmetic script they run wherever
+ * protection is on.
+ */
+export function nerdScripts(settings: Settings, groups: readonly ScopeGroup<boolean>[]): DesiredScript[] {
+  const n = settings.nerd;
+  if (!n.enabled || (!n.clipboardGuard && !n.fingerprintMeter)) return [];
+  const base = (id: string, file: string, world: 'MAIN' | 'ISOLATED'): DesiredScript => ({
+    id,
+    js: [file],
+    matches: [ALL_URLS],
+    world,
+    runAt: 'document_start',
+    allFrames: true,
+    matchOriginAsFallback: true,
+    persistAcrossSessions: true,
+  });
+  const out: DesiredScript[] = [];
+  if (n.clipboardGuard) out.push(...scopeToEnabled(base(CLIPGUARD_ID, CLIPGUARD_SCRIPT_FILE, 'MAIN'), groups));
+  out.push(...scopeToEnabled(base(NERD_RELAY_ID, NERD_RELAY_SCRIPT_FILE, 'ISOLATED'), groups));
   return out;
 }
 
@@ -221,7 +265,9 @@ export function computeRegistrations(inputs: RegistrationInputs): DesiredScript[
   const gh = genericHighScript(cosmeticMeta, enabledListIds, inputs.extraGenericHideHosts ?? []);
   if (gh) out.push(...scopeToEnabled(gh.base, groups, gh.exclude));
   for (const s of scriptletScripts(scriptletIndex, enabledListIds)) out.push(...scopeToEnabled(s, groups));
-  out.push(...privacyScripts(settings, sites, inputs.seedFiles));
+  const nerdOn = settings.nerd.enabled;
+  out.push(...privacyScripts(settings, sites, inputs.seedFiles, nerdOn && settings.nerd.fingerprintMeter));
+  out.push(...nerdScripts(settings, groups));
   return out;
 }
 

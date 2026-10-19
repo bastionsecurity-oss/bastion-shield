@@ -156,6 +156,24 @@
       "title": "Report a broken site",
       "description": "'github' opens a prefilled public GitHub issue that the user reviews and submits, 'email' opens a message to supportEmail, 'none' hides the button. Default: 'email' when supportEmail is set, otherwise 'github'."
     },
+    "nerdMode": {
+      "type": "boolean",
+      "title": "Nerd mode",
+      "description": "Forces nerd mode on or off: filter bisect, fingerprinting meter, clipboard guard, lookalike-domain warning and the Lab view (docs/NERD-MODE.md). Missing = the user decides. Default off."
+    },
+    "clipboardGuard": {
+      "type": "boolean",
+      "title": "Clipboard guard (ClickFix protection)",
+      "description": "Forces the clipboard guard on or off. While nerd mode is on, it replaces shell commands (PowerShell, mshta, curl | sh …) that a page puts on the clipboard. Default true."
+    },
+    "protectedDomains": {
+      "type": "array",
+      "title": "Protected domains (lookalike warning)",
+      "description": "Registrable domains (for example bastion.ch) whose lookalikes (homoglyphs, typos, combo-squats) trigger a warning bar while nerd mode is on. Added to the built-in list and the user's own domains.",
+      "items": {
+        "type": "string"
+      }
+    },
     "protectionEnabled": {
       "type": "boolean",
       "title": "Protection enabled (emergency switch)",

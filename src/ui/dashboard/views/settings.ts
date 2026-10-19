@@ -1,17 +1,18 @@
 // Bastion Shield — dashboard «Einstellungen»: default blocking mode, toolbar
 // badge, activity log, history and retention, backup export / import and
-// reset to defaults. Backups are plain JSON files the user saves locally.
+// reset to defaults, and the nerd-mode switches. Backups are plain JSON files
+// the user saves locally.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BackupFile, BlockingMode, EffectiveConfig, Settings } from '../../../shared/types.ts';
-import { downloadText, h, pickTextFile, toast } from '../../shared/dom.ts';
-import { clearI18nCache, fmtDateTime, fmtNumber, t } from '../../shared/i18n.ts';
+import { append, downloadText, h, pickTextFile, toast } from '../../shared/dom.ts';
+import { clearI18nCache, fmtDateTime, fmtNumber, plural, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { call } from '../../shared/messaging.ts';
-import { confirmDialog, notice, segmented, switchControl } from '../../shared/controls.ts';
+import { confirmDialog, lockBadge, lockIcon, notice, segmented, switchControl } from '../../shared/controls.ts';
 import { errorState, nextId, openTabButton, pageHead, panel, popupMode, settingRow, type View, mount } from '../common.ts';
-import { adoptConfig, getConfig, getLists, ignoredPaths, isLocked } from '../store.ts';
+import { adoptConfig, getConfig, getLists, ignoredPaths, isLocked, saveSettings } from '../store.ts';
 import { persist } from './privacy.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
@@ -35,6 +36,7 @@ export function defaultSettings(): Settings {
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
+    nerd: { enabled: false, clipboardGuard: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
 }
 
@@ -47,6 +49,135 @@ export function validateBackup(data: unknown): BackupFile | null {
   if (d.sites !== undefined && (typeof d.sites !== 'object' || d.sites === null || Array.isArray(d.sites))) return null;
   if (d.customFilters !== undefined && typeof d.customFilters !== 'string') return null;
   return { format: 'bastion-shield-backup', version: 1, exportedAt: String(d.exportedAt ?? ''), settings: d.settings as Settings, sites: d.sites ?? {}, customFilters: d.customFilters ?? '' };
+}
+
+const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/;
+
+/**
+ * Protected domains typed one per line (also accepts commas and URLs):
+ * lower-cased, scheme, path and a leading "www." removed, IDNs punycoded,
+ * deduplicated. `invalid` holds the entries that are not domain names.
+ */
+export function parseProtectedDomains(text: string): { domains: string[]; invalid: string[] } {
+  const domains: string[] = [];
+  const invalid: string[] = [];
+  for (const raw of text.split(/[\n,;]+/)) {
+    const s = raw.trim();
+    if (s === '' || s.startsWith('#') || s.startsWith('!')) continue;
+    let d = s.toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, '').replace(/[/:?#].*$/, '').replace(/\.$/, '');
+    try {
+      d = new URL(`https://${d}`).hostname;
+    } catch {
+      /* keep d; the check below rejects it */
+    }
+    d = d.replace(/^www\./, '');
+    if (DOMAIN_RE.test(d)) {
+      if (!domains.includes(d)) domains.push(d);
+    } else {
+      invalid.push(s);
+    }
+  }
+  return { domains, invalid };
+}
+
+/**
+ * «Nerd-Modus»: a normal settings group. The master switch row carries the
+ * only visible description (one sober line); the guards (clipboard,
+ * fingerprinting meter, lookalike warning) and the protected-domain list
+ * appear only while it is on. Policy domains are shown read-only; the user's own
+ * list is the effective list minus the policy's.
+ */
+function nerdPanel(cfg: EffectiveConfig): HTMLElement {
+  const n = cfg.settings.nerd ?? defaultSettings().nerd;
+  const policyDomains = (cfg.managed.protectedDomains ?? []).map((d) => d.toLowerCase());
+  const userDomains = n.protectedDomains.filter((d) => !policyDomains.includes(d));
+
+  const sub = h('div', { class: 'nerd-sub', hidden: !n.enabled });
+
+  const row = (path: string, value: boolean, labelKey: string, descKey: string, patch: (v: boolean) => Parameters<typeof persist>[0]): HTMLElement => {
+    const labelId = nextId('set');
+    const descId = nextId('set-d');
+    const locked = isLocked(cfg, path);
+    const sw = switchControl({ checked: value, labelledBy: labelId, describedBy: descId, disabled: locked, onChange: (v) => persist(patch(v)) });
+    return settingRow({ label: t(labelKey), desc: t(descKey), control: sw.el, locked, labelId, descId });
+  };
+
+  // Master switch: the sub-settings and the «Labor» navigation entry follow it live.
+  const masterLabel = nextId('set');
+  const masterDesc = nextId('set-d');
+  const masterLocked = isLocked(cfg, 'nerd.enabled');
+  const master = switchControl({
+    checked: n.enabled,
+    labelledBy: masterLabel,
+    describedBy: masterDesc,
+    disabled: masterLocked,
+    onChange: async (v) => {
+      const ok = await persist({ nerd: { enabled: v } });
+      if (ok) sub.hidden = !v;
+      return ok;
+    },
+  });
+
+  // Protected domains editor.
+  const domLocked = isLocked(cfg, 'nerd.protectedDomains');
+  const domLabel = nextId('set');
+  const area = h('textarea', {
+    class: 'input nerd-domains mono',
+    attrs: { rows: 5, spellcheck: 'false', autocapitalize: 'off', autocomplete: 'off', 'aria-labelledby': domLabel, 'aria-describedby': `${domLabel}-hint`, placeholder: 'postfinance.ch\nubs.com', readonly: domLocked },
+  });
+  area.value = userDomains.join('\n');
+  let saved = area.value;
+  const status = h('span', { class: 'nerd-domains__status', attrs: { role: 'status' } });
+  const saveBtn = h('button', { class: 'btn btn--secondary btn--sm', attrs: { type: 'button', disabled: true } }, icon('check', 14), t('actionApply'));
+  area.addEventListener('input', () => {
+    saveBtn.disabled = domLocked || area.value === saved;
+    status.textContent = '';
+  });
+  saveBtn.addEventListener('click', async () => {
+    const { domains, invalid } = parseProtectedDomains(area.value);
+    saveBtn.disabled = true;
+    const r = await saveSettings({ nerd: { protectedDomains: domains } });
+    if (!r.ok || r.data.ignored.length) {
+      saveBtn.disabled = false;
+      const locked = r.ok && r.data.ignored.some((p) => isLocked(r.data.config, p));
+      toast(locked ? t('lockedByPolicy') : t('errorSaveFailed'), icon(locked ? 'lock' : 'alert', 15));
+      return;
+    }
+    const eff = r.data.config?.settings.nerd?.protectedDomains ?? domains;
+    const mine = eff.filter((d) => !policyDomains.includes(d));
+    area.value = mine.join('\n');
+    saved = area.value;
+    status.textContent = invalid.length ? t('nerdSettingsDomainsInvalid', invalid.slice(0, 5).join(', ')) : plural(mine.length, 'nerdSettingsDomainsSavedOne', 'nerdSettingsDomainsSaved');
+    toast(t('saved'), icon('check', 15));
+  });
+
+  append(sub, [
+    row('nerd.clipboardGuard', n.clipboardGuard, 'nerdSettingsClipboard', 'nerdSettingsClipboardDesc', (v) => ({ nerd: { clipboardGuard: v } })),
+    row('nerd.fingerprintMeter', n.fingerprintMeter, 'nerdSettingsFpMeter', 'nerdSettingsFpMeterDesc', (v) => ({ nerd: { fingerprintMeter: v } })),
+    row('nerd.lookalike', n.lookalike, 'nerdSettingsLookalike', 'nerdSettingsLookalikeDesc', (v) => ({ nerd: { lookalike: v } })),
+    h(
+      'div',
+      { class: `nerd-domains__block${domLocked ? ' db-row--locked' : ''}` },
+      h('div', { class: 'nerd-domains__head' }, h('div', { class: 'db-row__label', text: t('nerdSettingsDomains'), attrs: { id: domLabel } }), domLocked ? lockIcon() : null),
+      h('p', { class: 'db-muted nerd-domains__hint', text: t('nerdSettingsDomainsHint'), attrs: { id: `${domLabel}-hint` } }),
+      area,
+      domLocked ? null : h('div', { class: 'nerd-domains__actions' }, saveBtn, status),
+      policyDomains.length
+        ? h(
+            'div',
+            { class: 'nerd-domains__policy' },
+            h('div', { class: 'nerd-domains__policy-head' }, h('span', { text: t('nerdSettingsDomainsPolicy') }), lockBadge()),
+            h('ul', { class: 'nerd-chips' }, ...policyDomains.map((d) => h('li', { class: 'nerd-chip mono', text: d }))),
+          )
+        : null,
+    ),
+  ]);
+
+  return panel(
+    { title: t('nerdSettingsTitle'), flush: true, class: 'nerd-panel' },
+    settingRow({ label: t('nerdSettingsEnabled'), desc: t('nerdSettingsEnabledDesc'), control: master.el, locked: masterLocked, labelId: masterLabel, descId: masterDesc }),
+    sub,
+  );
 }
 
 /**
@@ -231,6 +362,7 @@ export function settingsView(): View {
           settingRow({ label: t('setRetention'), desc: t('setRetentionDesc'), control: ret, locked: retLocked, labelId: retLabel, descId: retDesc }),
           settingRow({ label: t('setClearHistory'), desc: t('setClearHistoryDesc'), control: clearBtn, labelId: nextId('set') }),
         ),
+        nerdPanel(cfg),
         // File dialogs close the popup: backups are made in the dashboard tab.
         popupMode
           ? panel({ title: t('setGroupBackup'), flush: true }, settingRow({ label: t('setBackupInTab'), control: openTabButton('settings', t('panelOpenInTab')), labelId: nextId('set') }))

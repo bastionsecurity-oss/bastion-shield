@@ -211,6 +211,15 @@ test('a second instance never replaces an installed mask', async () => {
   assert.equal(calls.length, 0, 'patched realm did not replace the existing mask');
 });
 
+// Double injection: a second copy of the bundle loads AFTER the first one
+// patched the realm, so its captured "native" toString is the first copy's
+// proxy. A fresh module instance (query string) reproduces that.
+test('a second copy loaded into a patched realm detects it (duplicate-injection guard)', async () => {
+  const second = (await import(`../../src/main/stealth.ts?copy=${Date.now()}`)) as typeof import('../../src/main/stealth.ts');
+  assert.equal(second.realmAlreadyPatched('secret-sentinel', 'secret-reply'), true);
+  assert.equal(second.realmAlreadyPatched('wrong', 'secret-reply'), false);
+});
+
 test('ownStackNeedle falls back to the extension scheme outside extensions', () => {
   assert.equal(ownStackNeedle(), 'chrome-extension://');
 });

@@ -96,8 +96,10 @@ docs/                       this file, FILTER-LISTS.md, DEPLOYMENT-INTUNE.md, PR
 | DEBOUNCE | 35 | dynamic `regexSubstitution` redirects to `pages/bounce.html` (§4.6) |
 | IMPORTANT | 40 | `$important` block |
 | IMPORTANT_REDIRECT | 41–49 | `$important` + `$redirect` (41 + min(8, N)) |
-| SITE_USER_BLOCK | 50 | reserved (per-site user blocks) |
+| IMPORTANT_ALLOW | 50 | `@@…$important` in user and admin custom filters only (`allow`, or `allowAllRequests` for `$document`); lists cannot emit it |
+| SITE_USER_BLOCK | 60 | reserved (per-site user blocks) |
 | PROCEED_ANYWAY | 900 | session `allow` after "proceed anyway" (§4.5) |
+| BISECT_ALLOW | 950 | nerd mode: session `allow` (`requestDomains` + `tabIds`) for the hosts let through in one bisect test reload; never `main_frame`, does not lift cosmetic filters or scriptlets (docs/NERD-MODE.md) |
 | SITE_DISABLED | 1000 | dynamic `allowAllRequests` (main_frame) for sites with protection off, its session `allow` for `tabIds:[-1]`, and the global allow of the emergency switch (§10.5) |
 | GPC_HEADER | 5000 | dynamic `modifyHeaders` set `Sec-GPC: 1` (applies everywhere) |
 
@@ -107,6 +109,7 @@ What follows from the bands:
 
 - **Protected-list redirects.** uBO and Brave serve a redirect stub whatever filter blocked the request. A protected-list redirect at 11–18 would lose to an always-apply block at 21, so the compiler also emits a copy with `domainType: thirdParty` at 22 + min(6, N) (not for `$1p` filters; a `$3p` filter keeps its base rule too, so the copy is always a higher-priority duplicate the build may drop). The Standard 1p allow (19) never matches a third-party request, so Standard semantics are unchanged, and `@@` (30) still wins. To save static-rule budget the build keeps only copies that an always-apply block can actually meet (`restrictRedirectCopies` in `src/compiler/copies.ts`, a conservative overlap test). A tie between a copy and an always-apply redirect is harmless: both serve stubs.
 - **`$important`.** An `$important` block (40) still beats a non-important redirect, as in uBO Lite.
+- **Important exceptions.** `@@…$important` (AdGuard syntax; uBO rejects it) is accepted in user and admin custom filters only and compiles to `allow` at 50, above every `$important` block and redirect. In a list it is rejected (`invalid-option`), so a third-party list cannot lift `$important` blocks. It cannot be combined with `$removeparam`, `$csp` or `$permissions`.
 - **Debounce** (35) beats list exceptions (30) and strict blocks (29): a known bounce tracker is skipped entirely, as Brave debounces before its ad-block engine. It stays below `$important`.
 - **GPC** (5000) is above every allow, including protection off (1000). Only the emergency switch removes it.
 
@@ -191,6 +194,7 @@ What follows from the bands:
 | Custom filters (admin policy) | dynamic | 1,000,000..1,999,999 |
 | Debounce | dynamic `redirect.regexSubstitution` → `chrome-extension://<id>/pages/bounce.html[?from=<host>]#<target>`, priority 35, from `data/debounce.json` | 2,000,000..2,000,999 |
 | Proceed anyway | session `allow` (§4.5) | 9,100,000..9,199,999 |
+| Filter bisect (nerd mode) | session `allow`, priority 950, one tab; kept across applies, removed on finish, cancel, tab close, navigation to another site, nerd mode off and stale state after a worker restart | 9,200,000..9,209,999 |
 | Emergency switch (§10.5) | replaces every rule above: dynamic `allowAllRequests` with only `resourceTypes:["main_frame"]` (every site) and a session `allow` for `tabIds:[-1]` | 8,000,000 and 9,000,000 |
 
 - **Protection off is keyed to the top-level site**, as in uBO, uBO Lite and Brave: `allowAllRequests` on the top document covers its whole frame tree, including the disabled site's own iframes. The same site embedded as an iframe in another site stays filtered. Content scripts are excluded per frame (`excludeMatches` with `allFrames`), so cosmetic filtering, scriptlets and the privacy script are still skipped inside such embeds; the content script itself decides `off` by the tab's URL.
@@ -485,7 +489,7 @@ Only when `vendor/` is missing or on `--update`: fetch the pinned commits listed
 8. writes the scriptlet core, data, merged and end files plus `scriptlets/index.json` (§6); every file is parse-checked with `vm.Script`, release builds minify the core and end files;
 9. copies the used redirect resources to `dist/war/`;
 10. writes the seed files (16 × 16 fresh random words) and the six config files (§9);
-11. writes `meta.json` (`BuildMeta`, with vendor commits and lock data) and `manifest.json` (rule_resources in §4.1 order, web_accessible_resources, version);
+11. writes `meta.json` (`BuildMeta`, with vendor commits and lock data) and `manifest.json` (rule_resources in §4.1 order, web_accessible_resources, version), then `rulesets/integrity.json` (`tools/integrity.ts`: SHA-256 of every file under `rulesets/`, keyed by package path, for the Lab's self-check; not a signature);
 12. bundles TS with esbuild (`background.js` as ESM; content, main, ui and pages as IIFE; target chrome128);
 13. copies `_locales`, icons, fonts, pages, `data/debounce.json`, `managed_schema.json` and licences;
 14. checks the content-script budget of the default configuration (§6) and prints a report (rule counts, budgets, unsupported reasons) that it also writes to `dist/build-report.json`.
@@ -517,6 +521,7 @@ Because the RE2 limit can only be checked in a browser, CI and the release build
   - `scripting`, `storage`, `unlimitedStorage`, `alarms`
   - `webRequest`, `webNavigation`
   - `privacy`, `contentSettings`, `tabs`
+  - `contextMenus` (nerd mode only creates items; no install warning)
 - `host_permissions`: `<all_urls>`.
 - `incognito: "split"` (WAR navigation in incognito).
 - `minimum_chrome_version: "128"`, `default_locale: "en"`, `background: {service_worker: "background.js", type: "module"}`, CSP `script-src 'self'; object-src 'self'` for extension pages.
@@ -527,7 +532,11 @@ Because the RE2 limit can only be checked in a browser, CI and the release build
 
 **Limitation of `use_dynamic_url`.** It only stops direct probing: a page cannot fetch `chrome-extension://<static id>/war/noop.js` or frame our pages, and `chrome.runtime.getURL()` returns the dynamic id used for the bounce and blocked pages. DNR redirects with `extensionPath` resolve to the **static** id, and for `xmlhttprequest`/`other` resource types the page can read the result: `Response.url` / `XMLHttpRequest.responseURL` show `chrome-extension://<static id>/war/<stub>`. A page can therefore detect Bastion Shield and read its id with one `fetch` of a stubbed script. Script-type redirects (`<script>`) do not expose it. Most of these redirects are compatibility stubs that must succeed (anti-adblock checks), so they are kept; PRIVACY.md states the limitation.
 
-## 13. Testing
+## 13. Nerd mode
+
+Opt-in power-user tools (`settings.nerd`, policy `nerdMode`): filter bisect, popup statusline and command line, keyboard shortcuts (`commands`), context menu, fingerprinting meter, clipboard guard, lookalike-domain warning and the dashboard Lab. With nerd mode off none of its scripts, menus or rules exist. Details, message flow and trust model: docs/NERD-MODE.md.
+
+## 14. Testing
 
 - **`npm test`** (node:test, TypeScript run natively; globs, because Node 26 does not expand directory arguments) covers:
   - compiler unit tests: parser, every option mapping, merging, badfilter, cosmetic/scriptlet extraction, procedural parsing, trust markers, and the real cached lists when `.cache/lists` (or `BASTION_TEST_LISTS`) exists;

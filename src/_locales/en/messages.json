@@ -756,6 +756,35 @@
       }
     }
   },
+  "nerdGuardClipBody": {
+    "message": "This page tried to put a command on your clipboard. Bastion Shield replaced it with a harmless note. Never paste commands from websites into Run, Terminal or PowerShell."
+  },
+  "nerdGuardClipTitle": {
+    "message": "Suspicious clipboard command blocked"
+  },
+  "nerdGuardLookalikeHint": {
+    "message": "Check the address before you sign in or pay."
+  },
+  "nerdGuardLookalikeTitle": {
+    "message": "This looks like $P1$ but is $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdGuardReasonCombo": {
+    "message": "The address combines the name with other words."
+  },
+  "nerdGuardReasonHomoglyph": {
+    "message": "The address uses lookalike characters."
+  },
+  "nerdGuardReasonTypo": {
+    "message": "The address differs by a typing error."
+  },
   "ovByCategory": {
     "message": "By category"
   },
@@ -1703,5 +1732,824 @@
   },
   "setLanguageAuto": {
     "message": "Same as browser"
+  },
+  "nerdPopupLookalikeHomoglyph": {
+    "message": "look-alike characters"
+  },
+  "nerdPopupLookalikeTypo": {
+    "message": "typo domain"
+  },
+  "nerdPopupLookalikeCombo": {
+    "message": "brand name with extra words"
+  },
+  "nerdPopupFpNoise": {
+    "message": "answered with noise"
+  },
+  "nerdPopupHistory": {
+    "message": "history"
+  },
+  "nerdBisectNeedsLog": {
+    "message": "bisect needs the activity log (settings)"
+  },
+  "nerdBisectNeedsProtection": {
+    "message": "bisect needs protection on for this site"
+  },
+  "nerdBisectYes": {
+    "message": "yes"
+  },
+  "nerdBisectNo": {
+    "message": "no"
+  },
+  "nerdBisectFound": {
+    "message": "breaks the page"
+  },
+  "nerdBisectFoundMany": {
+    "message": "these hosts break the page together"
+  },
+  "nerdBisectPartial": {
+    "message": "could not be fully separated; together they work"
+  },
+  "nerdBisectKeep": {
+    "message": "keep exception"
+  },
+  "nerdBisectDiscard": {
+    "message": "discard"
+  },
+  "nerdBisectKept": {
+    "message": "exception added to your filters"
+  },
+  "nerdBisectLocked": {
+    "message": "your filters are locked by your organisation"
+  },
+  "nerdBisectError": {
+    "message": "bisect step failed, try again"
+  },
+  "nerdBisectNoFilterText": {
+    "message": "Filter text unknown"
+  },
+  "nerdBisectRuleLabel": {
+    "message": "Bisect test (nerd mode)"
+  },
+  "nerdSlLabel": {
+    "message": "Nerd mode"
+  },
+  "nerdSlCommands": {
+    "message": "Commands (Ctrl+K)"
+  },
+  "nerdSlFpTitle": {
+    "message": "Fingerprinting calls on this page"
+  },
+  "nerdSlClipTitle": {
+    "message": "Dangerous clipboard writes replaced"
+  },
+  "nerdSlHostsTitle": {
+    "message": "Hosts blocked on this page"
+  },
+  "nerdSlHosts": {
+    "message": "$P1$ hosts",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSlHostsOne": {
+    "message": "$P1$ host",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSlLookalike": {
+    "message": "$P1$ looks like $P2$ ($P3$). Check the address.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "nerdSlCopied": {
+    "message": "copied"
+  },
+  "nerdSlAllowed": {
+    "message": "exception for $P1$ added, reload to apply",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSlFailed": {
+    "message": "failed"
+  },
+  "nerdSlPolicy": {
+    "message": "nerd mode is set by your organisation"
+  },
+  "nerdSlFpOff": {
+    "message": "fingerprinting meter is off"
+  },
+  "nerdSlFpNone": {
+    "message": "no fingerprinting calls"
+  },
+  "nerdCmdLabel": {
+    "message": "Command"
+  },
+  "nerdCmdPlaceholder": {
+    "message": "type a command — bisect, why, blame, allow …"
+  },
+  "nerdCmdNoMatch": {
+    "message": "no matching command"
+  },
+  "nerdCmdBadHost": {
+    "message": "not a valid host or URL"
+  },
+  "nerdCmdBisect": {
+    "message": "find the filter that breaks this page"
+  },
+  "nerdCmdBisectCancel": {
+    "message": "stop the bisect, block as before"
+  },
+  "nerdCmdWhy": {
+    "message": "explain a URL in the Lab playground"
+  },
+  "nerdCmdBlame": {
+    "message": "history of a filter line in the Lab"
+  },
+  "nerdCmdAllow": {
+    "message": "exception for a host on this site"
+  },
+  "nerdCmdFp": {
+    "message": "fingerprinting calls by API"
+  },
+  "nerdCmdCopyReport": {
+    "message": "page report as JSON to the clipboard"
+  },
+  "nerdCmdLab": {
+    "message": "open the Lab"
+  },
+  "nerdCmdNerdOff": {
+    "message": "switch nerd mode off"
+  },
+  "nerdCmdHostCount": {
+    "message": "$P1$ requests blocked",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdCmdHostCountOne": {
+    "message": "$P1$ request blocked",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAsk": {
+    "message": "$P1$ hosts let through — page works?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskOne": {
+    "message": "$P1$ host let through — page works?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectMaxTitle": {
+    "message": "at most $P1$ answers, often fewer",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAbort": {
+    "message": "abort"
+  },
+  "nerdBisectBlame": {
+    "message": "blame"
+  },
+  "nerdBisectClean": {
+    "message": "not a network block — more likely a cosmetic filter, a scriptlet or the site itself"
+  },
+  "nerdBisectOk": {
+    "message": "ok"
+  },
+  "cmdNerdBisect": {
+    "message": "Nerd mode: start or stop the filter bisect on this tab"
+  },
+  "nerdSettingsTitle": {
+    "message": "Nerd mode"
+  },
+  "nerdSettingsEnabled": {
+    "message": "Lab and developer tools"
+  },
+  "nerdSettingsEnabledDesc": {
+    "message": "Lab, right-click menu and filter bisect, plus three experimental guards. Nothing leaves this device."
+  },
+  "nerdSettingsClipboard": {
+    "message": "Clipboard guard"
+  },
+  "nerdSettingsClipboardDesc": {
+    "message": "Replaces dangerous commands a website writes to the clipboard (ClickFix: PowerShell, mshta, curl | sh)."
+  },
+  "nerdSettingsFpMeter": {
+    "message": "Fingerprinting meter"
+  },
+  "nerdSettingsFpMeterDesc": {
+    "message": "Counts per page how often canvas, WebGL, audio and other fingerprinting interfaces are read."
+  },
+  "nerdSettingsLookalike": {
+    "message": "Lookalike domain warning"
+  },
+  "nerdSettingsLookalikeDesc": {
+    "message": "Warns when an address looks confusingly similar to a protected domain (swapped letters, lookalike characters)."
+  },
+  "nerdSettingsDomains": {
+    "message": "Protected domains"
+  },
+  "nerdSettingsDomainsHint": {
+    "message": "One domain per line, e.g. your bank’s. Lookalikes of these domains trigger the warning."
+  },
+  "nerdSettingsDomainsPolicy": {
+    "message": "Set by your organisation"
+  },
+  "nerdSettingsDomainsSaved": {
+    "message": "$P1$ domains saved",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSettingsDomainsSavedOne": {
+    "message": "$P1$ domain saved",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSettingsDomainsInvalid": {
+    "message": "Saved. Not valid domain names, left out: $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabNav": {
+    "message": "Lab"
+  },
+  "nerdLabTitle": {
+    "message": "Lab"
+  },
+  "nerdLabLead": {
+    "message": "Try filters, check the rulesets, look up where a filter comes from."
+  },
+  "nerdLabOffTitle": {
+    "message": "Nerd mode is off"
+  },
+  "nerdLabOffText": {
+    "message": "Turn it on in Settings to open the Lab."
+  },
+  "nerdLabTabsLabel": {
+    "message": "Tool"
+  },
+  "nerdLabTabPlayground": {
+    "message": "Playground"
+  },
+  "nerdLabTabIntegrity": {
+    "message": "Integrity"
+  },
+  "nerdLabTabBlame": {
+    "message": "Blame"
+  },
+  "nerdLabPlayTitle": {
+    "message": "Filter playground"
+  },
+  "nerdLabPlayLead": {
+    "message": "Compiled like your own filters and dry-run against requests. Nothing is blocked or saved."
+  },
+  "nerdLabFiltersLabel": {
+    "message": "Filters"
+  },
+  "nerdLabFiltersHint": {
+    "message": "One filter per line. Network filters are tested; cosmetic filters are only listed."
+  },
+  "nerdLabSourceLabel": {
+    "message": "Requests"
+  },
+  "nerdLabSourceHistory": {
+    "message": "History"
+  },
+  "nerdLabSourceUrls": {
+    "message": "Pasted URLs"
+  },
+  "nerdLabSourceBoth": {
+    "message": "Both"
+  },
+  "nerdLabHistoryLabel": {
+    "message": "From history"
+  },
+  "nerdLabHistoryLimit": {
+    "message": "Number of requests"
+  },
+  "nerdLabHistoryLast": {
+    "message": "Last $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabHistoryHint": {
+    "message": "History only holds requests Bastion already blocked or redirected. Paste URLs to test anything else."
+  },
+  "nerdLabHistoryOffTitle": {
+    "message": "History is off"
+  },
+  "nerdLabHistoryOffText": {
+    "message": "Without history there are no recorded requests. Paste URLs, or turn history on in Settings."
+  },
+  "nerdLabHistoryFailed": {
+    "message": "History could not be read."
+  },
+  "nerdLabUrlsLabel": {
+    "message": "URLs"
+  },
+  "nerdLabUrlsHint": {
+    "message": "One request per line: URL [type] [page], e.g. https://ads.example/a.js script news.ch. Without a type it is guessed from the file extension; without a page the request counts as third-party."
+  },
+  "nerdLabUrlsInvalid": {
+    "message": "Invalid URLs skipped (line $P1$).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabRun": {
+    "message": "Run"
+  },
+  "nerdLabRunning": {
+    "message": "Running…"
+  },
+  "nerdLabResultsTitle": {
+    "message": "Results"
+  },
+  "nerdLabEmptyFilters": {
+    "message": "Enter at least one filter."
+  },
+  "nerdLabNoRequests": {
+    "message": "No requests to test against. Choose history or paste URLs."
+  },
+  "nerdLabTruncated": {
+    "message": "Only the first 1’000 filters were compiled."
+  },
+  "nerdLabSumFilters": {
+    "message": "Filters"
+  },
+  "nerdLabSumNetwork": {
+    "message": "Network filters"
+  },
+  "nerdLabSumRequests": {
+    "message": "Requests checked"
+  },
+  "nerdLabSumMatched": {
+    "message": "Matched"
+  },
+  "nerdLabOutcomeBlock": {
+    "message": "Blocked"
+  },
+  "nerdLabOutcomeAllow": {
+    "message": "Allowed"
+  },
+  "nerdLabOutcomeRedirect": {
+    "message": "Redirected"
+  },
+  "nerdLabOutcomeUpgrade": {
+    "message": "Upgraded to HTTPS"
+  },
+  "nerdLabOutcomeHeaders": {
+    "message": "Headers modified"
+  },
+  "nerdLabKindNetwork": {
+    "message": "Network"
+  },
+  "nerdLabKindCosmetic": {
+    "message": "Cosmetic"
+  },
+  "nerdLabKindScriptlet": {
+    "message": "Scriptlet"
+  },
+  "nerdLabKindError": {
+    "message": "Error"
+  },
+  "nerdLabKindInert": {
+    "message": "No effect"
+  },
+  "nerdLabCosmeticNote": {
+    "message": "Cosmetic filter: acts on the page, not on the network, so it is not dry-run here."
+  },
+  "nerdLabScriptletNote": {
+    "message": "Scriptlet: needs an extension release (MV3 forbids runtime code), so it is not dry-run here."
+  },
+  "nerdLabInertNote": {
+    "message": "Produces no rule, e.g. a $$badfilter or a filter cancelled by one."
+  },
+  "nerdLabRules": {
+    "message": "$P1$ DNR rules",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabRulesOne": {
+    "message": "$P1$ DNR rule",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabMatches": {
+    "message": "$P1$ matching requests",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabMatchesOne": {
+    "message": "$P1$ matching request",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabDecided": {
+    "message": "decides $P1$ of $P2$ (another filter wins the rest)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabAlready": {
+    "message": "$P1$ of them already handled by your lists",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabAlreadyOne": {
+    "message": "$P1$ of them already handled by your lists",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabUncertain": {
+    "message": "Cannot be checked without a server response, so ignored: $P1$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabShowUrls": {
+    "message": "Show $P1$ URLs",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabUrlsCapped": {
+    "message": "Truncated: only the first matches are listed."
+  },
+  "nerdLabOverridden": {
+    "message": "Overridden, result: $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabIntegrityTitle": {
+    "message": "Ruleset integrity"
+  },
+  "nerdLabIntegrityLead": {
+    "message": "Computes the SHA-256 of every packaged rule file here in the browser and compares it with the values recorded at build time."
+  },
+  "nerdLabVerify": {
+    "message": "Verify"
+  },
+  "nerdLabHashing": {
+    "message": "$P1$ of $P2$ files",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabColFile": {
+    "message": "File"
+  },
+  "nerdLabColExpected": {
+    "message": "Expected"
+  },
+  "nerdLabColActual": {
+    "message": "Actual"
+  },
+  "nerdLabColStatus": {
+    "message": "Status"
+  },
+  "nerdLabStatusOk": {
+    "message": "Matches"
+  },
+  "nerdLabStatusMismatch": {
+    "message": "Mismatch"
+  },
+  "nerdLabStatusMissing": {
+    "message": "Missing"
+  },
+  "nerdLabIntegrityOk": {
+    "message": "$P1$ files verified, matches build $P2$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabIntegrityBad": {
+    "message": "$P1$ of $P2$ files differ or are missing.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabIntegrityOtherBuild": {
+    "message": "Note: integrity.json comes from a different build than meta.json."
+  },
+  "nerdLabIntegrityMissingTitle": {
+    "message": "No checksums found"
+  },
+  "nerdLabIntegrityMissingText": {
+    "message": "This version has no rulesets/integrity.json; newer builds write it."
+  },
+  "nerdLabIntegrityCaption": {
+    "message": "A self-check, not a signature: whoever can change the rule files can change the checksums too. The store signature vouches for the package as a whole."
+  },
+  "nerdLabProvTitle": {
+    "message": "List provenance"
+  },
+  "nerdLabProvLead": {
+    "message": "Exactly what the build of $P1$ fetched (version $P2$): source, SHA-256, size and version of every list.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabColSource": {
+    "message": "Source"
+  },
+  "nerdLabColBytes": {
+    "message": "Bytes"
+  },
+  "nerdLabColModified": {
+    "message": "Last modified"
+  },
+  "nerdLabCopyJson": {
+    "message": "Copy as JSON"
+  },
+  "nerdLabCopied": {
+    "message": "Copied to the clipboard"
+  },
+  "nerdLabBlameTitle": {
+    "message": "Filter blame"
+  },
+  "nerdLabBlameLead": {
+    "message": "For any filter, its history in the upstream source on GitHub: who added it, when and why."
+  },
+  "nerdLabBlameInput": {
+    "message": "Filter text"
+  },
+  "nerdLabBlameList": {
+    "message": "List"
+  },
+  "nerdLabBlameAll": {
+    "message": "All lists"
+  },
+  "nerdLabBlameGo": {
+    "message": "Look up"
+  },
+  "nerdLabBlameKindBlame": {
+    "message": "Blame"
+  },
+  "nerdLabBlameKindSearch": {
+    "message": "Search"
+  },
+  "nerdLabBlameNone": {
+    "message": "No upstream history on GitHub"
+  },
+  "nerdLabBlameNoneText": {
+    "message": "The selected lists do not come from a GitHub repository whose files we know."
+  },
+  "nerdLabBlameNoText": {
+    "message": "No filter text is recorded for this rule."
+  },
+  "nerdLabBlameDialogTitle": {
+    "message": "Filter history"
+  },
+  "nerdLabBlameCaption": {
+    "message": "Opens github.com in a new tab. Only the filter text is sent, never an address you visited."
+  },
+  "nerdLabClose": {
+    "message": "Close"
+  },
+  "nerdLabHistory": {
+    "message": "history"
+  },
+  "nerdLabHistoryTitle": {
+    "message": "Open this filter’s history on GitHub"
+  },
+  "nerdMenuExplain": {
+    "message": "Explain this URL"
+  },
+  "nerdMenuTestFilter": {
+    "message": "Test selection as filter"
+  },
+  "nerdMenuBlameFilter": {
+    "message": "Blame selection as filter"
+  },
+  "nerdMenuBisect": {
+    "message": "Find the breaking filter"
+  },
+  "nerdMenuOpenLab": {
+    "message": "Open Lab"
+  },
+  "nerdLabExplainToggle": {
+    "message": "Also check the installed rules"
+  },
+  "nerdLabExplainTitle": {
+    "message": "Installed rules"
+  },
+  "nerdLabExplainProgress": {
+    "message": "Checking $P1$ of $P2$: $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "nerdLabExplainBlock": {
+    "message": "Blocked by $P1$ (priority $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabExplainAllow": {
+    "message": "Allowed by $P1$ (priority $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabExplainRedirect": {
+    "message": "Redirected by $P1$ (priority $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabExplainUpgrade": {
+    "message": "Upgraded to HTTPS by $P1$ (priority $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabExplainHeaders": {
+    "message": "Headers modified by $P1$ (priority $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "nerdLabExplainNone": {
+    "message": "No installed rule matches: the request would load."
+  },
+  "nerdLabExplainCapped": {
+    "message": "Only the first $P1$ matching rules are listed.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabExplainMax": {
+    "message": "Only the first $P1$ URLs are checked against the installed rules.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabExplainFailed": {
+    "message": "The installed rules could not be read."
+  },
+  "nerdLabExplainPage": {
+    "message": "page"
+  },
+  "nerdLabExplainNoPage": {
+    "message": "no page"
+  },
+  "nerdLabExplainWinner": {
+    "message": "Decides"
+  },
+  "nerdLabExplainColAction": {
+    "message": "Action"
+  },
+  "nerdLabExplainColPriority": {
+    "message": "Priority"
+  },
+  "nerdLabExplainColSource": {
+    "message": "Source"
+  },
+  "nerdLabExplainColFilter": {
+    "message": "Filter"
+  },
+  "nerdLabKeyFocus": {
+    "message": "focus"
+  },
+  "nerdLabKeyRun": {
+    "message": "run"
+  },
+  "nerdLabKeyBlur": {
+    "message": "leave field"
   }
 }
