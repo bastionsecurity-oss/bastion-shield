@@ -65,7 +65,7 @@ export class NerdService {
       return { ok: true };
     }
     if (msg.kind === 'clip') {
-      if (!n.clipboardGuard) return { ok: true };
+      if (!this.deps.settings().privacy.clipboardGuard) return { ok: true };
       const t = this.tab(tabId);
       t.clipboardBlocked = Math.min(MAX_COUNT, t.clipboardBlocked + 1);
       return { ok: true };

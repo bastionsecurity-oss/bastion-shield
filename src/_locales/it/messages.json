@@ -1988,12 +1988,6 @@
   "nerdSettingsEnabledDesc": {
     "message": "Strumenti per sviluppatori, riga di comando (Ctrl+K), menu contestuale e bisect. Nulla lascia questo dispositivo."
   },
-  "nerdSettingsClipboard": {
-    "message": "Protezione ClickFix (appunti)"
-  },
-  "nerdSettingsClipboardDesc": {
-    "message": "Sostituisce i comandi pericolosi che un sito scrive negli appunti (ClickFix: PowerShell, mshta, curl | sh)."
-  },
   "nerdSettingsFpMeter": {
     "message": "Contatore di fingerprinting"
   },
@@ -2693,5 +2687,85 @@
   },
   "nerdLabKeyBlur": {
     "message": "esci dal campo"
+  },
+  "privGroupClipboard": {
+    "message": "Appunti"
+  },
+  "privClipboard": {
+    "message": "Protezione ClickFix"
+  },
+  "privClipboardDesc": {
+    "message": "Impedisce ai siti di copiare di nascosto negli appunti comandi pensati per indurti a eseguirli (ClickFix: PowerShell, mshta, curl | sh). Ciò che copi tu non viene toccato."
+  },
+  "panelOpenDashboard": {
+    "message": "Apri la dashboard"
+  },
+  "railCollapse": {
+    "message": "Comprimi la barra laterale"
+  },
+  "railExpand": {
+    "message": "Espandi la barra laterale"
+  },
+  "cmdkOpen": {
+    "message": "Cerca"
+  },
+  "cmdkLabel": {
+    "message": "Cerca sezioni, impostazioni e azioni"
+  },
+  "cmdkPlaceholder": {
+    "message": "Cerca una sezione, un’impostazione o una lista di filtri…"
+  },
+  "cmdkGroupViews": {
+    "message": "Sezioni"
+  },
+  "cmdkGroupActions": {
+    "message": "Azioni"
+  },
+  "cmdkGroupSettings": {
+    "message": "Impostazioni"
+  },
+  "cmdkGroupLists": {
+    "message": "Liste di filtri"
+  },
+  "cmdkOpensTab": {
+    "message": "Si apre nella scheda della dashboard"
+  },
+  "cmdkListOn": {
+    "message": "Lista di filtri · attiva"
+  },
+  "cmdkListOff": {
+    "message": "Lista di filtri · disattivata"
+  },
+  "cmdkNerdOn": {
+    "message": "Attiva la modalità nerd"
+  },
+  "cmdkNerdOff": {
+    "message": "Disattiva la modalità nerd"
+  },
+  "cmdkEmpty": {
+    "message": "Nessun risultato per «$P1$»",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkHintMove": {
+    "message": "spostarsi"
+  },
+  "cmdkHintOpen": {
+    "message": "aprire"
+  },
+  "cmdkHintClose": {
+    "message": "chiudere"
+  },
+  "nerdRevealSub": {
+    "message": "Accesso consentito · strumenti per sviluppatori sbloccati"
+  },
+  "nerdRevealSr": {
+    "message": "Modalità nerd attivata. Gli strumenti per sviluppatori sono sbloccati."
+  },
+  "nerdRevealSkip": {
+    "message": "Premi un tasto per continuare"
   }
 }

@@ -47,10 +47,11 @@ export function defaultSettings(): Settings {
       webrtcPolicy: 'default',
       blockThirdPartyCookies: null,
       disablePrivacySandboxAds: true,
+      clipboardGuard: true,
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
-    nerd: { enabled: false, clipboardGuard: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
+    nerd: { enabled: false, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
 }
 
@@ -116,6 +117,8 @@ export function normalizeSettings(raw: unknown): Settings {
       webrtcPolicy: oneOf(p.webrtcPolicy, WEBRTC, d.privacy.webrtcPolicy),
       blockThirdPartyCookies: typeof cookies === 'boolean' ? cookies : null,
       disablePrivacySandboxAds: bool(p.disablePrivacySandboxAds, d.privacy.disablePrivacySandboxAds),
+      // Lived under nerd mode before ClickFix protection became a default: carry an earlier choice over.
+      clipboardGuard: bool(p.clipboardGuard, bool(n.clipboardGuard, d.privacy.clipboardGuard)),
     },
     ui: {
       badge: bool(ui.badge, d.ui.badge),
@@ -129,7 +132,6 @@ export function normalizeSettings(raw: unknown): Settings {
     },
     nerd: {
       enabled: bool(n.enabled, d.nerd.enabled),
-      clipboardGuard: bool(n.clipboardGuard, d.nerd.clipboardGuard),
       fingerprintMeter: bool(n.fingerprintMeter, d.nerd.fingerprintMeter),
       lookalike: bool(n.lookalike, d.nerd.lookalike),
       protectedDomains: domainList(n.protectedDomains),
@@ -324,6 +326,7 @@ export const SETTING_PATHS = [
   'privacy.webrtcPolicy',
   'privacy.blockThirdPartyCookies',
   'privacy.disablePrivacySandboxAds',
+  'privacy.clipboardGuard',
   'ui.badge',
   'ui.activityLog',
   'ui.incidentCta',
@@ -331,7 +334,6 @@ export const SETTING_PATHS = [
   'history.enabled',
   'history.retentionDays',
   'nerd.enabled',
-  'nerd.clipboardGuard',
   'nerd.fingerprintMeter',
   'nerd.lookalike',
   'nerd.protectedDomains',
@@ -360,7 +362,7 @@ const POLICY_PATHS: [keyof ManagedPolicy, (typeof SETTING_PATHS)[number]][] = [
   ['historyEnabled', 'history.enabled'],
   ['historyRetentionDays', 'history.retentionDays'],
   ['nerdMode', 'nerd.enabled'],
-  ['clipboardGuard', 'nerd.clipboardGuard'],
+  ['clipboardGuard', 'privacy.clipboardGuard'],
 ];
 
 /**
@@ -433,7 +435,7 @@ export function effectiveSettings(user: Settings, managed: ManagedPolicy, lists:
   if (managed.historyEnabled !== undefined) s.history.enabled = managed.historyEnabled;
   if (managed.historyRetentionDays !== undefined) s.history.retentionDays = retention(managed.historyRetentionDays, s.history.retentionDays);
   if (managed.nerdMode !== undefined) s.nerd.enabled = managed.nerdMode;
-  if (managed.clipboardGuard !== undefined) s.nerd.clipboardGuard = managed.clipboardGuard;
+  if (managed.clipboardGuard !== undefined) p.clipboardGuard = managed.clipboardGuard;
   if (managed.protectedDomains) s.nerd.protectedDomains = domainList([...managed.protectedDomains, ...s.nerd.protectedDomains], 1000 + MAX_PROTECTED_DOMAINS);
   s.lists = effectiveLists(lists, user, managed);
   return s;
@@ -482,7 +484,7 @@ export function applySettingsPatch(
   if (isPlainObject(patch.privacy)) {
     const pp = patch.privacy;
     const p = next.privacy;
-    const boolKeys = ['gpc', 'stripParams', 'debounce', 'deAmp', 'blockHyperlinkAuditing', 'disablePrivacySandboxAds'] as const;
+    const boolKeys = ['gpc', 'stripParams', 'debounce', 'deAmp', 'blockHyperlinkAuditing', 'disablePrivacySandboxAds', 'clipboardGuard'] as const;
     for (const k of boolKeys) {
       if (k in pp) set(`privacy.${k}`, typeof pp[k] === 'boolean', () => (p[k] = pp[k] as boolean));
     }
@@ -511,7 +513,7 @@ export function applySettingsPatch(
   }
   if (isPlainObject(patch.nerd)) {
     const np = patch.nerd;
-    for (const k of ['enabled', 'clipboardGuard', 'fingerprintMeter', 'lookalike'] as const) {
+    for (const k of ['enabled', 'fingerprintMeter', 'lookalike'] as const) {
       if (k in np) set(`nerd.${k}`, typeof np[k] === 'boolean', () => (next.nerd[k] = np[k] as boolean));
     }
     if ('protectedDomains' in np) {

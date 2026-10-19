@@ -231,14 +231,16 @@ export function privacyScripts(settings: Settings, sites: SitesMap, seedFiles: r
 }
 
 /**
- * Nerd mode registrations besides the meter (which rides on the privacy
- * registrations): the MAIN-world clipboard guard and the ISOLATED relay both
- * MAIN scripts report to. Like the cosmetic script they run wherever
- * protection is on.
+ * The MAIN-world clipboard guard (ClickFix protection, a privacy default
+ * independent of nerd mode) and the ISOLATED relay that both it and the nerd
+ * mode fingerprinting meter (which rides on the privacy registrations) report
+ * to. Like the cosmetic script they run wherever protection is on.
  */
 export function nerdScripts(settings: Settings, groups: readonly ScopeGroup<boolean>[]): DesiredScript[] {
   const n = settings.nerd;
-  if (!n.enabled || (!n.clipboardGuard && !n.fingerprintMeter)) return [];
+  const clip = settings.privacy.clipboardGuard;
+  const meter = n.enabled && n.fingerprintMeter;
+  if (!clip && !meter) return [];
   const base = (id: string, file: string, world: 'MAIN' | 'ISOLATED'): DesiredScript => ({
     id,
     js: [file],
@@ -250,7 +252,7 @@ export function nerdScripts(settings: Settings, groups: readonly ScopeGroup<bool
     persistAcrossSessions: true,
   });
   const out: DesiredScript[] = [];
-  if (n.clipboardGuard) out.push(...scopeToEnabled(base(CLIPGUARD_ID, CLIPGUARD_SCRIPT_FILE, 'MAIN'), groups));
+  if (clip) out.push(...scopeToEnabled(base(CLIPGUARD_ID, CLIPGUARD_SCRIPT_FILE, 'MAIN'), groups));
   out.push(...scopeToEnabled(base(NERD_RELAY_ID, NERD_RELAY_SCRIPT_FILE, 'ISOLATED'), groups));
   return out;
 }

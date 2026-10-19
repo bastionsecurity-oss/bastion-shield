@@ -253,6 +253,8 @@ export interface Settings {
     blockThirdPartyCookies: boolean | null;
     /** Turn off Topics / Protected Audience / Attribution reporting via chrome.privacy. Default true. */
     disablePrivacySandboxAds: boolean;
+    /** ClickFix protection: stop pages from putting hidden commands (powershell, mshta, curl | sh …) on the clipboard. Default true. */
+    clipboardGuard: boolean;
   };
   ui: {
     /** Toolbar badge with the per-tab blocked count. Default true. */
@@ -277,8 +279,6 @@ export interface Settings {
   nerd: {
     /** Master switch. Default false. */
     enabled: boolean;
-    /** Replace dangerous clipboard writes (ClickFix: powershell, mshta, curl | sh …). Default true. */
-    clipboardGuard: boolean;
     /** Count fingerprinting API calls per page (MAIN-world meter). Default true. */
     fingerprintMeter: boolean;
     /** Warn on lookalike domains of protected domains. Default true. */
@@ -349,7 +349,7 @@ export interface ManagedPolicy {
   reportBrokenSite?: 'github' | 'email' | 'none';
   /** Forces nerd mode on or off (nerd.enabled). */
   nerdMode?: boolean;
-  /** Forces the clipboard guard on or off (nerd.clipboardGuard). */
+  /** Forces ClickFix protection on or off (privacy.clipboardGuard). */
   clipboardGuard?: boolean;
   /** Registrable domains protected by the lookalike warning, added to the user's own. */
   protectedDomains?: string[];

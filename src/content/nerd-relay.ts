@@ -1,7 +1,8 @@
 // Bastion Shield — nerd mode relay, ISOLATED world (dist/content/nerd-relay.js).
 //
 // Registered with the MAIN-world scripts clipguard.js / fpmeter.js when
-// nerd mode and either feature is on (registrations.ts): <all_urls>,
+// ClickFix protection (privacy.clipboardGuard, on by default) or the nerd
+// mode fingerprinting meter is on (registrations.ts): <all_urls>,
 // document_start, all frames, matchOriginAsFallback, not on sites with
 // protection off. It listens on the per-extension event channel
 // (main/nerd-channel.ts) and

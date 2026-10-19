@@ -4,9 +4,10 @@ Nerd mode is an opt-in set of power-user tools and experimental guards. It is
 off by default (`settings.nerd.enabled`), and an admin can force it with the
 `nerdMode` policy. With nerd mode off, Bastion Shield behaves and looks exactly
 as before: no extra content scripts are registered, and the popup and dashboard
-show nothing new. The one exception is not a nerd feature: the blocker notices
-(see Blocker notices) also show uBlock filters' ClickFix blocks in Bastion
-style instead of uBO's own alert bar.
+show nothing new. Two things are not nerd features and stay on: the blocker
+notices (see Blocker notices) show uBlock filters' ClickFix blocks in Bastion
+style instead of uBO's own alert bar, and ClickFix protection (below) is a
+privacy default (dashboard › Datenschutz, `privacy.clipboardGuard`).
 
 Like everything else in Bastion, nothing leaves the device. The filter-history
 links («GitHub ↗») are plain links the user chooses to open.
@@ -15,15 +16,15 @@ UI names (en / de): the dashboard section is "Developer tools" /
 «Entwicklertools» (hash `#lab`, command `lab`; called the Lab in code and
 below) with the tabs "Filter tester" / «Filter-Tester», "Checksums (SHA-256)"
 / «Prüfsummen (SHA-256)» and "Filter history" / «Filter-Historie». The
-settings rows are "ClickFix protection (clipboard)", "Fingerprinting counter"
+settings rows are "Fingerprinting counter"
 and "Lookalike domains (typosquatting)" with "Protected domains".
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |
 | Find the breaking filter (bisect) | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
 | Command line (`Ctrl+K`) | Popup | `nerd.enabled` |
+| «NERD MODE» reveal when switched on (easter egg; also via `nerd` in the dashboard's `Ctrl+K` palette) | Dashboard, expanded popup | `nerd.enabled` |
 | Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
-| ClickFix protection (clipboard) | Page (notice), popup | `nerd.clipboardGuard` / `clipboardGuard` |
 | Lookalike domains (typosquatting) | Page (notice), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
 | Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity and Developer tools | `nerd.enabled` |
 | Filter tester (dry run) | Dashboard › Developer tools | `nerd.enabled` |
@@ -172,6 +173,12 @@ media, timing). It sends the counts in batches to the ISOLATED relay
 only.
 
 ## ClickFix protection (clipboard)
+
+Not a nerd feature any more: on by default for everyone, switched in
+dashboard › Datenschutz › Zwischenablage (`privacy.clipboardGuard`, policy
+`clipboardGuard`; stored `nerd.clipboardGuard` values carry over). It is
+described here because it shares the relay with the fingerprinting meter. Only
+the popup's `clip` counter needs nerd mode.
 
 `main/clipguard.js` checks text that a page writes to the clipboard
 (`navigator.clipboard.writeText`/`write`, `setData` in copy events,

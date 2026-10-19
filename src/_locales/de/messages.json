@@ -1988,12 +1988,6 @@
   "nerdSettingsEnabledDesc": {
     "message": "Entwicklertools, Befehlszeile (Ctrl+K), Kontextmenü und Bisect. Nichts verlässt dieses Gerät."
   },
-  "nerdSettingsClipboard": {
-    "message": "ClickFix-Schutz (Zwischenablage)"
-  },
-  "nerdSettingsClipboardDesc": {
-    "message": "Ersetzt gefährliche Befehle, die eine Website in die Zwischenablage schreibt (ClickFix: PowerShell, mshta, curl | sh)."
-  },
   "nerdSettingsFpMeter": {
     "message": "Fingerprinting-Zähler"
   },
@@ -2693,5 +2687,85 @@
   },
   "nerdLabKeyBlur": {
     "message": "Feld verlassen"
+  },
+  "privGroupClipboard": {
+    "message": "Zwischenablage"
+  },
+  "privClipboard": {
+    "message": "ClickFix-Schutz"
+  },
+  "privClipboardDesc": {
+    "message": "Verhindert, dass Websites heimlich Befehle in die Zwischenablage legen, die Sie zum Ausführen verleiten sollen (ClickFix: PowerShell, mshta, curl | sh). Was Sie selbst kopieren, bleibt unberührt."
+  },
+  "panelOpenDashboard": {
+    "message": "Dashboard öffnen"
+  },
+  "railCollapse": {
+    "message": "Seitenleiste einklappen"
+  },
+  "railExpand": {
+    "message": "Seitenleiste ausklappen"
+  },
+  "cmdkOpen": {
+    "message": "Suchen"
+  },
+  "cmdkLabel": {
+    "message": "Bereiche, Einstellungen und Aktionen durchsuchen"
+  },
+  "cmdkPlaceholder": {
+    "message": "Bereich, Einstellung oder Filterliste suchen …"
+  },
+  "cmdkGroupViews": {
+    "message": "Bereiche"
+  },
+  "cmdkGroupActions": {
+    "message": "Aktionen"
+  },
+  "cmdkGroupSettings": {
+    "message": "Einstellungen"
+  },
+  "cmdkGroupLists": {
+    "message": "Filterlisten"
+  },
+  "cmdkOpensTab": {
+    "message": "Öffnet im Dashboard-Tab"
+  },
+  "cmdkListOn": {
+    "message": "Filterliste · aktiv"
+  },
+  "cmdkListOff": {
+    "message": "Filterliste · aus"
+  },
+  "cmdkNerdOn": {
+    "message": "Nerd-Modus einschalten"
+  },
+  "cmdkNerdOff": {
+    "message": "Nerd-Modus ausschalten"
+  },
+  "cmdkEmpty": {
+    "message": "Nichts gefunden für «$P1$»",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkHintMove": {
+    "message": "navigieren"
+  },
+  "cmdkHintOpen": {
+    "message": "öffnen"
+  },
+  "cmdkHintClose": {
+    "message": "schliessen"
+  },
+  "nerdRevealSub": {
+    "message": "Zugriff gewährt · Entwicklertools freigeschaltet"
+  },
+  "nerdRevealSr": {
+    "message": "Nerd-Modus eingeschaltet. Die Entwicklertools sind freigeschaltet."
+  },
+  "nerdRevealSkip": {
+    "message": "Beliebige Taste zum Fortfahren"
   }
 }

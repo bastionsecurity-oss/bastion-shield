@@ -88,12 +88,12 @@ test('relevantSites keeps only sites that can intersect the matches (SW-5)', () 
   assert.deepEqual(relevantSites(['https://example.com/path*'], ['x.ch']), ['x.ch'], 'unanalysable pattern keeps everything');
 });
 
-test('default registrations: cosmetic, one generic-high CSS, one scriptlet bundle per world, privacy', () => {
+test('default registrations: cosmetic, one generic-high CSS, one scriptlet bundle per world, privacy, ClickFix protection', () => {
   const out = plan(['easylist', 'ublock']);
   const m = byId(out);
   assert.deepEqual(
     out.map((d) => d.id),
-    [COSMETIC_SCRIPT_ID, GENERIC_HIGH_ID, 'sl-main', 'sl-isolated', 'bs-privacy'],
+    [COSMETIC_SCRIPT_ID, GENERIC_HIGH_ID, 'sl-main', 'sl-isolated', 'bs-privacy', CLIPGUARD_ID, NERD_RELAY_ID],
   );
   assert.deepEqual(m.get(COSMETIC_SCRIPT_ID), {
     id: COSMETIC_SCRIPT_ID,
@@ -153,8 +153,9 @@ test('the set stays small whatever the size of the lists (PERF-1/PERF-2)', () =>
   };
   const out = plan(Array.from({ length: 30 }, (_, i) => `l${i}`).concat(['easylist', 'ublock']), {}, { scriptletIndex: many });
   const st = registrationStats(out);
-  assert.equal(st.registrations, 4);
-  assert.equal(st.matches, 4);
+  // + ClickFix protection (clipboard guard and its relay), on by default.
+  assert.equal(st.registrations, 6);
+  assert.equal(st.matches, 6);
   assert.equal(st.excludeMatches, 3);
   assert.equal(byId(out).get('sl-main')!.js!.length, 32);
 });
@@ -195,7 +196,7 @@ test('a site toggle only updates the registrations it can affect, in place (SW-5
   assert.deepEqual(diff.register, []);
   assert.deepEqual(diff.unregister, []);
   // The host-scoped privacy registration for bank.ch is untouched.
-  assert.deepEqual(diff.update.map((d) => d.id).sort(), [COSMETIC_SCRIPT_ID, GENERIC_HIGH_ID, 'bs-privacy', 'sl-isolated', 'sl-main']);
+  assert.deepEqual(diff.update.map((d) => d.id).sort(), [COSMETIC_SCRIPT_ID, GENERIC_HIGH_ID, CLIPGUARD_ID, NERD_RELAY_ID, 'bs-privacy', 'sl-isolated', 'sl-main'].sort());
   for (const d of diff.update) assert.ok(d.excludeMatches?.includes('*://*.unrelated.org/*'));
   const strict = after.find((d) => d.id === 'bs-privacy-1')!;
   assert.deepEqual(strict.matches, ['*://*.bank.ch/*']);
@@ -209,8 +210,8 @@ test('a site toggle only updates the registrations it can affect, in place (SW-5
   // update cannot express (apply.ts omits empty lists): re-register those.
   const off: RegisteredScript[] = after.map((d) => ({ ...d }));
   const back = diffRegistrations(off, before);
-  assert.deepEqual(back.register.map((d) => d.id).sort(), [COSMETIC_SCRIPT_ID, 'sl-isolated', 'sl-main']);
-  assert.deepEqual(back.unregister.sort(), [COSMETIC_SCRIPT_ID, 'sl-isolated', 'sl-main']);
+  assert.deepEqual(back.register.map((d) => d.id).sort(), [COSMETIC_SCRIPT_ID, CLIPGUARD_ID, NERD_RELAY_ID, 'sl-isolated', 'sl-main'].sort());
+  assert.deepEqual(back.unregister.sort(), [COSMETIC_SCRIPT_ID, CLIPGUARD_ID, NERD_RELAY_ID, 'sl-isolated', 'sl-main'].sort());
   // These keep other exclusions (generichide hosts; bank.ch's own privacy level).
   assert.deepEqual(back.update.map((d) => d.id).sort(), [GENERIC_HIGH_ID, 'bs-privacy']);
   for (const d of back.register) assert.equal(d.excludeMatches, undefined);
@@ -305,12 +306,23 @@ const planWith = (settings: ReturnType<typeof normalizeSettings>, sites = {}) =>
     seedFiles: SEEDS,
   });
 
-test('nerd mode off (default): no nerd registrations, privacy unchanged', () => {
+test('nerd mode off (default): ClickFix protection still on, no meter', () => {
   const out = planWith(nerd({}));
-  assert.ok(!out.some((d) => d.id === CLIPGUARD_ID || d.id.startsWith(NERD_RELAY_ID)));
+  const m = byId(out);
+  // ClickFix protection is a privacy default, independent of nerd mode.
+  assert.ok(m.has(CLIPGUARD_ID) && m.has(NERD_RELAY_ID));
   assert.ok(!out.some((d) => d.js?.includes(FPMETER_SCRIPT_FILE)));
-  // The feature flags alone do nothing while the master switch is off.
-  assert.deepEqual(planWith(nerd({ enabled: false, clipboardGuard: true, fingerprintMeter: true })), out);
+  // The meter flag alone does nothing while the master switch is off.
+  assert.deepEqual(planWith(nerd({ enabled: false, fingerprintMeter: true })), out);
+  // Guard off and nerd mode off: neither script.
+  const none = planWith(nerd({}, { clipboardGuard: false }));
+  assert.ok(!none.some((d) => d.id === CLIPGUARD_ID || d.id === NERD_RELAY_ID));
+});
+
+test('an earlier nerd.clipboardGuard choice carries over to privacy.clipboardGuard', () => {
+  assert.equal(nerd({ clipboardGuard: false }).privacy.clipboardGuard, false);
+  assert.equal(nerd({}).privacy.clipboardGuard, true);
+  assert.equal(nerd({ clipboardGuard: false }, { clipboardGuard: true }).privacy.clipboardGuard, true);
 });
 
 test('nerd mode on: clipboard guard (MAIN), relay (ISOLATED), meter after privacy.js', () => {
@@ -345,12 +357,12 @@ test('nerd feature flags select the scripts', () => {
   assert.ok(clipOnly.has(CLIPGUARD_ID) && clipOnly.has(NERD_RELAY_ID));
   assert.ok(!clipOnly.get('bs-privacy')!.js!.includes(FPMETER_SCRIPT_FILE));
 
-  const meterOnly = byId(planWith(nerd({ enabled: true, clipboardGuard: false })));
+  const meterOnly = byId(planWith(nerd({ enabled: true }, { clipboardGuard: false })));
   assert.ok(!meterOnly.has(CLIPGUARD_ID));
   assert.ok(meterOnly.has(NERD_RELAY_ID));
   assert.ok(meterOnly.get('bs-privacy')!.js!.includes(FPMETER_SCRIPT_FILE));
 
-  const none = planWith(nerd({ enabled: true, clipboardGuard: false, fingerprintMeter: false }));
+  const none = planWith(nerd({ enabled: true, fingerprintMeter: false }, { clipboardGuard: false }));
   assert.ok(!none.some((d) => d.id === CLIPGUARD_ID || d.id === NERD_RELAY_ID || d.js?.includes(FPMETER_SCRIPT_FILE)));
 });
 
@@ -378,15 +390,19 @@ test('nerd scripts are excluded where protection is off, with companions for re-
   assert.ok(m.get('bs-privacy-1')!.js!.includes(FPMETER_SCRIPT_FILE));
 });
 
-test('toggling nerd mode is a small diff: register/unregister nerd scripts, update privacy in place', () => {
+test('toggling nerd mode is a small diff: the meter rides on privacy (updated in place), ClickFix protection stays', () => {
   const off = planWith(nerd({}));
   const on = planWith(nerd({ enabled: true }));
   const up = diffRegistrations(off.map((d) => ({ ...d })), on);
-  assert.deepEqual(up.register.map((d) => d.id).sort(), [CLIPGUARD_ID, NERD_RELAY_ID]);
+  assert.deepEqual(up.register, []);
   assert.deepEqual(up.update.map((d) => d.id), ['bs-privacy']);
   assert.deepEqual(up.unregister, []);
   const down = diffRegistrations(on.map((d) => ({ ...d })), off);
-  assert.deepEqual(down.unregister.sort(), [CLIPGUARD_ID, NERD_RELAY_ID]);
+  assert.deepEqual(down.unregister, []);
+  // Without ClickFix protection, nerd mode brings the relay along on its own.
+  const bare = planWith(nerd({}, { clipboardGuard: false }));
+  const bareUp = diffRegistrations(bare.map((d) => ({ ...d })), planWith(nerd({ enabled: true }, { clipboardGuard: false })));
+  assert.deepEqual(bareUp.register.map((d) => d.id), [NERD_RELAY_ID]);
   assert.deepEqual(down.update.map((d) => d.id), ['bs-privacy']);
   assert.deepEqual(down.register, []);
 });

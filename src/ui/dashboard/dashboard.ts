@@ -2,7 +2,9 @@
 // #lists, #filters, #sites, #privacy, #settings, #about, #welcome, #site in the
 // expanded popup, and #lab while nerd mode is on), the navigation footer
 // (organisation, «Cyber-Vorfall?»), the nerd-mode navigation entry and view
-// lifecycle (dispose / unsaved-changes guard). The same app runs as
+// lifecycle (dispose / unsaved-changes guard), plus the collapsible rail
+// (rail.ts), the Ctrl+K command palette (palette.ts) and the nerd mode
+// reveal (nerd-reveal.ts). The same app runs as
 // the dashboard tab (dashboard.html) and as the expanded popup (panel.html).
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -27,6 +29,9 @@ import { settingsView } from './views/settings.ts';
 import { aboutView } from './views/about.ts';
 import { welcomeView } from './views/welcome.ts';
 import { labView } from './views/lab.ts';
+import { initRail } from './rail.ts';
+import { initPalette } from './palette.ts';
+import { playNerdReveal } from './nerd-reveal.ts';
 
 const VIEWS: Record<string, { make: () => View; titleKey: string }> = {
   site: { make: siteView, titleKey: 'navSite' },
@@ -112,6 +117,7 @@ async function route(): Promise<void> {
   if (token !== navToken) return; // the user moved on while this view loaded
   replace(root, container);
   root.setAttribute('aria-busy', 'false');
+  document.dispatchEvent(new CustomEvent('db:routed', { detail: name }));
   if (!firstRoute) {
     // Move focus to the new heading so screen readers announce the view.
     const heading = container.querySelector<HTMLElement>('h1');
@@ -127,8 +133,12 @@ async function nerdOn(): Promise<boolean> {
   return r.ok && r.data.settings.nerd?.enabled === true;
 }
 
-/** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. */
+let nerdWasOn: boolean | null = null;
+
+/** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. Switching it on plays the reveal. */
 function syncNerdNav(on: boolean): void {
+  if (nerdWasOn === false && on) playNerdReveal();
+  nerdWasOn = on;
   const li = document.getElementById('db-nav-lab');
   if (li) li.hidden = !on;
   if (!on && current?.name === 'lab') location.hash = popupMode ? '#site' : '#overview';
@@ -240,6 +250,8 @@ async function main(): Promise<void> {
   if (!initI18nSync()) await initI18n();
   translate();
   hydrateIcons();
+  initRail();
+  initPalette();
   bindPopupChrome();
   if (embedded) bindMorph();
   window.addEventListener('hashchange', () => void route());

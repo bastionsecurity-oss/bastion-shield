@@ -1988,12 +1988,6 @@
   "nerdSettingsEnabledDesc": {
     "message": "Outils de développement, ligne de commande (Ctrl+K), menu contextuel et bisect. Rien ne quitte cet appareil."
   },
-  "nerdSettingsClipboard": {
-    "message": "Protection ClickFix (presse-papiers)"
-  },
-  "nerdSettingsClipboardDesc": {
-    "message": "Remplace les commandes dangereuses qu’un site écrit dans le presse-papiers (ClickFix : PowerShell, mshta, curl | sh)."
-  },
   "nerdSettingsFpMeter": {
     "message": "Compteur de fingerprinting"
   },
@@ -2693,5 +2687,85 @@
   },
   "nerdLabKeyBlur": {
     "message": "quitter le champ"
+  },
+  "privGroupClipboard": {
+    "message": "Presse-papiers"
+  },
+  "privClipboard": {
+    "message": "Protection ClickFix"
+  },
+  "privClipboardDesc": {
+    "message": "Empêche les sites de placer en secret dans le presse-papiers des commandes destinées à vous inciter à les exécuter (ClickFix : PowerShell, mshta, curl | sh). Ce que vous copiez vous-même n’est pas touché."
+  },
+  "panelOpenDashboard": {
+    "message": "Ouvrir le tableau de bord"
+  },
+  "railCollapse": {
+    "message": "Replier la barre latérale"
+  },
+  "railExpand": {
+    "message": "Déplier la barre latérale"
+  },
+  "cmdkOpen": {
+    "message": "Rechercher"
+  },
+  "cmdkLabel": {
+    "message": "Rechercher des sections, des paramètres et des actions"
+  },
+  "cmdkPlaceholder": {
+    "message": "Rechercher une section, un paramètre ou une liste de filtres…"
+  },
+  "cmdkGroupViews": {
+    "message": "Sections"
+  },
+  "cmdkGroupActions": {
+    "message": "Actions"
+  },
+  "cmdkGroupSettings": {
+    "message": "Paramètres"
+  },
+  "cmdkGroupLists": {
+    "message": "Listes de filtres"
+  },
+  "cmdkOpensTab": {
+    "message": "S’ouvre dans l’onglet du tableau de bord"
+  },
+  "cmdkListOn": {
+    "message": "Liste de filtres · active"
+  },
+  "cmdkListOff": {
+    "message": "Liste de filtres · désactivée"
+  },
+  "cmdkNerdOn": {
+    "message": "Activer le mode nerd"
+  },
+  "cmdkNerdOff": {
+    "message": "Désactiver le mode nerd"
+  },
+  "cmdkEmpty": {
+    "message": "Aucun résultat pour « $P1$ »",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkHintMove": {
+    "message": "naviguer"
+  },
+  "cmdkHintOpen": {
+    "message": "ouvrir"
+  },
+  "cmdkHintClose": {
+    "message": "fermer"
+  },
+  "nerdRevealSub": {
+    "message": "Accès autorisé · outils de développement déverrouillés"
+  },
+  "nerdRevealSr": {
+    "message": "Mode nerd activé. Les outils de développement sont déverrouillés."
+  },
+  "nerdRevealSkip": {
+    "message": "Appuyez sur une touche pour continuer"
   }
 }

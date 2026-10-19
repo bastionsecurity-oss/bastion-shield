@@ -13,8 +13,8 @@
 //   5. shows the blocker notices (content/notice.ts, top frame only): the
 //      nerd mode lookalike-domain warning when the response carries one,
 //      and «ClickFix blocked» for clipboard writes that uBO's
-//      prevent-clipboard-write scriptlet (nerd mode on or off) or the nerd
-//      mode clipboard guard stopped. The scriptlet reports through a
+//      prevent-clipboard-write scriptlet or Bastion's own clipboard guard
+//      (ClickFix protection, privacy.clipboardGuard) stopped. The scriptlet reports through a
 //      synchronous window event whose name is a per-build token compiled
 //      into both files (tools/lib/notice-transform.ts); subframes forward
 //      their notices to the top frame through the service worker.

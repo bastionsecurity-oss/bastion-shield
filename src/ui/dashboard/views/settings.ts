@@ -33,10 +33,11 @@ export function defaultSettings(): Settings {
       webrtcPolicy: 'default',
       blockThirdPartyCookies: null,
       disablePrivacySandboxAds: true,
+      clipboardGuard: true,
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
-    nerd: { enabled: false, clipboardGuard: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
+    nerd: { enabled: false, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
 }
 
@@ -82,8 +83,8 @@ export function parseProtectedDomains(text: string): { domains: string[]; invali
 
 /**
  * «Nerd-Modus»: a normal settings group. The master switch row carries the
- * only visible description (one sober line); the guards (clipboard,
- * fingerprinting meter, lookalike warning) and the protected-domain list
+ * only visible description (one sober line); the guards (fingerprinting
+ * meter, lookalike warning) and the protected-domain list
  * appear only while it is on. Policy domains are shown read-only; the user's own
  * list is the effective list minus the policy's.
  */
@@ -152,7 +153,6 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
   });
 
   append(sub, [
-    row('nerd.clipboardGuard', n.clipboardGuard, 'nerdSettingsClipboard', 'nerdSettingsClipboardDesc', (v) => ({ nerd: { clipboardGuard: v } })),
     row('nerd.fingerprintMeter', n.fingerprintMeter, 'nerdSettingsFpMeter', 'nerdSettingsFpMeterDesc', (v) => ({ nerd: { fingerprintMeter: v } })),
     row('nerd.lookalike', n.lookalike, 'nerdSettingsLookalike', 'nerdSettingsLookalikeDesc', (v) => ({ nerd: { lookalike: v } })),
     h(

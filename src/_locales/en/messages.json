@@ -1988,12 +1988,6 @@
   "nerdSettingsEnabledDesc": {
     "message": "Developer tools, command line (Ctrl+K), context menu and bisect. Nothing leaves this device."
   },
-  "nerdSettingsClipboard": {
-    "message": "ClickFix protection (clipboard)"
-  },
-  "nerdSettingsClipboardDesc": {
-    "message": "Replaces dangerous commands a website writes to the clipboard (ClickFix: PowerShell, mshta, curl | sh)."
-  },
   "nerdSettingsFpMeter": {
     "message": "Fingerprinting counter"
   },
@@ -2693,5 +2687,85 @@
   },
   "nerdLabKeyBlur": {
     "message": "leave field"
+  },
+  "privGroupClipboard": {
+    "message": "Clipboard"
+  },
+  "privClipboard": {
+    "message": "ClickFix protection"
+  },
+  "privClipboardDesc": {
+    "message": "Stops websites from secretly putting commands on your clipboard that try to trick you into running them (ClickFix: PowerShell, mshta, curl | sh). What you copy yourself is left alone."
+  },
+  "panelOpenDashboard": {
+    "message": "Open dashboard"
+  },
+  "railCollapse": {
+    "message": "Collapse sidebar"
+  },
+  "railExpand": {
+    "message": "Expand sidebar"
+  },
+  "cmdkOpen": {
+    "message": "Search"
+  },
+  "cmdkLabel": {
+    "message": "Search sections, settings and actions"
+  },
+  "cmdkPlaceholder": {
+    "message": "Search a section, setting or filter list …"
+  },
+  "cmdkGroupViews": {
+    "message": "Sections"
+  },
+  "cmdkGroupActions": {
+    "message": "Actions"
+  },
+  "cmdkGroupSettings": {
+    "message": "Settings"
+  },
+  "cmdkGroupLists": {
+    "message": "Filter lists"
+  },
+  "cmdkOpensTab": {
+    "message": "Opens in the dashboard tab"
+  },
+  "cmdkListOn": {
+    "message": "Filter list · on"
+  },
+  "cmdkListOff": {
+    "message": "Filter list · off"
+  },
+  "cmdkNerdOn": {
+    "message": "Turn on nerd mode"
+  },
+  "cmdkNerdOff": {
+    "message": "Turn off nerd mode"
+  },
+  "cmdkEmpty": {
+    "message": "Nothing found for “$P1$”",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkHintMove": {
+    "message": "move"
+  },
+  "cmdkHintOpen": {
+    "message": "open"
+  },
+  "cmdkHintClose": {
+    "message": "close"
+  },
+  "nerdRevealSub": {
+    "message": "Access granted · developer tools unlocked"
+  },
+  "nerdRevealSr": {
+    "message": "Nerd mode is on. The developer tools are unlocked."
+  },
+  "nerdRevealSkip": {
+    "message": "Press any key to continue"
   }
 }

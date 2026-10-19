@@ -1,6 +1,7 @@
 // Bastion Shield — dashboard «Datenschutz»: GPC, tracking parameters, bounce
-// tracking, AMP, fingerprinting default, hyperlink auditing, Privacy Sandbox
-// ad APIs, WebRTC policy and third-party cookies. Each setting carries a
+// tracking, AMP, ClickFix protection (clipboard), fingerprinting default,
+// hyperlink auditing, Privacy Sandbox ad APIs, WebRTC policy and third-party
+// cookies. Each setting carries a
 // one-line plain-language explanation and a lock when managed by policy.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -119,6 +120,10 @@ export function privacyView(): View {
           toggle('stripParams', 'privParams', 'privParamsDesc'),
           toggle('debounce', 'privDebounce', 'privDebounceDesc'),
           toggle('deAmp', 'privAmp', 'privAmpDesc'),
+        ),
+        panel(
+          { title: t('privGroupClipboard'), flush: true },
+          toggle('clipboardGuard', 'privClipboard', 'privClipboardDesc'),
         ),
         panel(
           { title: t('privGroupFingerprint'), flush: true },

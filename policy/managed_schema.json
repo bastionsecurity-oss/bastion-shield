@@ -159,12 +159,12 @@
     "nerdMode": {
       "type": "boolean",
       "title": "Nerd mode",
-      "description": "Forces nerd mode on or off: filter bisect, fingerprinting meter, clipboard guard, lookalike-domain warning and the Lab view (docs/NERD-MODE.md). Missing = the user decides. Default off."
+      "description": "Forces nerd mode on or off: filter bisect, fingerprinting meter, lookalike-domain warning and the Lab view (docs/NERD-MODE.md). Missing = the user decides. Default off."
     },
     "clipboardGuard": {
       "type": "boolean",
       "title": "Clipboard guard (ClickFix protection)",
-      "description": "Forces the clipboard guard on or off. While nerd mode is on, it replaces shell commands (PowerShell, mshta, curl | sh …) that a page puts on the clipboard. Default true."
+      "description": "Forces ClickFix protection (privacy.clipboardGuard) on or off, independent of nerd mode: stops pages from putting shell commands (PowerShell, mshta, curl | sh …) on the clipboard. Default true."
     },
     "protectedDomains": {
       "type": "array",
