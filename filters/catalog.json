@@ -564,6 +564,209 @@
       "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
       "licenseUrl": "https://easylist.to/pages/licence.html",
       "attribution": "The EasyList Italy authors"
+    },
+    {
+      "id": "block-lan",
+      "name": {
+        "en": "Block outsider intrusion into LAN",
+        "de": "Zugriffe auf das lokale Netzwerk sperren",
+        "fr": "Bloquer les intrusions dans le réseau local",
+        "it": "Blocca le intrusioni nella rete locale"
+      },
+      "description": {
+        "en": "Stops public websites from probing devices on your local network (routers, printers, NAS) or on this computer.",
+        "de": "Verhindert, dass öffentliche Websites Geräte im lokalen Netzwerk (Router, Drucker, NAS) oder auf diesem Computer abtasten.",
+        "fr": "Empêche les sites publics de sonder les appareils de votre réseau local (routeurs, imprimantes, NAS) ou de cet ordinateur.",
+        "it": "Impedisce ai siti pubblici di sondare i dispositivi della rete locale (router, stampanti, NAS) o di questo computer."
+      },
+      "category": "security",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": true,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/filters/lan-block.txt"
+        }
+      ],
+      "homepage": "https://github.com/uBlockOrigin/uAssets",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/uBlockOrigin/uAssets/blob/master/LICENSE",
+      "attribution": "uBlock Origin / uAssets contributors"
+    },
+    {
+      "id": "hagezi-tif",
+      "name": {
+        "en": "Threat Intelligence Feeds (HaGeZi, mini)",
+        "de": "Threat Intelligence Feeds (HaGeZi, Mini)",
+        "fr": "Threat Intelligence Feeds (HaGeZi, mini)",
+        "it": "Threat Intelligence Feeds (HaGeZi, mini)"
+      },
+      "description": {
+        "en": "Domains used for malware, phishing, scams and command-and-control, collected from many threat feeds. Large; updated with each Bastion release.",
+        "de": "Domains für Malware, Phishing, Betrug und Command-and-Control aus vielen Bedrohungs-Feeds. Gross; wird mit jeder Bastion-Version aktualisiert.",
+        "fr": "Domaines utilisés pour les logiciels malveillants, l'hameçonnage, les arnaques et le command-and-control, issus de nombreux flux de menaces. Volumineux; mis à jour à chaque version de Bastion.",
+        "it": "Domini usati per malware, phishing, truffe e command-and-control, raccolti da molti feed di minacce. Grande; aggiornato a ogni versione di Bastion."
+      },
+      "category": "security",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.mini.txt"
+        }
+      ],
+      "homepage": "https://github.com/hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/hagezi/dns-blocklists/blob/main/LICENSE",
+      "attribution": "HaGeZi (https://github.com/hagezi/dns-blocklists) and the feeds it aggregates"
+    },
+    {
+      "id": "hagezi-pro",
+      "name": {
+        "en": "Multi PRO (HaGeZi)",
+        "de": "Multi PRO (HaGeZi)",
+        "fr": "Multi PRO (HaGeZi)",
+        "it": "Multi PRO (HaGeZi)"
+      },
+      "description": {
+        "en": "A large domain list against ads, trackers, telemetry and junk sites. It blocks whole domains, so it breaks more sites than the default lists.",
+        "de": "Grosse Domainliste gegen Werbung, Tracker, Telemetrie und Ramschseiten. Sie sperrt ganze Domains und stört deshalb mehr Websites als die Standardlisten.",
+        "fr": "Grande liste de domaines contre les publicités, les traqueurs, la télémétrie et les sites indésirables. Elle bloque des domaines entiers et casse donc plus de sites que les listes par défaut.",
+        "it": "Grande elenco di domini contro pubblicità, tracker, telemetria e siti spazzatura. Blocca interi domini e quindi danneggia più siti degli elenchi predefiniti."
+      },
+      "category": "privacy",
+      "default": false,
+      "firstPartyProtected": true,
+      "trusted": false,
+      "strictBlock": true,
+      "sources": [
+        {
+          "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt"
+        }
+      ],
+      "homepage": "https://github.com/hagezi/dns-blocklists",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/hagezi/dns-blocklists/blob/main/LICENSE",
+      "attribution": "HaGeZi (https://github.com/hagezi/dns-blocklists)"
+    },
+    {
+      "id": "anti-facebook",
+      "name": {
+        "en": "Anti-Facebook",
+        "de": "Anti-Facebook",
+        "fr": "Anti-Facebook",
+        "it": "Anti-Facebook"
+      },
+      "description": {
+        "en": "Blocks Facebook and Meta tracking, pixels and plugins on other websites.",
+        "de": "Sperrt Tracking, Pixel und Plug-ins von Facebook und Meta auf anderen Websites.",
+        "fr": "Bloque le pistage, les pixels et les plugins de Facebook et Meta sur les autres sites.",
+        "it": "Blocca tracciamento, pixel e plugin di Facebook e Meta sugli altri siti."
+      },
+      "category": "privacy",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://secure.fanboy.co.nz/fanboy-antifacebook.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "CC-BY-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "attribution": "The EasyList authors (Fanboy)"
+    },
+    {
+      "id": "easylist-chat",
+      "name": {
+        "en": "Chat widgets",
+        "de": "Chat-Widgets",
+        "fr": "Widgets de discussion",
+        "it": "Widget di chat"
+      },
+      "description": {
+        "en": "Hides support chat bubbles and live-chat widgets.",
+        "de": "Blendet Support-Chat-Blasen und Live-Chat-Widgets aus.",
+        "fr": "Masque les bulles de discussion d'assistance et les widgets de chat en direct.",
+        "it": "Nasconde le bolle della chat di assistenza e i widget di live chat."
+      },
+      "category": "annoyances",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/thirdparties/easylist-chat.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (https://easylist.to/)"
+    },
+    {
+      "id": "easylist-ai",
+      "name": {
+        "en": "AI suggestions",
+        "de": "KI-Vorschläge",
+        "fr": "Suggestions d'IA",
+        "it": "Suggerimenti IA"
+      },
+      "description": {
+        "en": "Hides AI assistants, AI summaries and «ask AI» prompts that websites add.",
+        "de": "Blendet KI-Assistenten, KI-Zusammenfassungen und «KI fragen»-Aufforderungen aus, die Websites einfügen.",
+        "fr": "Masque les assistants IA, les résumés IA et les invites «demander à l'IA» ajoutés par les sites.",
+        "it": "Nasconde assistenti IA, riassunti IA e inviti «chiedi all'IA» aggiunti dai siti."
+      },
+      "category": "annoyances",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://ublockorigin.github.io/uAssets/thirdparties/easylist-ai.txt"
+        }
+      ],
+      "homepage": "https://easylist.to/",
+      "license": "GPL-3.0-or-later OR CC-BY-SA-3.0",
+      "licenseUrl": "https://easylist.to/pages/licence.html",
+      "attribution": "The EasyList authors (https://easylist.to/)"
+    },
+    {
+      "id": "adguard-popups",
+      "name": {
+        "en": "Pop-ups (AdGuard)",
+        "de": "Pop-ups (AdGuard)",
+        "fr": "Fenêtres surgissantes (AdGuard)",
+        "it": "Pop-up (AdGuard)"
+      },
+      "description": {
+        "en": "Hides pop-ups and overlays a site does not need, such as push-notification and newsletter prompts.",
+        "de": "Blendet Pop-ups und Overlays aus, die eine Website nicht braucht, etwa Aufforderungen zu Push-Mitteilungen und Newslettern.",
+        "fr": "Masque les fenêtres et superpositions inutiles au site, comme les invitations aux notifications push et aux newsletters.",
+        "it": "Nasconde pop-up e sovrapposizioni non necessari al sito, come gli inviti a notifiche push e newsletter."
+      },
+      "category": "annoyances",
+      "default": false,
+      "firstPartyProtected": false,
+      "trusted": false,
+      "strictBlock": false,
+      "sources": [
+        {
+          "url": "https://filters.adtidy.org/extension/ublock/filters/19.txt"
+        }
+      ],
+      "homepage": "https://github.com/AdguardTeam/AdguardFilters",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE",
+      "attribution": "AdGuard"
     }
   ]
 }

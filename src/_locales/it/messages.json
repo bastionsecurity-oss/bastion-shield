@@ -628,6 +628,15 @@
   "listsLead": {
     "message": "Bastion Shield combina liste di filtri affermate come EasyList, EasyPrivacy e i filtri uBlock con le proprie. Vengono aggiornate a ogni versione dell’estensione. Disattivarle è possibile, ma raramente necessario."
   },
+  "listsMoreLead": {
+    "message": "Elenchi verificati, disattivati per impostazione predefinita, per bloccare di più. Ognuno aggiunge regole al budget qui sopra; oltre 30'000 regole il browser può rifiutarsi di attivare un elenco. Gli elenchi che bloccano interi domini possono danneggiare i siti: in tal caso disattiva di nuovo l'elenco."
+  },
+  "listsMoreTitle": {
+    "message": "Altri elenchi"
+  },
+  "listsRuleCost": {
+    "message": "Regole"
+  },
   "listsLicence": {
     "message": "Licenza"
   },

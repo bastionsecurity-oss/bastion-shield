@@ -628,6 +628,15 @@
   "listsLead": {
     "message": "Bastion Shield combines well-known filter lists such as EasyList, EasyPrivacy and uBlock filters with its own. They are updated with every release of the extension. You can turn lists off, but rarely need to."
   },
+  "listsMoreLead": {
+    "message": "Vetted lists that are off by default, for when you want to block more. Each one adds rules to the budget above; above 30'000 rules the browser may refuse to switch a list on. Lists that block whole domains can break sites: if one does, turn the list off again."
+  },
+  "listsMoreTitle": {
+    "message": "More lists"
+  },
+  "listsRuleCost": {
+    "message": "Rules"
+  },
   "listsLicence": {
     "message": "Licence"
   },

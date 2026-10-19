@@ -14,7 +14,7 @@ const { groupMatches } = await import(`${ROOT}/ui/popup/matched.ts`);
 const { ListDirectory } = await import(`${ROOT}/ui/shared/labels.ts`);
 const { applyAttributed } = await import(`${ROOT}/ui/shared/messaging.ts`);
 const { safeSupportUrl } = await import(`${ROOT}/ui/shared/org.ts`);
-const { listFilterCount } = await import(`${ROOT}/ui/dashboard/views/lists.ts`);
+const { isOptionalList, listFilterCount, listRuleCost } = await import(`${ROOT}/ui/dashboard/views/lists.ts`);
 const { decodeBounceTarget, isSameSiteBounce, parseFromHost } = await import(`${ROOT}/pages/bounce-decode.ts`);
 const { RULE_ID } = await import(`${ROOT}/shared/constants.ts`);
 
@@ -113,6 +113,14 @@ test('lists: headline shows source filters, not merged DNR rules', () => {
   assert.equal(listFilterCount({ ruleCount: 1840, stats: { filters: 33478, network: 2175, cosmetic: 24094, scriptlets: 7168, unsupported: 39, badfiltered: 0 } }), 33437);
   assert.equal(listFilterCount({ ruleCount: 12 } as never), 12);
   assert.equal(listFilterCount({ ruleCount: 7, stats: { filters: 0 } } as never), 7);
+});
+
+test('lists: «More lists» holds off-by-default lists except regional ones, with their rule cost', () => {
+  assert.equal(isOptionalList({ default: false, category: 'annoyances' }), true);
+  assert.equal(isOptionalList({ default: true, category: 'ads' }), false);
+  assert.equal(isOptionalList({ default: false, category: 'regional' }), false, 'regional lists follow the languages');
+  assert.equal(listRuleCost({ ruleCount: 12, regexRuleCount: 8 }), 20);
+  assert.equal(listRuleCost({ ruleCount: undefined, regexRuleCount: -1 } as never), 0);
 });
 
 test('managed support link: https only, no credentials', () => {

@@ -1,7 +1,9 @@
-// Bastion Shield — dashboard «Filterlisten»: lists grouped by category with
-// toggle, description, rule count, sources, licence, version and lock state,
-// plus the static rule budget (30'000 guaranteed rules, 1'000 regex rules)
-// and per-list errors reported by the service worker.
+// Bastion Shield — dashboard «Filterlisten»: the default lists grouped by
+// category, then «More lists» (vetted lists that are off by default, with
+// the rules each would add), each with toggle, description, rule count,
+// sources, licence, version and lock state, plus the static rule budget
+// (30'000 guaranteed rules, 1'000 regex rules) and per-list errors reported
+// by the service worker.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -34,6 +36,20 @@ export function listFilterCount(l: Pick<BuiltList, 'stats' | 'ruleCount'>): numb
   const n = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
   const applied = s ? n(s.network) + n(s.cosmetic) + n(s.scriptlets) : 0;
   return applied > 0 ? applied : n(l.ruleCount);
+}
+
+/** Rules a list takes from the static rule budget when it is on (plain + regex). */
+export function listRuleCost(l: Pick<BuiltList, 'ruleCount' | 'regexRuleCount'>): number {
+  const n = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
+  return n(l.ruleCount) + n(l.regexRuleCount);
+}
+
+/**
+ * «More lists»: vetted lists that are off by default. Regional lists stay in
+ * their own group even when off, because the user's languages switch them on.
+ */
+export function isOptionalList(l: Pick<BuiltList, 'default' | 'category'>): boolean {
+  return l.default !== true && l.category !== 'regional';
 }
 
 function lastUpdated(l: BuiltList): number | null {
@@ -95,7 +111,7 @@ function budgetPanel(state: ListsState): HTMLElement {
   );
 }
 
-function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChanged: (s: ListsState | null, listId: string) => void): HTMLElement {
+function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChanged: (s: ListsState | null, listId: string) => void, optional = false): HTMLElement {
   const nameId = nextId('list-name');
   const descId = nextId('list-desc');
   const lock = listLocked(state, l, policyLockAll);
@@ -121,6 +137,7 @@ function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChan
   const updated = lastUpdated(l);
   const version = l.sources?.find((s) => s.version)?.version;
   const metaBits: HTMLElement[] = [];
+  if (optional) metaBits.push(h('span', null, h('span', { class: 'lists-row__k', text: t('listsRuleCost') }), ' ', h('span', { class: 'num', text: fmtNumber(listRuleCost(l)) })));
   metaBits.push(h('span', null, h('span', { class: 'lists-row__k', text: t('listsLicence') }), ' ', extLink(safeHttpUrl(l.licenseUrl), l.license)));
   if (version) metaBits.push(h('span', null, h('span', { class: 'lists-row__k', text: t('listsVersion') }), ' ', h('span', { class: 'mono', text: version })));
   if (updated) metaBits.push(h('span', null, h('span', { class: 'lists-row__k', text: t('listsUpdated') }), ' ', fmtDate(updated)));
@@ -173,6 +190,7 @@ function listRow(state: ListsState, l: BuiltList, policyLockAll: boolean, onChan
         'div',
         { class: 'lists-row__top' },
         h('h3', { class: 'lists-row__name', text: localized(l.name), attrs: { id: nameId } }),
+        optional ? h('span', { class: 'lists-row__badge mono-label', text: categoryLabel(l.category) }) : null,
         lock ? lockIcon(t('lockedByPolicy')) : null,
         h('span', { class: 'lists-row__count' }, h('span', { class: 'num', text: fmtNumber(filterCount) }), ' ', t(filterCount === 1 ? 'listsFilterOne' : 'listsFilters')),
       ),
@@ -199,8 +217,15 @@ export function listsView(): View {
 
       const draw = (state: ListsState, focusListId?: string): void => {
         replace(budgetSlot, budgetPanel(state));
-        const lists = state.meta.lists ?? [];
-        const cats = [...CATEGORY_ORDER, ...new Set(lists.map((l) => l.category).filter((c) => !CATEGORY_ORDER.includes(c)))];
+        const all = state.meta.lists ?? [];
+        const lists = all.filter((l) => !isOptionalList(l));
+        const cats = [...CATEGORY_ORDER, ...new Set(all.map((l) => l.category).filter((c) => !CATEGORY_ORDER.includes(c)))];
+        const rank = (l: BuiltList): number => cats.indexOf(l.category);
+        const optional = all.filter(isOptionalList).sort((a, b) => rank(a) - rank(b));
+        const onChanged = (s: ListsState | null, id: string): void => {
+          if (s) draw(s, id);
+        };
+        const optionalOn = optional.filter((l) => state.enabled[l.id]).length;
         replace(
           groupsSlot,
           ...cats
@@ -210,10 +235,17 @@ export function listsView(): View {
               const on = members.filter((l) => state.enabled[l.id]).length;
               return panel(
                 { title: categoryLabel(cat), aside: t('listsGroupActive', [fmtNumber(on), fmtNumber(members.length)]), flush: true },
-                h('ul', { class: 'lists-list' }, ...members.map((l) => listRow(state, l, policyLockAll, (s, id) => s && draw(s, id)))),
+                h('ul', { class: 'lists-list' }, ...members.map((l) => listRow(state, l, policyLockAll, onChanged))),
               );
             })
             .filter((x): x is HTMLElement => x !== null),
+          optional.length
+            ? panel(
+                { title: t('listsMoreTitle'), aside: t('listsGroupActive', [fmtNumber(optionalOn), fmtNumber(optional.length)]), flush: true, class: 'lists-more' },
+                h('p', { class: 'lists-more__lead', text: t('listsMoreLead') }),
+                h('ul', { class: 'lists-list' }, ...optional.map((l) => listRow(state, l, policyLockAll, onChanged, true))),
+              )
+            : null,
         );
         // Re-rendering replaces the switch the user just pressed; keep keyboard focus on it.
         if (focusListId) {

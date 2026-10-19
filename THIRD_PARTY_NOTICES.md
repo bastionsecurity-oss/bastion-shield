@@ -66,6 +66,11 @@ The extension contains rulesets compiled from the filter lists below. The lists 
 | AdGuard French (`regional-fr`) | https://github.com/AdguardTeam/AdguardFilters (uBlock flavour from filters.adtidy.org) | GPL-3.0 | AdGuard. Contains Liste FR (https://github.com/easylist/listefr), CC BY-SA 3.0, by the Liste FR authors; converted to Chromium DNR format by Bastion Shield. |
 | Peter Lowe's ad and tracking server list (`peter-lowe`) | https://pgl.yoyo.org/adservers/ | distributed with the author's permission as stated on his site | Peter Lowe |
 | Online Malicious URL Blocklist (`urlhaus`) | https://gitlab.com/malware-filter/urlhaus-filter | CC0 / MIT (list); data from abuse.ch URLhaus under abuse.ch's terms of use | curbengh (malware-filter); data by abuse.ch (https://urlhaus.abuse.ch/) |
+| Block Outsider Intrusion into LAN (`block-lan`) | https://github.com/uBlockOrigin/uAssets | GPL-3.0 | uBlock Origin / uAssets contributors |
+| EasyList Chat Widgets (`easylist-chat`), EasyList Anti AI Suggestions (`easylist-ai`) | https://easylist.to/ (via the uAssets mirror) | GPL-3.0-or-later or CC BY-SA 3.0 (dual; used under the GPL) | The EasyList authors (https://easylist.to/) |
+| Anti-Facebook List (`anti-facebook`) | https://secure.fanboy.co.nz/ | CC BY 3.0 (per file header) | The EasyList authors (Fanboy). Converted to Chromium DNR format by Bastion Shield. |
+| AdGuard Popups filter (`adguard-popups`) | https://github.com/AdguardTeam/AdguardFilters (uBlock flavour from filters.adtidy.org) | GPL-3.0 | AdGuard |
+| HaGeZi Multi PRO (`hagezi-pro`), HaGeZi Threat Intelligence Feeds mini (`hagezi-tif`) | https://github.com/hagezi/dns-blocklists | GPL-3.0 | HaGeZi; the threat feeds aggregated in TIF keep their own terms |
 
 ## 4. Tools used to build (not distributed)
 

@@ -42,6 +42,13 @@ Each list becomes its own static ruleset (the list id is the ruleset id), so it 
 | `regional-de` | German websites (EasyList Germany) | regional | **on** | yes | yes | no | `easylist.to/easylistgermany/easylistgermany.txt` |
 | `regional-fr` | French websites (AdGuard French) | regional | **on** | yes | yes | no | `filters.adtidy.org/extension/ublock/filters/16.txt` |
 | `regional-it` | Italian websites (EasyList Italy) | regional | **on** | yes | yes | no | `easylist-downloads.adblockplus.org/easylistitaly.txt` |
+| `block-lan` | Block outsider intrusion into LAN | security | off | no | no | yes | uAssets `lan-block.txt` |
+| `hagezi-tif` | Threat Intelligence Feeds (HaGeZi, mini) | security | off | no | yes | no | hagezi/dns-blocklists `adblock/tif.mini.txt` (domain level) |
+| `hagezi-pro` | Multi PRO (HaGeZi) | privacy | off | yes | yes | no | hagezi/dns-blocklists `adblock/pro.txt` (domain level) |
+| `anti-facebook` | Anti-Facebook | privacy | off | no | no | no | Fanboy `fanboy-antifacebook.txt` |
+| `easylist-chat` | Chat widgets | annoyances | off | no | no | no | uAssets mirror of EasyList `easylist-chat.txt` |
+| `easylist-ai` | AI suggestions | annoyances | off | no | no | no | uAssets mirror of EasyList `easylist-ai.txt` |
+| `adguard-popups` | Pop-ups (AdGuard) | annoyances | off | no | no | no | `filters.adtidy.org/extension/ublock/filters/19.txt` |
 
 Built in, not a catalog list: `bastion-params`, Brave's tracking-parameter list (`query-filter.json`, MPL-2.0) compiled to parameter-stripping rules, and Brave's bounce-tracking list (`debounce.json`), applied as dynamic rules. Both can be switched off in the dashboard (`stripParams`, `debounce`).
 
@@ -51,6 +58,12 @@ Notes:
 2. **Strict block**: navigating to a domain blocked by a plain hostname filter of this list opens Bastion Shield's warning page ("proceed anyway" possible) instead of a browser error.
 3. **Trusted** sources may use uBlock Origin's `trusted-*` scriptlets and redirect resources that need trust (for example to click "reject all" in cookie banners). Those can run arbitrary code on pages, so trust is granted **per source**: only sources maintained by uBlock Origin, Brave and Bastion are trusted, the same principle as uBO Lite (which trusts only uAssets) and uBlock Origin (which does not trust Fanboy's lists). A list that mixes sources, such as `cookies` and `annoyances`, is trusted only for its uAssets and Brave parts: the build wraps the Fanboy part in `!#trusted off/on` markers with a secret that is random per build, and the compiler rejects trusted scriptlets and redirects inside it. `!#trusted` lines in upstream text are removed, so a list can never switch trust on by itself.
 4. See the licence note on URLhaus in [section 5](#5-licences-and-attribution).
+
+**More lists.** The dashboard shows the off-by-default lists (except the regional ones, which follow the user's languages) in a separate «More lists» group, with the rules each would take from the budget. They were picked from uBlock Origin's own catalog of optional lists (`assets.json`) plus HaGeZi's, and checked on 2026-10-19:
+
+- Left out because they overlap: the EasyList newsletter and notification lists (both are part of Fanboy's Annoyance list in `annoyances`), AdGuard Widgets (overlaps `easylist-chat`), AdGuard Base (overlaps EasyList, 53,000 lines), AdGuard Mobile Ads (mobile only).
+- Left out for the licence: Dan Pollock's hosts file («free … for non-commercial uses»).
+- HaGeZi's lists are GPL-3.0 as published; HaGeZi notes that the upstream feeds keep their own terms, which only matters to someone building on that raw data. Both HaGeZi lists change several times a day; Bastion ships them weekly like every other list. Together they add about 17 MB to the unpacked package (about 6 MB compressed) but only 2 rules each, because host filters merge into `requestDomains`.
 
 Always use the uBlock Origin flavour of third-party lists (`filters.adtidy.org/extension/ublock/…`, Fanboy's `_ubo` files): the native AdGuard and Adblock Plus flavours contain syntax a uBO-style compiler cannot translate. We never ship lists that uBlock Origin flags as harmful in its `badlists.txt` (for example the Adblock Plus "acceptable ads" exception list).
 
@@ -136,6 +149,12 @@ Static rules per list (plain + regex). The first column is the *estimate* made w
 | Optional: `annoyances` | ≈ 3,500 | 3,376 |
 | Optional: `social` | 596 | 596 |
 | Optional: `url-tracking` | 2,165 | 4,169 |
+| Optional: `block-lan` | – | 20 |
+| Optional: `hagezi-tif`, `hagezi-pro` | – | 2 each |
+| Optional: `anti-facebook` | – | 64 |
+| Optional: `easylist-chat` | – | 71 |
+| Optional: `easylist-ai` | – | 10 |
+| Optional: `adguard-popups` | – | 1,687 |
 
 The largest differences to the estimate: `ublock-badware`, whose strict-block navigation rules are static rules in Bastion Shield (uBO Lite keeps them as session rules), and the optional `url-tracking`, where parameter-removal rules are compiled differently (to be investigated).
 
@@ -251,3 +270,4 @@ List authors publish more often (uBlock's quick fixes every 8 hours, EasyList ev
 6. **Test** with `npm run test:e2e` and on a few real sites in Standard and Aggressive mode.
 7. **Document**: add the list to the tables in this file and to [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 8. Open a pull request.
+
