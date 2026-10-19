@@ -4,7 +4,7 @@
 // (organisation, «Cyber-Vorfall?»), the nerd-mode navigation entry and view
 // lifecycle (dispose / unsaved-changes guard), plus the collapsible rail
 // (rail.ts), the Ctrl+K command palette (palette.ts) and the nerd mode
-// reveal (nerd-reveal.ts). The same app runs as
+// easter egg (nerd-reveal.ts). The same app runs as
 // the dashboard tab (dashboard.html) and as the expanded popup (panel.html).
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -31,7 +31,7 @@ import { welcomeView } from './views/welcome.ts';
 import { labView } from './views/lab.ts';
 import { initRail } from './rail.ts';
 import { initPalette } from './palette.ts';
-import { playNerdReveal } from './nerd-reveal.ts';
+import { revealNerd } from './nerd-reveal.ts';
 
 const VIEWS: Record<string, { make: () => View; titleKey: string }> = {
   site: { make: siteView, titleKey: 'navSite' },
@@ -135,12 +135,12 @@ async function nerdOn(): Promise<boolean> {
 
 let nerdWasOn: boolean | null = null;
 
-/** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. Switching it on plays the reveal. */
+/** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. Switching it on decodes the entry in place. */
 function syncNerdNav(on: boolean): void {
-  if (nerdWasOn === false && on) playNerdReveal();
-  nerdWasOn = on;
   const li = document.getElementById('db-nav-lab');
   if (li) li.hidden = !on;
+  if (nerdWasOn === false && on) revealNerd(li?.querySelector('.db-nav__label'));
+  nerdWasOn = on;
   if (!on && current?.name === 'lab') location.hash = popupMode ? '#site' : '#overview';
 }
 

@@ -2758,14 +2758,5 @@
   },
   "cmdkHintClose": {
     "message": "chiudere"
-  },
-  "nerdRevealSub": {
-    "message": "Accesso consentito · strumenti per sviluppatori sbloccati"
-  },
-  "nerdRevealSr": {
-    "message": "Modalità nerd attivata. Gli strumenti per sviluppatori sono sbloccati."
-  },
-  "nerdRevealSkip": {
-    "message": "Premi un tasto per continuare"
   }
 }

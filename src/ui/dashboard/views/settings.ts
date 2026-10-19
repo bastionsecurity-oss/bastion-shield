@@ -14,6 +14,7 @@ import { confirmDialog, lockBadge, lockIcon, notice, segmented, switchControl } 
 import { errorState, nextId, openTabButton, pageHead, panel, popupMode, settingRow, type View, mount } from '../common.ts';
 import { adoptConfig, getConfig, getLists, ignoredPaths, isLocked, saveSettings } from '../store.ts';
 import { persist } from './privacy.ts';
+import { revealNerd } from '../nerd-reveal.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
 
@@ -115,6 +116,8 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     onChange: async (v) => {
       const ok = await persist({ nerd: { enabled: v } });
       if (ok) sub.hidden = !v;
+      // Easter egg: the unlocked settings decode in place.
+      if (ok && v) revealNerd(sub);
       return ok;
     },
   });

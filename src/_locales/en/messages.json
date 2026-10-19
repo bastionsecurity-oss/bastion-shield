@@ -2758,14 +2758,5 @@
   },
   "cmdkHintClose": {
     "message": "close"
-  },
-  "nerdRevealSub": {
-    "message": "Access granted · developer tools unlocked"
-  },
-  "nerdRevealSr": {
-    "message": "Nerd mode is on. The developer tools are unlocked."
-  },
-  "nerdRevealSkip": {
-    "message": "Press any key to continue"
   }
 }

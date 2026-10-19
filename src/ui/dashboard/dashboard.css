@@ -1081,140 +1081,19 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 }
 .db-flash { animation: db-flash 1.6s var(--ease); }
 
-/* ------------------------------------- Nerd mode reveal (nerd-reveal.ts) --
- * Always a dark terminal, in both colour schemes: phosphor text, scanlines,
- * a CRT that powers on and off, Bundesrot and cyan for the glitch. Only
- * transform and opacity animate on the large layers, so it stays smooth
- * without a GPU. */
-.nr {
-  --phosphor: #C3FF70;
-  position: fixed;
-  inset: 0;
-  z-index: 2147483000;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  background: radial-gradient(120% 90% at 50% 45%, #0E1710 0%, #070B08 62%, #030504 100%);
-  color: var(--phosphor);
-  font-family: var(--font-mono);
-  cursor: pointer;
-  user-select: none;
-  animation: nr-on 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-.nr::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.32) 0 1px, transparent 1px 3px);
-  pointer-events: none;
-  animation: nr-flicker 2.4s steps(12) infinite;
-}
-.nr::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, rgb(0 0 0 / 0.7) 100%);
-  pointer-events: none;
-}
-.nr__scan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 26vh;
-  background: linear-gradient(to bottom, transparent, rgb(195 255 112 / 0.06) 60%, rgb(195 255 112 / 0.12), transparent);
-  will-change: transform;
-  pointer-events: none;
-  animation: nr-sweep 2.6s linear infinite;
-}
-.nr__screen {
-  position: relative;
-  z-index: 1;
-  max-width: calc(100vw - 32px);
-  padding: 24px;
-  text-align: center;
-  text-shadow: 0 0 6px rgb(195 255 112 / 0.55), 0 0 26px rgb(195 255 112 / 0.22);
-}
-.nr__prompt { min-height: 1.4em; margin: 0 0 20px; color: rgb(195 255 112 / 0.78); font-size: clamp(12px, 1.7vw, 16px); letter-spacing: 0.04em; white-space: pre; }
-.nr__ps1 { margin-right: 0.7em; color: #FF5A4E; text-shadow: 0 0 8px rgb(255 90 78 / 0.6); }
-.nr__caret { display: inline-block; width: 0.6em; height: 1.15em; margin-left: 3px; vertical-align: -0.22em; background: currentColor; box-shadow: 0 0 8px rgb(195 255 112 / 0.6); animation: nr-blink 1s steps(1) infinite; }
-.nr__title {
-  position: relative;
-  height: 1em;
-  margin: 0;
-  color: #DFFFB0;
-  font-family: var(--font-mono);
-  font-size: clamp(40px, 11vw, 116px);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  white-space: pre;
-}
-.nr__title--live .nr__title-text { text-shadow: -2px 0 rgb(218 41 28 / 0.75), 2px 0 rgb(0 225 255 / 0.6), 0 0 22px rgb(195 255 112 / 0.5); }
-.nr__title--locked { animation: nr-lock 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.nr__title--locked .nr__title-text { text-shadow: 0 0 8px rgb(195 255 112 / 0.75), 0 0 34px rgb(195 255 112 / 0.35); }
-.nr__title--locked::before,
-.nr__title--locked::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0;
-}
-.nr__title--locked::before { color: #FF4436; animation: nr-glitch-a 1.8s steps(1) 120ms 2 both; }
-.nr__title--locked::after { color: #29E6FF; animation: nr-glitch-b 1.8s steps(1) 120ms 2 both; }
-.nr__sub { min-height: 1.5em; margin: 22px 0 0; color: rgb(195 255 112 / 0.85); font-size: clamp(11px, 1.6vw, 14px); letter-spacing: 0.26em; text-transform: uppercase; white-space: pre-wrap; }
-.nr__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 30px; margin: 22px 0 0; padding: 0; list-style: none; }
-.nr__chip {
-  min-width: 4ch;
-  padding: 4px 10px;
-  border: 1px solid rgb(195 255 112 / 0.35);
-  border-radius: 6px;
-  background: rgb(195 255 112 / 0.06);
-  font-size: 13px;
-  white-space: pre;
-  opacity: 0;
-}
-.nr__chip--on { opacity: 1; animation: nr-pop 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.nr__skip { margin: 34px 0 0; color: rgb(195 255 112 / 0.4); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; text-shadow: none; animation: nr-fade 600ms ease 1.4s both; }
-.nr--out { animation: nr-off 480ms cubic-bezier(0.6, 0, 0.8, 0.2) forwards; pointer-events: none; }
-.nr--still { animation: nr-fade 240ms ease both; }
-.nr--still.nr--out { animation: nr-fade 240ms ease reverse forwards; }
-.nr--still::before, .nr--still .nr__scan, .nr--still .nr__caret { animation: none; }
-.nr--still .nr__chip { opacity: 1; }
+/* --------------------------------- Nerd mode easter egg (nerd-reveal.ts) --
+ * Switching nerd mode on decodes the unlocked settings in place out of cipher
+ * glyphs: terminal green while they scramble, a faint green edge on the row,
+ * then a fade back to the normal colours. */
+.nerd-decode { --nerd-green: #2E8B12; transition: color 700ms var(--ease), text-shadow 700ms var(--ease); }
+.nerd-decode:not(.nerd-decode--settle) { color: var(--nerd-green) !important; text-shadow: 0 0 10px color-mix(in srgb, var(--nerd-green) 35%, transparent); }
+@media (prefers-color-scheme: dark) { .nerd-decode { --nerd-green: #C3FF70; } }
+.db-row:has(.nerd-decode:not(.nerd-decode--settle)),
+.nerd-domains__block:has(.nerd-decode:not(.nerd-decode--settle)) { box-shadow: inset 2px 0 0 color-mix(in srgb, #4CC21F 80%, transparent); }
+.db-row, .nerd-domains__block { transition: box-shadow 700ms var(--ease); }
+.nerd-rise { animation: nerd-rise 420ms var(--ease) var(--d, 0ms) both; }
+@keyframes nerd-rise { from { opacity: 0; transform: translateY(6px); } }
 
-/* CRT power on / off: a bright line opens to the full screen and collapses back to a dot. */
-@keyframes nr-on {
-  0% { opacity: 0; transform: scale(1, 0.004); }
-  35% { opacity: 1; transform: scale(1, 0.004); }
-  100% { transform: none; }
-}
-@keyframes nr-off {
-  0% { transform: none; }
-  55% { opacity: 1; transform: scale(1, 0.004); }
-  100% { opacity: 0; transform: scale(0, 0.004); }
-}
-@keyframes nr-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.86; } 75% { opacity: 0.95; } }
-@keyframes nr-sweep { from { transform: translateY(-30vh); } to { transform: translateY(110vh); } }
-@keyframes nr-blink { 50% { opacity: 0; } }
-@keyframes nr-fade { from { opacity: 0; } }
-@keyframes nr-pop { from { opacity: 0; transform: translateY(6px) scale(0.92); } }
-@keyframes nr-lock {
-  0% { opacity: 0.55; transform: scale(1.07); }
-  100% { opacity: 1; transform: none; }
-}
-@keyframes nr-glitch-a {
-  0% { opacity: 0.8; clip-path: inset(10% 0 62% 0); transform: translate(-6px, 0); }
-  8% { clip-path: inset(58% 0 18% 0); transform: translate(5px, 0); }
-  16% { clip-path: inset(30% 0 48% 0); transform: translate(-3px, 0); }
-  24%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); transform: none; }
-}
-@keyframes nr-glitch-b {
-  0% { opacity: 0.75; clip-path: inset(64% 0 8% 0); transform: translate(6px, 0); }
-  8% { clip-path: inset(18% 0 60% 0); transform: translate(-5px, 0); }
-  16% { clip-path: inset(42% 0 36% 0); transform: translate(3px, 0); }
-  24%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); transform: none; }
-}
 @media (prefers-reduced-motion: reduce) {
   .db-shell, .db-nav__label, .db-nav__word, .db-nav__ext, .db-nav__rail svg { transition: none !important; }
   .db-nav__top, .cmdk[open], .cmdk::backdrop, .db-flash { animation: none !important; }

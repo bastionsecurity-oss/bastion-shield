@@ -23,7 +23,7 @@ and "Lookalike domains (typosquatting)" with "Protected domains".
 | --- | --- | --- |
 | Find the breaking filter (bisect) | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
 | Command line (`Ctrl+K`) | Popup | `nerd.enabled` |
-| «NERD MODE» reveal when switched on (easter egg; also via `nerd` in the dashboard's `Ctrl+K` palette) | Dashboard, expanded popup | `nerd.enabled` |
+| Unlocked settings decode in place when switched on (easter egg; also via `nerd` in the dashboard's `Ctrl+K` palette) | Dashboard, expanded popup | `nerd.enabled` |
 | Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
 | Lookalike domains (typosquatting) | Page (notice), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
 | Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity and Developer tools | `nerd.enabled` |

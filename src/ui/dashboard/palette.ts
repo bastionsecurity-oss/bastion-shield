@@ -1,7 +1,10 @@
 // Bastion Shield — command palette for the dashboard and the expanded popup
 // (Ctrl+K / ⌘K, or the search button in the navigation). One field finds
 // sections, individual settings (by name or by what they do), filter lists
-// and a few actions; arrow keys move, Enter opens, Esc closes. Opening a
+// and a few actions; arrow keys move, Enter opens. Closing: ← (with the
+// caret at the start of the field) everywhere, and in the dashboard tab also
+// Esc and Ctrl+K. In the expanded popup Esc closes the whole popup (Chrome),
+// so the hints show ← there instead. Opening a
 // setting navigates to its section, scrolls it into view, highlights the row
 // and focuses its control. Matching lives in palette-core.ts.
 //
@@ -15,6 +18,7 @@ import { rankEntries, type PaletteEntry, type PaletteGroup, type PaletteHit } fr
 import { railAvailable, railCollapsed, setRail, shortcutLabel } from './rail.ts';
 import { getConfig, getLists, isLocked } from './store.ts';
 import { persist } from './views/privacy.ts';
+import { revealNerd } from './nerd-reveal.ts';
 
 interface Item extends PaletteEntry {
   run(): void | Promise<void>;
@@ -65,6 +69,9 @@ const GROUP_TITLE: Record<PaletteGroup, string> = {
 };
 
 let dialog: HTMLDialogElement | null = null;
+
+/** The key the hints name for closing: Esc would close the whole popup window. */
+const CLOSE_KEY = popupMode ? '←' : 'Esc';
 
 /** Wait until the router has drawn `view` (dashboard.ts dispatches db:routed). */
 function routedTo(view: string): Promise<boolean> {
@@ -192,7 +199,13 @@ async function buildItems(): Promise<Item[]> {
       hidden: true,
       lead: icon('lab', 15),
       run: async () => {
-        await persist({ nerd: { enabled: !nerd } });
+        const on = !nerd;
+        if (!(await persist({ nerd: { enabled: on } })) || !on) return;
+        // Show what was unlocked: the nerd settings, decoding in place.
+        if (!(await routedTo('settings'))) return;
+        const panel = document.querySelector<HTMLElement>('.db-page--settings .nerd-panel');
+        panel?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        revealNerd(panel?.querySelector('.nerd-sub'));
       },
     });
   }
@@ -250,7 +263,7 @@ async function open(): Promise<void> {
     h(
       'div',
       { class: 'cmdk__box' },
-      h('div', { class: 'cmdk__field' }, icon('search', 16), input, kbd('Esc')),
+      h('div', { class: 'cmdk__field' }, icon('search', 16), input, kbd(CLOSE_KEY)),
       list,
       empty,
       h(
@@ -258,7 +271,7 @@ async function open(): Promise<void> {
         { class: 'cmdk__foot', attrs: { 'aria-hidden': 'true' } },
         h('span', null, kbd('↑'), kbd('↓'), ` ${t('cmdkHintMove')}`),
         h('span', null, kbd('↵'), ` ${t('cmdkHintOpen')}`),
-        h('span', null, kbd('Esc'), ` ${t('cmdkHintClose')}`),
+        h('span', null, kbd(CLOSE_KEY), ` ${t('cmdkHintClose')}`),
       ),
     ),
   ) as HTMLDialogElement;
@@ -330,6 +343,10 @@ async function open(): Promise<void> {
     } else if (ev.key === 'Enter') {
       ev.preventDefault();
       void run(active);
+    } else if (ev.key === 'ArrowLeft' && !ev.shiftKey && input.selectionStart === 0 && input.selectionEnd === 0) {
+      // ← at the start of the field closes (the popup has no safe Esc).
+      ev.preventDefault();
+      d.close();
     }
   });
   // Click on the backdrop closes.

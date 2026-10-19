@@ -2758,14 +2758,5 @@
   },
   "cmdkHintClose": {
     "message": "fermer"
-  },
-  "nerdRevealSub": {
-    "message": "Accès autorisé · outils de développement déverrouillés"
-  },
-  "nerdRevealSr": {
-    "message": "Mode nerd activé. Les outils de développement sont déverrouillés."
-  },
-  "nerdRevealSkip": {
-    "message": "Appuyez sur une touche pour continuer"
   }
 }

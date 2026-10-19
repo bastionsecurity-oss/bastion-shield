@@ -2758,14 +2758,5 @@
   },
   "cmdkHintClose": {
     "message": "schliessen"
-  },
-  "nerdRevealSub": {
-    "message": "Zugriff gewährt · Entwicklertools freigeschaltet"
-  },
-  "nerdRevealSr": {
-    "message": "Nerd-Modus eingeschaltet. Die Entwicklertools sind freigeschaltet."
-  },
-  "nerdRevealSkip": {
-    "message": "Beliebige Taste zum Fortfahren"
   }
 }
