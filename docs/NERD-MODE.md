@@ -137,7 +137,8 @@ fuzzy subsequence matching, at most six suggestions, `↑`/`↓` or
 | `nerd off` | Switch nerd mode off |
 
 Keyboard shortcuts (`chrome://extensions/shortcuts`): `Alt+Shift+B` opens the
-popup, `Alt+Shift+X` starts the bisect on the active tab or ends the one shown
+popup, `Alt+Shift+X` starts the bisect on the active tab (and opens the popup,
+where it asks its questions) or ends the one shown
 there (`background/nerd-commands.ts`; nothing happens while nerd mode or the
 activity log is off).
 

@@ -1,6 +1,7 @@
 // Bastion Shield service worker — nerd mode keyboard shortcuts (manifest
 // "commands", docs/NERD-MODE.md). `nerd-bisect` (suggested Alt+Shift+X)
-// starts the filter bisect on the active tab, or ends the one shown there.
+// starts the filter bisect on the active tab and opens the popup, where it
+// asks its questions, or ends the one shown there.
 // It does nothing while nerd mode is off or the activity log (which lists the
 // candidates) is off. `_execute_action` opens the popup and is handled by the
 // browser itself.
@@ -24,6 +25,8 @@ export interface NerdCommandDeps {
   canBisect(): boolean;
   /** Fallback when the command event carries no tab. */
   activeTabId(): Promise<number | null>;
+  /** Show the popup after a start: without it the shortcut seems to do nothing. */
+  openPopup(): Promise<void>;
 }
 
 export type NerdCommandResult = 'started' | 'cancelled' | 'ignored';
@@ -44,6 +47,7 @@ export async function runNerdCommand(command: string, tabId: number | null | und
     return 'cancelled';
   }
   await deps.bisect({ type: 'nerd:bisect', action: 'start', tabId: id });
+  await deps.openPopup();
   return 'started';
 }
 

@@ -20,6 +20,25 @@ import { commandHelp } from '../../popup/commands.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
 
+/** localStorage, a per-device convenience only: the nerd help decoded once already. */
+const HELP_SEEN = 'bs.nerdHelp.seen';
+
+function readFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeFlag(key: string): void {
+  try {
+    localStorage.setItem(key, '1');
+  } catch {
+    /* private window or blocked storage: the reveal may play again next time */
+  }
+}
+
 /** Documented defaults (src/shared/types.ts). Used by «Zurücksetzen». */
 export function defaultSettings(): Settings {
   return {
@@ -151,8 +170,18 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     h('summary', { class: 'db-row nerd-help__summary' }, h('span', { class: 'db-row__label', text: t('nerdHelpTitle') }), icon('chevronRight', 14, 'nerd-help__chev')),
     helpBody,
   );
+  // A double click on the summary would select the text it just revealed.
+  help.querySelector('summary')?.addEventListener('mousedown', (ev) => {
+    if (ev.detail > 1) ev.preventDefault();
+  });
   help.addEventListener('toggle', () => {
-    if ((help as HTMLDetailsElement).open) revealNerd(helpBody);
+    if (!(help as HTMLDetailsElement).open) return;
+    const sel = getSelection();
+    if (sel && !sel.isCollapsed && sel.anchorNode && help.contains(sel.anchorNode)) sel.removeAllRanges();
+    // The decode is a one-time welcome; after that the help just opens.
+    if (readFlag(HELP_SEEN)) return;
+    writeFlag(HELP_SEEN);
+    revealNerd(helpBody);
   });
 
   // Master switch: the sub-settings and the «Entwicklertools» (developer tools) navigation entry follow it live.

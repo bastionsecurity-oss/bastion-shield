@@ -398,6 +398,9 @@ registerNerdCommands({
   bisect: (msg) => nerd.bisect(msg),
   canBisect: () => settings().nerd.enabled && settings().ui.activityLog,
   activeTabId: async () => (await log.attempt('commands', () => chrome.tabs.query({ active: true, lastFocusedWindow: true }), [] as chrome.tabs.Tab[]))[0]?.id ?? null,
+  openPopup: async () => {
+    await log.attempt('commands', () => chrome.action.openPopup());
+  },
 });
 
 try {

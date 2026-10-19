@@ -674,7 +674,7 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 /* Settings: master switch, guards and protected domains. */
 .nerd-sub[hidden], .db-nav__lab[hidden] { display: none; }
 .nerd-sub { border-top: 1px solid var(--line-soft); }
-.nerd-help > summary { list-style: none; cursor: pointer; }
+.nerd-help > summary { list-style: none; cursor: pointer; user-select: none; }
 .nerd-help > summary::-webkit-details-marker { display: none; }
 .nerd-help__summary { justify-content: space-between; }
 .nerd-help__summary:hover { background: color-mix(in srgb, var(--bg) 45%, transparent); }

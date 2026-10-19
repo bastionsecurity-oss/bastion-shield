@@ -568,10 +568,14 @@ test('Bisector: keep writes an important exception for an $important culprit', a
 test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log on', async () => {
   const sent: string[] = [];
   let shown: string | null = null;
+  let popups = 0;
   const cmdDeps = (can: boolean): NerdCommandDeps => ({
     ready: Promise.resolve(),
     canBisect: () => can,
     activeTabId: async () => 5,
+    openPopup: async () => {
+      popups++;
+    },
     bisect: async (msg) => {
       sent.push(`${msg.action}:${msg.tabId}`);
       if (msg.action === 'state') return { bisect: shown ? { phase: shown } : null };
@@ -587,4 +591,6 @@ test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log
   // No tab in the event: the active tab.
   assert.equal(await runNerdCommand(NERD_BISECT_COMMAND, undefined, cmdDeps(true)), 'started');
   assert.deepEqual(sent, ['state:3', 'start:3', 'state:3', 'cancel:3', 'state:5', 'start:5']);
+  // The popup opens after each start, not after a cancel.
+  assert.equal(popups, 2);
 });
