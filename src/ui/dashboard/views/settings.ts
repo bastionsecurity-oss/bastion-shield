@@ -6,11 +6,11 @@
 
 import type { BackupFile, BlockingMode, EffectiveConfig, Settings } from '../../../shared/types.ts';
 import { downloadText, h, pickTextFile, toast } from '../../shared/dom.ts';
-import { fmtDateTime, fmtNumber, t } from '../../shared/i18n.ts';
+import { clearI18nCache, fmtDateTime, fmtNumber, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { call } from '../../shared/messaging.ts';
 import { confirmDialog, notice, segmented, switchControl } from '../../shared/controls.ts';
-import { errorState, nextId, pageHead, panel, settingRow, type View, mount } from '../common.ts';
+import { errorState, nextId, openTabButton, pageHead, panel, popupMode, settingRow, type View, mount } from '../common.ts';
 import { adoptConfig, getConfig, getLists, ignoredPaths, isLocked } from '../store.ts';
 import { persist } from './privacy.ts';
 
@@ -33,7 +33,7 @@ export function defaultSettings(): Settings {
       blockThirdPartyCookies: null,
       disablePrivacySandboxAds: true,
     },
-    ui: { badge: true, activityLog: true },
+    ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
   };
 }
@@ -115,6 +115,31 @@ export function settingsView(): View {
         else ret.value = String(prev);
       });
 
+      // Language: native names, so anyone can find their way back.
+      const langLabel = nextId('set');
+      const langLocked = isLocked(cfg, 'ui.language');
+      const LANGS: [Settings['ui']['language'], string][] = [
+        ['de', 'Deutsch'],
+        ['en', 'English'],
+        ['fr', 'Français'],
+        ['it', 'Italiano'],
+        ['auto', t('setLanguageAuto')],
+      ];
+      const lang = h('select', { class: 'select', attrs: { 'aria-labelledby': langLabel, disabled: langLocked, 'data-setting': 'ui.language' } }, ...LANGS.map(([v, label]) => h('option', { attrs: { value: v }, text: label })));
+      lang.value = s.ui.language;
+      lang.addEventListener('change', async () => {
+        const prev = s.ui.language;
+        const v = lang.value as Settings['ui']['language'];
+        if (await persist({ ui: { language: v } })) {
+          s.ui.language = v;
+          // Every label on the page changes: reload in the new language.
+          clearI18nCache();
+          setTimeout(() => location.reload(), 300);
+        } else {
+          lang.value = prev;
+        }
+      });
+
       // Clear history.
       const clearBtn = h('button', { class: 'btn btn--secondary btn--sm', attrs: { type: 'button' } }, icon('trash', 14), t('actClearHistory'));
       clearBtn.addEventListener('click', async () => {
@@ -191,8 +216,13 @@ export function settingsView(): View {
           settingRow({ label: t('setMode'), desc: t('setModeDesc'), control: mode.el, locked: modeLocked, labelId: modeLabel, descId: modeDesc }),
         ),
         panel(
+          { title: t('setGroupLanguage'), flush: true },
+          settingRow({ label: t('setLanguage'), control: lang, locked: langLocked, labelId: langLabel }),
+        ),
+        panel(
           { title: t('setGroupDisplay'), flush: true },
           toggle('ui.badge', s.ui.badge, 'setBadge', 'setBadgeDesc', (v) => ({ ui: { badge: v } })),
+          toggle('ui.incidentCta', s.ui.incidentCta, 'setIncidentCta', 'setIncidentCtaDesc', (v) => ({ ui: { incidentCta: v } })),
         ),
         panel(
           { title: t('setGroupActivity'), flush: true },
@@ -201,11 +231,14 @@ export function settingsView(): View {
           settingRow({ label: t('setRetention'), desc: t('setRetentionDesc'), control: ret, locked: retLocked, labelId: retLabel, descId: retDesc }),
           settingRow({ label: t('setClearHistory'), desc: t('setClearHistoryDesc'), control: clearBtn, labelId: nextId('set') }),
         ),
-        panel(
-          { title: t('setGroupBackup') },
-          h('p', { class: 'db-muted', text: t('setBackupDesc') }),
-          h('div', { class: 'set-actions' }, exportBtn, importBtn),
-        ),
+        // File dialogs close the popup: backups are made in the dashboard tab.
+        popupMode
+          ? panel({ title: t('setGroupBackup'), flush: true }, settingRow({ label: t('setBackupInTab'), control: openTabButton('settings', t('panelOpenInTab')), labelId: nextId('set') }))
+          : panel(
+              { title: t('setGroupBackup') },
+              h('p', { class: 'db-muted', text: t('setBackupDesc') }),
+              h('div', { class: 'set-actions' }, exportBtn, importBtn),
+            ),
         panel(
           { title: t('setGroupReset') },
           h('p', { class: 'db-muted', text: t('setResetDesc') }),

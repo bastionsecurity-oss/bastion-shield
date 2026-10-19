@@ -35,7 +35,7 @@ Brave facts refer to brave-core master and Brave's list catalog as of October 20
 | **Custom filters, custom lists** | Custom filters, list subscriptions by URL | Custom filters (network and cosmetic) for users and admins; no subscriptions by URL | **Partial** |
 | **Live log / statistics** | Per-page blocked resources in the panel, global counters | Live per-tab activity with the list that blocked each request, local history with daily statistics, toolbar badge | **Extra** (history) |
 | **Central management** | Brave enterprise policies | `chrome.storage.managed` policy for every setting, Intune kit, fleet-wide emergency switch (`protectionEnabled`) | **Parity** |
-| **Brave as host browser** | – | Shields blocks first; Bastion Shield sees and counts only what Shields lets through | see [DEPLOYMENT-INTUNE.md FAQ](DEPLOYMENT-INTUNE.md#should-we-deploy-bastion-shield-to-brave) |
+| **Brave as host browser** | – | Shields blocks first; Bastion Shield sees and counts only what Shields lets through | see [Edge and Brave](#edge-and-brave) and the [DEPLOYMENT-INTUNE.md FAQ](DEPLOYMENT-INTUNE.md#should-we-deploy-bastion-shield-to-brave) |
 
 ## Why network blocking is not slower
 
@@ -80,3 +80,33 @@ Per-site differences (median of the 25 paired visits): Bastion's DOMContentLoade
 - The totals in `summary.md` include the stackoverflow.com outlier (Bastion 5,910 requests in total; 4,233 without stackoverflow.com, Brave 4,248). The medians above are not affected by it.
 
 Last measured: 2026-10-18 16:59 UTC, Bastion Shield 0.1.0.2900. Per-site numbers and the REA cross-check: [`test/bench/results/summary.md`](../test/bench/results/summary.md); raw data `test/bench/results/2026-10-18T16-59-36.json` (previous run: `2026-10-18T13-24-08.json`).
+
+## Edge and Brave
+
+The numbers above come from Playwright's Chromium. On 2026-10-18 the same build (0.1.0.2900, loaded unpacked into a fresh profile, Swiss German UI) was checked in the installed **Microsoft Edge 155.0.4283.62** and **Brave 1.97.59** (Chromium 155.0.8059.85) on Windows 11, with visible windows. Edge runs the same extension code as Chrome; nothing Edge- or Brave-specific had to be changed. Screenshots: `docs/screenshots/edge-*.png` and `brave-*.png`.
+
+| Check (home pages of 20min.ch, nzz.ch, cnn.com, blick.ch) | Edge | Brave, Shields at defaults | Brave, Shields down for the site |
+|---|---|---|---|
+| Loads without manifest or runtime errors (extensions page in developer mode, service-worker console) | yes ([screenshot](screenshots/edge-extensions.png)) | yes ([screenshot](screenshots/brave-extensions.png)) | yes |
+| Rulesets enabled on install (28 declared, 22 on by default) | all 22 defaults | all 22 defaults | all 22 defaults |
+| Blocked + replaced by stubs, as counted by Bastion's popup | 14+4, 19+1, 11+4, 6+2 ([screenshot](screenshots/edge-popup-20minch.png)) | 0 on all four ([screenshot](screenshots/brave-popup-20minch.png)) | 14+4, 20+1, 11+2, 6+2 ([screenshot](screenshots/brave-shieldsdown-popup-20minch.png)) |
+| Requests failing with `ERR_BLOCKED_BY_CLIENT` on the page, any blocker | 14, 18, 11, 6 | 14, 17–19, 11, 6 | 14, 17–19, 11, 6 |
+| Bastion switched off for 20min.ch in the popup, page reloaded | 0 blocked, the ads load (378 requests instead of 217); switched on again: blocking resumes ([screenshot](screenshots/edge-popup-20minch-off.png)) | still 14 blocked, by Shields; Bastion counts 0 | 0 blocked, 331 requests ([screenshot](screenshots/brave-shieldsdown-popup-20minch-off.png)) |
+| Popup and dashboard | render, no console errors; list names in the live feed ([popup](screenshots/edge-popup-attributed.png), [dashboard](screenshots/edge-dashboard.png), [activity](screenshots/edge-dashboard-activity.png)) | render ([dashboard](screenshots/brave-dashboard.png)) | render |
+| **Works** | **yes** | **yes**, with Bastion's counters at about zero (by design) | **yes** |
+
+- **Edge.** Blocking is the same as Bastion Shield in Chromium, request for request (benchmark below). Edge's own tracking prevention (default "Balanced") blocked no network request on 20min.ch with Bastion switched off for the site, so it does not lower Bastion's counters there; in Balanced it mainly restricts storage access ([DEPLOYMENT-INTUNE.md FAQ](DEPLOYMENT-INTUNE.md#we-already-use-edge-tracking-prevention-do-we-still-need-bastion-shield)). Edge also runs the extension headless.
+- **Brave, Shields up.** Shields blocked the same requests on these pages before Bastion's rules saw them, so Bastion counted 0 on all four sites. Bastion does not count Shields' blocks as its own: with Bastion off for 20min.ch the page still had 14 blocked requests and the popup showed 0. Switching Bastion off for a site therefore unblocks nothing on Brave; lower Shields as well or use `BraveShieldsDisabledForUrls` ([DEPLOYMENT-INTUNE.md FAQ](DEPLOYMENT-INTUNE.md#should-we-deploy-bastion-shield-to-brave)). With both active, all four pages loaded normally (same titles, request counts within a few of Edge's), and the extension logged no errors.
+- **Brave, Shields down.** Bastion blocks exactly as in Chromium and Edge; with Bastion also switched off nothing is blocked, which confirms Shields was really down.
+- **List names in the popup** can lag in every browser: the service worker asks `getMatchedRules` at most every 35 s and pauses for 60 s whenever the popup opens, to stay inside Chrome's quota. Opening popups every few seconds (as the check script did) leaves rows without a list name for a minute; after a quiet minute all 14 events on spiegel.de in Edge carried their list.
+- **Not covered yet:** installation from Edge Add-ons and the Chrome Web Store, force-install through `ExtensionSettings` and the managed configuration from the registry (`3rdparty` policy). These need a managed test device and are the open item for the pilot. Also not checked: InPrivate and private windows, Edge and Brave on macOS.
+
+**Benchmark with Edge** (`npm run bench -- --browsers chromium,bastion,edge --limit 5`, same method as above, all headless, 2026-10-18 18:34 UTC; Edge keeps its tracking prevention and component updates on):
+
+| Result (20min.ch, blick.ch, watson.ch, nzz.ch, tagesanzeiger.ch) | Chromium | Bastion Shield in Chromium 156 | Bastion Shield in Edge 155 |
+|---|---:|---:|---:|
+| Ad/tracker requests that got through | 91 | 2 | 2 |
+| Requests blocked or stubbed | 0 | 69 | 69 |
+| Hosts that got through in one but not the other | – | none | none |
+
+Per site the blocked counts are identical (18, 8, 11, 21, 11); the two requests that got through are the same in both (20min.ch and watson.ch, as in the 25-site run). Timings were in the same range (median load event 443 ms in Chromium with Bastion, 377 ms in Edge). Per-site numbers: [`test/bench/results/summary-edge.md`](../test/bench/results/summary-edge.md); raw data `test/bench/results/2026-10-18T18-34-42.json`.

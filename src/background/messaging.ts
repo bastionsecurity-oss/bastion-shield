@@ -126,6 +126,7 @@ async function popupState(ctx: MessageContext, tabId: number): Promise<PopupStat
       supportEmail: managed.supportEmail,
       supportUrl: managed.supportUrl,
     },
+    incidentCta: settings.ui.incidentCta,
     version: version(),
   };
 }

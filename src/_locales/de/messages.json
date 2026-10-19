@@ -1599,5 +1599,109 @@
   },
   "welcomeTitle": {
     "message": "Willkommen bei Bastion Shield"
+  },
+  "ctaIncident": {
+    "message": "Cyber-Vorfall?"
+  },
+  "popupDataSaved": {
+    "message": "weniger geladen"
+  },
+  "popupTimeSaved": {
+    "message": "schneller geladen"
+  },
+  "popupBlockedShort": {
+    "message": "Tracker blockiert"
+  },
+  "popupAllSettings": {
+    "message": "Alle Einstellungen"
+  },
+  "popupProtectionOn": {
+    "message": "Schutz ein"
+  },
+  "popupProtectionOff": {
+    "message": "Schutz aus"
+  },
+  "popupHosts": {
+    "message": "$P1$ Hosts",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupHostsOne": {
+    "message": "$P1$ Host",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "unitSeconds": {
+    "message": "s"
+  },
+  "unitMinutes": {
+    "message": "Min."
+  },
+  "unitHours": {
+    "message": "Std."
+  },
+  "savingsEstimateNote": {
+    "message": "Schätzung: blockierte Anfragen mal typische Grösse und Ladezeit je Art (Skript, Bild, Frame …)."
+  },
+  "navSite": {
+    "message": "Diese Website"
+  },
+  "panelCollapse": {
+    "message": "Verkleinern"
+  },
+  "panelEditInTab": {
+    "message": "Bearbeiten"
+  },
+  "panelOpenInTab": {
+    "message": "Im Tab öffnen"
+  },
+  "siteRulesTitle": {
+    "message": "Filterregeln, die gegriffen haben"
+  },
+  "siteReport": {
+    "message": "Seite funktioniert nicht richtig? Melden"
+  },
+  "setIncidentCta": {
+    "message": "«Cyber-Vorfall?»-Button"
+  },
+  "setIncidentCtaDesc": {
+    "message": "Link zum Notfallkontakt von Bastion. Ausgeschaltet steht dort nur «Bastion Shield»."
+  },
+  "setBackupInTab": {
+    "message": "Exportieren oder importieren"
+  },
+  "ovPeriodLabel": {
+    "message": "Letzte $P1$ Tage",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileBlocked": {
+    "message": "blockiert in $P1$ Tagen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileTime": {
+    "message": "weniger gewartet"
+  },
+  "setGroupLanguage": {
+    "message": "Sprache"
+  },
+  "setLanguage": {
+    "message": "Sprache der Oberfläche"
+  },
+  "setLanguageAuto": {
+    "message": "Wie Browser"
   }
 }

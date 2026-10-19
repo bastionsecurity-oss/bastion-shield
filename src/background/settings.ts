@@ -28,6 +28,7 @@ export interface ListInfo {
 const MODES: readonly BlockingMode[] = ['standard', 'aggressive'];
 const FP_LEVELS: readonly FingerprintLevel[] = ['off', 'standard', 'strict'];
 const WEBRTC: readonly WebRtcPolicy[] = ['default', 'default_public_interface_only', 'disable_non_proxied_udp'];
+const UI_LANGUAGES: readonly Settings['ui']['language'][] = ['auto', 'de', 'en', 'fr', 'it'];
 const LIST_ID_RE = /^[a-z0-9][a-z0-9.-]{0,63}$/;
 export const MAX_RETENTION_DAYS = 3650;
 
@@ -47,7 +48,7 @@ export function defaultSettings(): Settings {
       blockThirdPartyCookies: null,
       disablePrivacySandboxAds: true,
     },
-    ui: { badge: true, activityLog: true },
+    ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
   };
 }
@@ -100,6 +101,8 @@ export function normalizeSettings(raw: unknown): Settings {
     ui: {
       badge: bool(ui.badge, d.ui.badge),
       activityLog: bool(ui.activityLog, d.ui.activityLog),
+      incidentCta: bool(ui.incidentCta, d.ui.incidentCta),
+      language: oneOf(ui.language, UI_LANGUAGES, d.ui.language),
     },
     history: {
       enabled: bool(h.enabled, d.history.enabled),
@@ -251,6 +254,7 @@ export function sanitizeManaged(raw: unknown): ManagedPolicy {
     'disablePrivacySandboxAds',
     'showBadge',
     'activityLog',
+    'showIncidentCta',
     'historyEnabled',
     'protectionEnabled',
   ] as const;
@@ -292,6 +296,8 @@ export const SETTING_PATHS = [
   'privacy.disablePrivacySandboxAds',
   'ui.badge',
   'ui.activityLog',
+  'ui.incidentCta',
+  'ui.language',
   'history.enabled',
   'history.retentionDays',
 ] as const;
@@ -315,6 +321,7 @@ const POLICY_PATHS: [keyof ManagedPolicy, (typeof SETTING_PATHS)[number]][] = [
   ['disablePrivacySandboxAds', 'privacy.disablePrivacySandboxAds'],
   ['showBadge', 'ui.badge'],
   ['activityLog', 'ui.activityLog'],
+  ['showIncidentCta', 'ui.incidentCta'],
   ['historyEnabled', 'history.enabled'],
   ['historyRetentionDays', 'history.retentionDays'],
 ];
@@ -385,6 +392,7 @@ export function effectiveSettings(user: Settings, managed: ManagedPolicy, lists:
   if (managed.disablePrivacySandboxAds !== undefined) p.disablePrivacySandboxAds = managed.disablePrivacySandboxAds;
   if (managed.showBadge !== undefined) s.ui.badge = managed.showBadge;
   if (managed.activityLog !== undefined) s.ui.activityLog = managed.activityLog;
+  if (managed.showIncidentCta !== undefined) s.ui.incidentCta = managed.showIncidentCta;
   if (managed.historyEnabled !== undefined) s.history.enabled = managed.historyEnabled;
   if (managed.historyRetentionDays !== undefined) s.history.retentionDays = retention(managed.historyRetentionDays, s.history.retentionDays);
   s.lists = effectiveLists(lists, user, managed);
@@ -453,8 +461,12 @@ export function applySettingsPatch(
   }
   if (isPlainObject(patch.ui)) {
     const u = patch.ui;
-    for (const k of ['badge', 'activityLog'] as const) {
+    for (const k of ['badge', 'activityLog', 'incidentCta'] as const) {
       if (k in u) set(`ui.${k}`, typeof u[k] === 'boolean', () => (next.ui[k] = u[k] as boolean));
+    }
+    if ('language' in u) {
+      const v = u.language;
+      set('ui.language', typeof v === 'string' && (UI_LANGUAGES as readonly string[]).includes(v), () => (next.ui.language = v as Settings['ui']['language']));
     }
   }
   if (isPlainObject(patch.history)) {

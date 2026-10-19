@@ -39,6 +39,11 @@ const ICONS = {
   pin: `<svg viewBox="0 0 16 16"><path ${P} d="M6 2.75h4l-.5 4 2.25 2.25H4.25L6.5 6.75zM8 9v4.25"/></svg>`,
   device: `<svg viewBox="0 0 16 16"><path ${P} d="M2.25 3.25h11.5v7.5H2.25zM5.5 13.25h5M8 10.75v2.5"/></svg>`,
   eye: `<svg viewBox="0 0 16 16"><path ${P} d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle ${P} cx="8" cy="8" r="2"/></svg>`,
+  incident: `<svg viewBox="0 0 16 16"><path ${P} d="M8 1.75 13.25 3.75v3.75c0 3.25-2.25 5.5-5.25 6.75-3-1.25-5.25-3.5-5.25-6.75V3.75z"/><path ${P} d="M8 5v3.25M8 10.25v.5"/></svg>`,
+  collapse: `<svg viewBox="0 0 16 16"><path ${P} d="M2.75 9.25h4v4M13.25 6.75h-4v-4M9.25 6.75l4.5-4.5M2.25 13.75l4.5-4.5"/></svg>`,
+  expand: `<svg viewBox="0 0 16 16"><path ${P} d="M9.5 2.25h4.25V6.5M6.5 13.75H2.25V9.5M13.75 2.25 9 7M2.25 13.75 7 9"/></svg>`,
+  openTab: `<svg viewBox="0 0 16 16"><path ${P} d="M5.5 10.5 11.25 4.75M6.5 4.75h4.75V9.5"/></svg>`,
+  shieldOn: `<svg viewBox="0 0 16 16"><path ${P} d="M8 1.75 13.25 3.75v3.75c0 3.25-2.25 5.5-5.25 6.75-3-1.25-5.25-3.5-5.25-6.75V3.75z"/><path ${P} d="m5.5 7.75 1.75 1.75 3.25-3.25"/></svg>`,
 } as const;
 
 export type IconName = keyof typeof ICONS;

@@ -1,33 +1,150 @@
-// Bastion Shield — UI localisation helpers on top of chrome.i18n. All copy
-// lives in src/_locales/<lang>/messages.json; markup carries data-i18n keys and
+// Bastion Shield — UI localisation. All copy lives in
+// src/_locales/<lang>/messages.json; markup carries data-i18n keys and
 // translate() fills them in, so no visible string is hard-coded in the UI.
+// The UI language is the user's choice (Einstellungen › Sprache, default
+// German); initI18n() loads that bundle, chrome.i18n is the fallback.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type UiLang = 'de' | 'en' | 'fr' | 'it';
+/** User choice in Einstellungen (settings ui.language): a language or the browser's. */
+export type UiLanguagePref = UiLang | 'auto';
+export const UI_LANGS: readonly UiLang[] = ['de', 'en', 'fr', 'it'];
+
+interface MessageEntry {
+  message: string;
+  placeholders?: Record<string, { content: string }>;
+}
+type Bundle = Record<string, MessageEntry>;
+
+/**
+ * Bundle loaded by initI18n() from _locales/<lang>/messages.json. We read the
+ * packaged file ourselves instead of relying on chrome.i18n alone: it lets the
+ * user pick a language other than the browser's, and it is never stale (some
+ * browsers keep an old message cache after an unpacked extension is reloaded).
+ */
+let bundle: Bundle | null = null;
+
+/** chrome.i18n message format: $NAME$ placeholders -> content with $1..$9, "$$" -> "$". */
+export function formatMessage(entry: MessageEntry, subs: readonly string[] = []): string {
+  const ph = entry.placeholders ?? {};
+  const sub = (content: string): string => content.replace(/\$(\d)/g, (_m, d: string) => subs[Number(d) - 1] ?? '');
+  return entry.message
+    .replace(/\$([A-Za-z0-9_@]+)\$/g, (m, name: string) => {
+      const p = ph[name.toLowerCase()] ?? ph[name];
+      return p ? sub(p.content) : m;
+    })
+    .replace(/\$\$/g, '$');
+}
 
 /** Read a message; never throws. Missing keys yield '' (the locale check script catches them). */
 export function t(key: string, subs?: string | number | (string | number)[]): string {
+  const list = subs === undefined ? undefined : (Array.isArray(subs) ? subs : [subs]).map(String);
+  const entry = bundle?.[key];
+  if (entry && typeof entry.message === 'string') return formatMessage(entry, list);
   try {
-    const list = subs === undefined ? undefined : (Array.isArray(subs) ? subs : [subs]).map(String);
     return chrome.i18n.getMessage(key, list) || '';
   } catch {
     return '';
   }
 }
 
+function browserLang(): UiLang {
+  try {
+    const code = chrome.i18n.getUILanguage().toLowerCase().slice(0, 2);
+    return (UI_LANGS as readonly string[]).includes(code) ? (code as UiLang) : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
 /**
- * The language of the message bundle Chrome actually resolved. Every bundle
- * defines `localeCode`, so this reflects the fallback to default_locale too
- * (getUILanguage() would report e.g. "es" even though English is shown).
+ * The UI language in use. Until initI18n() resolves it is the language of the
+ * bundle Chrome resolved (every bundle defines `localeCode`).
  */
-export const uiLang: UiLang = (() => {
+export let uiLang: UiLang = (() => {
   const code = t('localeCode');
   return code === 'de' || code === 'fr' || code === 'it' || code === 'en' ? code : 'en';
 })();
 
 /** BCP 47 tag for number/date formatting: Swiss conventions in every language (100’000). */
-export const formatLocale = `${uiLang}-CH`;
+export let formatLocale = `${uiLang}-CH`;
+
+/** Default when the user never chose: German (product of a Swiss company, German-first copy). */
+export const DEFAULT_UI_LANGUAGE: UiLanguagePref = 'de';
+
+/** Resolve a stored preference to a concrete language. */
+export function resolveLanguage(pref: unknown, browser: UiLang = browserLang()): UiLang {
+  if (pref === 'auto') return browser;
+  if (typeof pref === 'string' && (UI_LANGS as readonly string[]).includes(pref)) return pref as UiLang;
+  return DEFAULT_UI_LANGUAGE === 'auto' ? browser : DEFAULT_UI_LANGUAGE;
+}
+
+/**
+ * Load the message bundle for the user's language (settings ui.language,
+ * read straight from storage so the first paint is already translated).
+ * Call once before translate(); never throws.
+ */
+export async function initI18n(): Promise<void> {
+  let pref: unknown;
+  try {
+    const stored = await chrome.storage.local.get('settings');
+    pref = (stored?.settings as { ui?: { language?: unknown } } | undefined)?.ui?.language;
+  } catch {
+    pref = undefined;
+  }
+  const lang = resolveLanguage(pref);
+  try {
+    const res = await fetch(chrome.runtime.getURL(`_locales/${lang}/messages.json`));
+    if (res.ok) useBundle(lang, (await res.json()) as Bundle);
+  } catch {
+    /* chrome.i18n stays the fallback */
+  }
+  if (bundle) {
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ lang, bundle }));
+    } catch {
+      /* no cache: the next page loads the bundle itself */
+    }
+  }
+}
+
+const CACHE_KEY = 'bastion.i18n';
+
+function useBundle(lang: UiLang, b: Bundle): void {
+  bundle = b;
+  uiLang = lang;
+  formatLocale = `${lang}-CH`;
+  dtCache.clear();
+  compactFmt = null;
+}
+
+/**
+ * Synchronous start: re-use the bundle a previous page of the same popup
+ * window loaded (compact <-> expanded popup), so the first frame is already
+ * translated. Returns false when there is none; then await initI18n().
+ */
+export function initI18nSync(): boolean {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    const c = JSON.parse(raw) as { lang?: unknown; bundle?: unknown };
+    if (!(UI_LANGS as readonly unknown[]).includes(c.lang) || !c.bundle || typeof c.bundle !== 'object') return false;
+    useBundle(c.lang as UiLang, c.bundle as Bundle);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Forget the cached bundle (the user picked another language). */
+export function clearI18nCache(): void {
+  try {
+    sessionStorage.removeItem(CACHE_KEY);
+  } catch {
+    /* nothing cached */
+  }
+}
 
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt'] as const;
 

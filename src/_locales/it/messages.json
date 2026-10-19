@@ -1599,5 +1599,109 @@
   },
   "welcomeTitle": {
     "message": "Benvenuti in Bastion Shield"
+  },
+  "ctaIncident": {
+    "message": "Incidente informatico?"
+  },
+  "popupDataSaved": {
+    "message": "in meno da caricare"
+  },
+  "popupTimeSaved": {
+    "message": "più veloce"
+  },
+  "popupBlockedShort": {
+    "message": "tracker bloccati"
+  },
+  "popupAllSettings": {
+    "message": "Tutte le impostazioni"
+  },
+  "popupProtectionOn": {
+    "message": "Protezione attiva"
+  },
+  "popupProtectionOff": {
+    "message": "Protezione disattivata"
+  },
+  "popupHosts": {
+    "message": "$P1$ host",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupHostsOne": {
+    "message": "$P1$ host",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "unitSeconds": {
+    "message": "s"
+  },
+  "unitMinutes": {
+    "message": "min"
+  },
+  "unitHours": {
+    "message": "h"
+  },
+  "savingsEstimateNote": {
+    "message": "Stima: richieste bloccate moltiplicate per dimensione e tempo di caricamento tipici per tipo (script, immagine, frame …)."
+  },
+  "navSite": {
+    "message": "Questo sito"
+  },
+  "panelCollapse": {
+    "message": "Riduci"
+  },
+  "panelEditInTab": {
+    "message": "Modifica"
+  },
+  "panelOpenInTab": {
+    "message": "Apri in una scheda"
+  },
+  "siteRulesTitle": {
+    "message": "Regole di filtro applicate"
+  },
+  "siteReport": {
+    "message": "La pagina non funziona? Segnala"
+  },
+  "setIncidentCta": {
+    "message": "Pulsante «Incidente informatico?»"
+  },
+  "setIncidentCtaDesc": {
+    "message": "Link al contatto di emergenza di Bastion. Se disattivato, compare solo «Bastion Shield»."
+  },
+  "setBackupInTab": {
+    "message": "Esporta o importa"
+  },
+  "ovPeriodLabel": {
+    "message": "Ultimi $P1$ giorni",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileBlocked": {
+    "message": "bloccati in $P1$ giorni",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileTime": {
+    "message": "di attesa in meno"
+  },
+  "setGroupLanguage": {
+    "message": "Lingua"
+  },
+  "setLanguage": {
+    "message": "Lingua dell'interfaccia"
+  },
+  "setLanguageAuto": {
+    "message": "Come il browser"
   }
 }

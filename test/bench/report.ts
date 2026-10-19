@@ -32,7 +32,9 @@ export interface BenchResults {
   }[];
 }
 
-const LABEL: Record<BrowserKind, string> = { chromium: 'Chromium', bastion: 'Bastion', brave: 'Brave' };
+const LABEL: Record<BrowserKind, string> = { chromium: 'Chromium', bastion: 'Bastion', brave: 'Brave', edge: 'Edge' };
+/** Column order: baseline, Bastion in Chromium, Bastion in Edge, Brave. */
+const KINDS: BrowserKind[] = ['chromium', 'bastion', 'edge', 'brave'];
 
 function fmt(n: number | null | undefined, unit = ''): string {
   if (n === null || n === undefined || Number.isNaN(n)) return '–';
@@ -50,7 +52,7 @@ function median(xs: number[]): number | null {
 }
 
 export function summaryMarkdown(r: BenchResults): string {
-  const kinds = (['chromium', 'bastion', 'brave'] as BrowserKind[]).filter((k) => r.browsers[k] && !r.browsers[k]!.error);
+  const kinds = KINDS.filter((k) => r.browsers[k] && !r.browsers[k]!.error);
   const cell = (site: BenchResults['sites'][number], f: (s: SiteSummary) => string) =>
     kinds.map((k) => {
       const s = site.results[k];
@@ -67,7 +69,7 @@ export function summaryMarkdown(r: BenchResults): string {
     const b = r.browsers[k]!;
     lines.push(`- **${LABEL[k]}**: ${b.product || b.executable}${b.headless ? ' (headless)' : ' (headed)'}${b.extensionVersion ? `, Bastion Shield ${b.extensionVersion}` : ''}${b.readyNote ? ` — ${b.readyNote}` : ''}`);
   }
-  for (const k of ['chromium', 'bastion', 'brave'] as BrowserKind[]) {
+  for (const k of KINDS) {
     if (r.browsers[k]?.error) lines.push(`- **${LABEL[k]}**: not measured (${r.browsers[k]!.error})`);
   }
   lines.push(`- Reference set: ${fmt(r.reference.hosts)} ad/tracker hostnames (${r.reference.sources.map((s) => `${s.title} ${s.version}`).join(', ')}): EasyList adservers + EasyPrivacy trackingservers sections, \`||host^\` entries only.`);
@@ -103,10 +105,11 @@ export function summaryMarkdown(r: BenchResults): string {
     `| **Total / median** | ${kinds.map((k) => fmt(totals[k].requests)).join(' / ')} | ${kinds.map((k) => fmt(totals[k].through)).join(' / ')} | ${kinds.map((k) => fmt(totals[k].blocked)).join(' / ')} | ${kinds.map((k) => fmt(median(totals[k].dcl))).join(' / ')} | ${kinds.map((k) => fmt(median(totals[k].load))).join(' / ')} | ${kinds.map((k) => mb(median(totals[k].heap))).join(' / ')} |`,
   );
   lines.push('');
-  if (totals.chromium && (totals.bastion || totals.brave)) {
+  const blockers = kinds.filter((k) => k !== 'chromium');
+  if (totals.chromium && blockers.length) {
     const base = totals.chromium.through || 1;
-    const pct = (k: string) => (totals[k] ? `${(100 * (1 - totals[k].through / base)).toFixed(1)} %` : '–');
-    lines.push(`Reduction of ad/tracker requests that got through, relative to plain Chromium: Bastion ${pct('bastion')}, Brave ${pct('brave')}.`);
+    const pct = (k: string) => `${(100 * (1 - totals[k].through / base)).toFixed(1)} %`;
+    lines.push(`Reduction of ad/tracker requests that got through, relative to plain Chromium: ${blockers.map((k) => `${LABEL[k]} ${pct(k)}`).join(', ')}.`);
     lines.push('');
   }
   const visits = r.sites.map((s) => s.results.bastion).filter((s): s is SiteSummary => !!s?.ok);
@@ -121,8 +124,11 @@ export function summaryMarkdown(r: BenchResults): string {
   }
   lines.push('');
   // Where one blocker lets through what the other stops: the actionable lists for filter work.
-  if (kinds.includes('bastion') && kinds.includes('brave')) {
-    for (const [a, b] of [['bastion', 'brave'], ['brave', 'bastion']] as const) {
+  // Both directions for every pair of blockers measured (Bastion/Brave alone gives the same two lists as before).
+  const pairs: [BrowserKind, BrowserKind][] = [];
+  for (const [i, p] of blockers.entries()) for (const q of blockers.slice(i + 1)) pairs.push([p, q], [q, p]);
+  if (pairs.length) {
+    for (const [a, b] of pairs) {
       lines.push(`### Ad/tracker hosts that got through in ${LABEL[a]} but not in ${LABEL[b]}`);
       lines.push('');
       const diff = new Map<string, number>();

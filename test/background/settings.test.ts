@@ -211,3 +211,30 @@ test('policy numbers are clamped; empty registry strings ignored; kill switch pa
   assert.equal(sanitizeManaged({ protectionEnabled: 'true' }).protectionEnabled, true);
   assert.equal(sanitizeManaged({ protectionEnabled: 'maybe' }).protectionEnabled, undefined);
 });
+
+test('incident CTA: on by default, user switch, policy showIncidentCta locks it', () => {
+  assert.equal(defaultSettings().ui.incidentCta, true);
+  assert.equal(normalizeSettings({ ui: { incidentCta: 'no' } }).ui.incidentCta, true, 'garbage keeps the default');
+  const off = applySettingsPatch(defaultSettings(), { ui: { incidentCta: false } }, new Set());
+  assert.equal(off.settings.ui.incidentCta, false);
+  assert.deepEqual(off.ignored, []);
+  assert.equal(sanitizeManaged({ showIncidentCta: 'false' }).showIncidentCta, false, 'registry string');
+  const cfg = buildEffectiveConfig(off.settings, { showIncidentCta: true }, LISTS);
+  assert.equal(cfg.settings.ui.incidentCta, true, 'policy wins');
+  assert.ok(cfg.locked.includes('ui.incidentCta'));
+  const locked = applySettingsPatch(defaultSettings(), { ui: { incidentCta: false } }, new Set(['ui.incidentCta']));
+  assert.equal(locked.settings.ui.incidentCta, true);
+  assert.deepEqual(locked.ignored, ['ui.incidentCta']);
+});
+
+test('ui language: German by default, only known values, lockable', () => {
+  assert.equal(defaultSettings().ui.language, 'de');
+  assert.equal(normalizeSettings({ ui: { language: 'es' } }).ui.language, 'de');
+  assert.equal(normalizeSettings({ ui: { language: 'auto' } }).ui.language, 'auto');
+  const en = applySettingsPatch(defaultSettings(), { ui: { language: 'en' } }, new Set());
+  assert.equal(en.settings.ui.language, 'en');
+  const bad = applySettingsPatch(defaultSettings(), { ui: { language: 'klingon' } }, new Set());
+  assert.equal(bad.settings.ui.language, 'de');
+  assert.deepEqual(bad.ignored, ['ui.language']);
+  assert.ok(SETTING_PATHS.includes('ui.language'));
+});

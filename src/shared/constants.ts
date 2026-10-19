@@ -171,4 +171,7 @@ export const LINKS = {
   REPO_URL: 'https://github.com/bastion-security/bastion-shield',
   HOMEPAGE: 'https://bastionsecurity.ch',
   PRIVACY: 'https://github.com/bastion-security/bastion-shield/blob/main/docs/PRIVACY.md',
+  /** Incident contact form on bastionsecurity.ch («Cyber-Vorfall?»), German and English pages. */
+  INCIDENT_DE: 'https://www.bastionsecurity.ch/kontakt#vorfall',
+  INCIDENT_EN: 'https://www.bastionsecurity.ch/en/contact#vorfall',
 } as const;

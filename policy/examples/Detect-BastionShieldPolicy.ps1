@@ -138,6 +138,7 @@ $PolicySchema = [ordered]@{
     disablePrivacySandboxAds = 'bool'
     showBadge                = 'bool'
     activityLog              = 'bool'
+    showIncidentCta          = 'bool'
     historyEnabled           = 'bool'
     historyRetentionDays     = 'int:0:3650'
     reportBrokenSite         = 'enum:github,email,none'

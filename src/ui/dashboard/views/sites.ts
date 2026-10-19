@@ -11,7 +11,7 @@ import { plural, t } from '../../shared/i18n.ts';
 import { hostnameCandidates } from '../../../shared/hash.ts';
 import { icon } from '../../shared/icons.ts';
 import { confirmDialog, lockIcon, switchControl } from '../../shared/controls.ts';
-import { emptyState, errorState, nextId, normaliseHost, pageHead, panel, type View, mount } from '../common.ts';
+import { emptyState, errorState, nextId, normaliseHost, openTabButton, pageHead, panel, popupMode, type View, mount } from '../common.ts';
 import { getConfig, getSites, isLocked, setSites } from '../store.ts';
 
 const MODES: BlockingMode[] = ['standard', 'aggressive'];
@@ -276,15 +276,17 @@ export function sitesView(): View {
         }
       });
 
+      // Expanded popup: list and switches only. Adding, import and export happen in the tab
+      // (typing and file dialogs do not survive the popup closing).
       mount(root, 
-        pageHead(t('sitesTitle'), t('sitesLead')),
-        panel({ title: t('sitesAddTitle') }, form, addHint),
+        pageHead(t('sitesTitle'), t('sitesLead'), popupMode ? openTabButton('sites', t('panelEditInTab')) : null),
+        popupMode ? null : panel({ title: t('sitesAddTitle') }, form, addHint),
         panel(
           { title: t('sitesListTitle'), aside: countEl, flush: true },
-          h('div', { class: 'sites-tools' }, h('span', { class: 'act-search' }, icon('search', 14), search), h('div', { class: 'sites-tools__io' }, importBtn, exportBtn)),
+          h('div', { class: 'sites-tools' }, h('span', { class: 'act-search' }, icon('search', 14), search), popupMode ? null : h('div', { class: 'sites-tools__io' }, importBtn, exportBtn)),
           tableWrap,
         ),
-        h('p', { class: 'db-footnote', text: t('sitesFootnote') }),
+        popupMode ? null : h('p', { class: 'db-footnote', text: t('sitesFootnote') }),
       );
       draw();
     },

@@ -9,7 +9,7 @@ import { h } from '../../shared/dom.ts';
 import { fmtDate, fmtDateTime, localized, t } from '../../shared/i18n.ts';
 import { icon, mark } from '../../shared/icons.ts';
 import { extensionVersion } from '../../shared/messaging.ts';
-import { panel, type View, mount } from '../common.ts';
+import { openTabButton, panel, popupMode, settingRow, nextId, type View, mount } from '../common.ts';
 import { getConfig, getMeta } from '../store.ts';
 
 function ext(href: string, text: string, mono = false): HTMLElement {
@@ -134,6 +134,16 @@ export function aboutView(): View {
         ...FONTS.map(([name, url]) => h('li', null, h('span', { class: 'about-vendor__name', text: name }), h('span', { class: 'about-vendor__lic', text: 'SIL OFL 1.1' }), ext(url, url.replace(/^https:\/\//, ''), true))),
       );
 
+      if (popupMode) {
+        // The licence tables are long: in the popup they open in the dashboard tab.
+        mount(root,
+          hero,
+          privacy,
+          panel({ title: t('aboutContactTitle') }, h('dl', { class: 'kv about-kv' }, ...contactItems)),
+          panel({ flush: true }, settingRow({ label: t('aboutListsTitle'), control: openTabButton('about', t('panelOpenInTab')), labelId: nextId('about') })),
+        );
+        return;
+      }
       mount(root, 
         hero,
         privacy,

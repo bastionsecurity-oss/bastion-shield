@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  Bastion Shield — expanded popup view (760×560). Same app as the dashboard
+  (dashboard.js), in popup mode: «Diese Website» first, the collapse button
+  returns to the compact popup, and sections where closing the popup would
+  lose work (Eigene Filter) open the dashboard in a tab instead (↗).
+  panel.html?tabId=<n>#site — the tab id comes from the compact popup.
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title data-i18n="dashTitle">Bastion Shield</title>
+  <link rel="preload" href="shared/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="shared/fonts/inter-tight-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="shared/tokens.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <!-- Render-blocking: the first frame is the drawn view, so the morph from the compact popup has a target. -->
+  <script src="dashboard.js" defer blocking="render"></script>
+  <link rel="prefetch" href="popup.css">
+  <link rel="prefetch" href="popup.js">
+</head>
+<body class="db db--popup" data-view="">
+  <div class="db-shell">
+    <nav class="db-nav" data-i18n-aria-label="dashNavLabel" aria-label="Bereiche">
+      <div class="db-nav__top">
+        <button type="button" class="db-nav__collapse" id="db-collapse" data-i18n-title="panelCollapse" data-i18n-aria-label="panelCollapse"><span data-icon="collapse" data-icon-size="16"></span></button>
+        <span class="db-nav__word" data-i18n="extName">Bastion Shield</span>
+      </div>
+      <ul class="db-nav__list">
+        <li class="db-nav__group"><a class="db-nav__link" href="#site" data-view="site"><span class="db-nav__tile db-nav__tile--1"><span data-icon="sites"></span></span><span data-i18n="navSite">Diese Website</span></a></li>
+        <li><a class="db-nav__link" href="#overview" data-view="overview"><span class="db-nav__tile db-nav__tile--2"><span data-icon="overview"></span></span><span data-i18n="navOverview">Übersicht</span></a></li>
+        <li class="db-nav__group-end"><a class="db-nav__link" href="#activity" data-view="activity"><span class="db-nav__tile db-nav__tile--2"><span data-icon="activity"></span></span><span data-i18n="navActivity">Aktivität</span></a></li>
+        <li><a class="db-nav__link" href="#lists" data-view="lists"><span class="db-nav__tile db-nav__tile--3"><span data-icon="lists"></span></span><span data-i18n="navLists">Filterlisten</span></a></li>
+        <li><a class="db-nav__link" href="#filters" data-view="filters" data-open-tab="filters"><span class="db-nav__tile db-nav__tile--3"><span data-icon="filters"></span></span><span data-i18n="navFilters">Eigene Filter</span><span class="db-nav__ext" data-icon="openTab" data-icon-size="13"></span></a></li>
+        <li class="db-nav__group-end"><a class="db-nav__link" href="#sites" data-view="sites"><span class="db-nav__tile db-nav__tile--3"><span data-icon="privacy"></span></span><span data-i18n="navSites">Website-Ausnahmen</span></a></li>
+        <li><a class="db-nav__link" href="#privacy" data-view="privacy"><span class="db-nav__tile db-nav__tile--4"><span data-icon="lock"></span></span><span data-i18n="navPrivacy">Datenschutz</span></a></li>
+        <li><a class="db-nav__link" href="#settings" data-view="settings"><span class="db-nav__tile db-nav__tile--4"><span data-icon="settings"></span></span><span data-i18n="navSettings">Einstellungen</span></a></li>
+        <li><a class="db-nav__link" href="#about" data-view="about"><span class="db-nav__tile db-nav__tile--4"><span data-icon="about"></span></span><span data-i18n="navAbout">Über</span></a></li>
+      </ul>
+      <div class="db-nav__foot" id="db-nav-foot"></div>
+    </nav>
+    <main class="db-main" id="db-main" tabindex="-1">
+      <div class="db-view" id="db-view" aria-busy="true"></div>
+    </main>
+  </div>
+</body>
+</html>

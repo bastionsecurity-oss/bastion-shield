@@ -100,17 +100,18 @@ test.describe('live log', () => {
     await popup.goto(`${ext.origin}/${popupPath}`);
     await expect(popup.locator('#pp-host')).toContainText(HOSTS.A, { timeout: 5000 });
     const count = await poll(() => popup.locator('#pp-count').innerText().catch(() => '0'), (t) => Number(t.replace(/\D/g, '')) > 0, 5000);
-    expect.soft(Number(count.replace(/\D/g, '')), 'popup counter').toBeGreaterThan(0);
-    const before = await popup.locator('#pp-feed > li').count();
-    expect.soft(before, 'popup feed lists the blocked requests').toBeGreaterThan(0);
-    // A new block while the popup is open must appear without reopening it.
+    const before = Number(count.replace(/\D/g, ''));
+    expect.soft(before, 'popup counter').toBeGreaterThan(0);
+    // The data estimate follows the blocked requests (never 0 kB once something was blocked).
+    expect.soft(await popup.locator('#pp-data').innerText(), 'data saved estimate').not.toBe('0');
+    // A new block while the popup is open must be counted without reopening it.
     await page.evaluate((u: string) => {
       const i = new Image();
       i.src = u;
       document.body.appendChild(i);
     }, server.url('ad.doubleclick.net', '/ddm/live-' + Date.now() + '.gif'));
-    const after = await poll(() => popup.locator('#pp-feed > li').count(), (n) => n > before, 6000, 200);
-    expect.soft(after, 'popup feed updates live').toBeGreaterThan(before);
+    const after = await poll(() => popup.locator('#pp-count').innerText().then((t) => Number(t.replace(/\D/g, ''))), (n) => n > before, 6000, 200);
+    expect.soft(after, 'popup counter updates live').toBeGreaterThan(before);
     expect.soft(errors, 'popup console errors').toEqual([]);
     await popup.close();
   });

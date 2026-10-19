@@ -1,14 +1,16 @@
 // Bastion Shield — real-world parity and performance benchmark.
 //
-//   node test/bench/run.ts [--sites 20min.ch,blick.ch | --limit 3] [--browsers chromium,bastion,brave]
+//   node test/bench/run.ts [--sites 20min.ch,blick.ch | --limit 3] [--browsers chromium,bastion,brave,edge]
 //                          [--settle 15000] [--rea] [--rea-bin path/to/rea.mjs] [--headed] [--save-requests]
 //                          [--append test/bench/results/<run>.json]   (re-measure --sites into an existing run)
 //
-// Visits each site in three browsers that run side by side, one visit at a
-// time (rotating the order per site so no browser always goes first):
+// Visits each site in browsers that run side by side, one visit at a time
+// (rotating the order per site so no browser always goes first):
 //   chromium  Playwright's bundled Chromium, no extension (baseline)
 //   bastion   the same Chromium with the unpacked dist/ loaded
 //   brave     the installed Brave, Shields at defaults, fresh profile
+//   edge      the installed Microsoft Edge with the unpacked dist/ loaded,
+//             tracking prevention at its default (opt-in: --browsers ...,edge)
 // Every browser is a plain process with --remote-debugging-port on 127.0.0.1
 // and a fresh --user-data-dir; requests are recorded over CDP (including
 // out-of-process iframes). Results go to test/bench/results/<date>.json and a
@@ -25,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { chromium as pwChromium } from 'playwright';
 import type { BrowserKind, LaunchedBrowser } from './browsers.ts';
-import { defaultBravePath, launchBrowser } from './browsers.ts';
+import { defaultBravePath, defaultEdgePath, launchBrowser } from './browsers.ts';
 import { captureSite } from './capture.ts';
 import type { SiteCapture } from './capture.ts';
 import type { Cdp } from './cdp.ts';
@@ -57,6 +59,7 @@ interface Options {
   braveHeaded: boolean;
   dist: string;
   brave: string | null;
+  edge: string | null;
   chromium: string | null;
   profileRoot: string;
   out: string;
@@ -92,6 +95,7 @@ function parseArgs(argv: string[]): Options {
     braveHeaded: has('brave-headed'),
     dist: path.resolve(get('dist') ?? process.env.BASTION_DIST ?? path.join(ROOT, 'dist')),
     brave: get('brave') ?? defaultBravePath(),
+    edge: get('edge') ?? defaultEdgePath(),
     chromium: get('chromium'),
     profileRoot: path.resolve(get('profile-root') ?? path.join(os.tmpdir(), `bastion-bench-${stamp}`)),
     out: path.resolve(get('out') ?? path.join(HERE, 'results')),
@@ -103,6 +107,8 @@ function parseArgs(argv: string[]): Options {
 
 const log = (s: string) => console.log(`[bench ${new Date().toISOString().slice(11, 19)}] ${s}`);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Kinds that load Bastion Shield from the build. */
+const withExtension = (kind: BrowserKind): boolean => kind === 'bastion' || kind === 'edge';
 
 // ---------------------------------------------------------------------------
 // Readiness: lists loaded and blocking (Brave fetches its lists as components)
@@ -306,7 +312,7 @@ async function main(): Promise<void> {
 
   const browsers = new Map<BrowserKind, LaunchedBrowser>();
   const userAgents = new Map<BrowserKind, string>();
-  const extensionOrigin: { value: string | null } = { value: null };
+  const extensionOrigins = new Map<BrowserKind, string>();
   const chromiumPath = opts.chromium ?? pwChromium.executablePath();
   const cleanup = async () => {
     for (const b of browsers.values()) await b.close().catch(() => {});
@@ -321,13 +327,15 @@ async function main(): Promise<void> {
       const entry: BenchResults['browsers'][BrowserKind] = { executable: '', product: '', headless: !opts.headed, ready: false, readyNote: '' };
       results.browsers[kind] = entry;
       try {
-        if (kind === 'bastion' && !existsSync(path.join(opts.dist, 'manifest.json'))) throw new Error(`no build at ${opts.dist}`);
+        if (withExtension(kind) && !existsSync(path.join(opts.dist, 'manifest.json'))) throw new Error(`no build at ${opts.dist}`);
         if (kind === 'brave' && !opts.brave) throw new Error('Brave not found (pass --brave <path>)');
-        const executable = kind === 'brave' ? opts.brave! : chromiumPath;
+        if (kind === 'edge' && !opts.edge) throw new Error('Edge not found (pass --edge <path>)');
+        const executable = kind === 'brave' ? opts.brave! : kind === 'edge' ? opts.edge! : chromiumPath;
         entry.executable = executable;
         let headless = kind === 'brave' ? !(opts.headed || opts.braveHeaded) : !opts.headed;
-        // Chromium writes _metadata/ into an unpacked extension's folder; load a copy so dist/ stays pristine.
-        const extDir = kind === 'bastion' ? path.join(opts.profileRoot, 'bastion-extension') : undefined;
+        // Chromium writes _metadata/ into an unpacked extension's folder; load a copy so dist/ stays
+        // pristine (one per browser, so two running browsers never write into the same folder).
+        const extDir = withExtension(kind) ? path.join(opts.profileRoot, `${kind}-extension`) : undefined;
         if (extDir) {
           rmSync(extDir, { recursive: true, force: true });
           cpSync(opts.dist, extDir, { recursive: true, filter: (src) => path.basename(src) !== '_metadata' });
@@ -337,12 +345,12 @@ async function main(): Promise<void> {
         browsers.set(kind, b); // registered for cleanup right away; re-set below if relaunched
         entry.product = b.product;
         log(`${kind}: ${b.product} on ${b.httpEndpoint}${headless ? ' (headless)' : ''}`);
-        if (kind === 'bastion') {
+        if (withExtension(kind)) {
           const manifest = JSON.parse(readFileSync(path.join(opts.dist, 'manifest.json'), 'utf8')) as { version: string; background?: { service_worker?: string } };
           entry.extensionVersion = manifest.version;
           const ext = await findExtension(b.cdp, 20_000, { version: manifest.version, swPath: manifest.background?.service_worker ?? 'background.js' });
           if (!ext) throw new Error('extension service worker did not start (load error?)');
-          extensionOrigin.value = ext.origin;
+          extensionOrigins.set(kind, ext.origin);
           entry.extensionId = ext.id;
           await sleep(3000); // install-time applyAll()
         }
@@ -399,7 +407,7 @@ async function main(): Promise<void> {
           settleMs: opts.settleMs,
           navTimeoutMs: opts.navTimeoutMs,
           ref,
-          extensionOrigin: kind === 'bastion' ? extensionOrigin.value : null,
+          extensionOrigin: extensionOrigins.get(kind) ?? null,
           userAgent: userAgents.get(kind) ?? null,
           log,
           duringSettle: rea
@@ -437,7 +445,7 @@ async function main(): Promise<void> {
     await cleanup();
     // Profiles are removed by each browser's close(); the staged extension copy is ours to remove.
     try {
-      rmSync(path.join(opts.profileRoot, 'bastion-extension'), { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
+      for (const kind of opts.browsers) if (withExtension(kind)) rmSync(path.join(opts.profileRoot, `${kind}-extension`), { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
       if (!readdirSync(opts.profileRoot).length) rmSync(opts.profileRoot, { recursive: true, force: true });
     } catch {
       /* best effort */

@@ -1,29 +1,23 @@
-// Bastion Shield — dashboard «Übersicht»: protection status, totals since
-// install, blocked requests per day (30 days), top hosts, top sites and the
-// split by list category. Reads history:query once per visit.
+// Bastion Shield — dashboard «Übersicht»: blocked requests, data and waiting
+// time saved (estimate) over 30 days, blocked requests per day, top hosts, top
+// sites and the split by list category. Reads history:query once per visit.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import type { ActivityKind, DailyAggregate, HistoryResult } from '../../../shared/types.ts';
+import type { DailyAggregate, HistoryResult } from '../../../shared/types.ts';
 import { h } from '../../shared/dom.ts';
-import { fmtDateLong, fmtDayAxis, fmtDayShort, fmtNumber, t } from '../../shared/i18n.ts';
+import { fmtDayAxis, fmtDayShort, fmtNumber, t } from '../../shared/i18n.ts';
+import { estimateSavings, fmtBytes, fmtDuration } from '../../shared/savings.ts';
 import { icon } from '../../shared/icons.ts';
 import { call } from '../../shared/messaging.ts';
 import { notice } from '../../shared/controls.ts';
-import { CATEGORY_ORDER, categoryLabel, kindLabel } from '../../shared/labels.ts';
+import { CATEGORY_ORDER, categoryLabel } from '../../shared/labels.ts';
 import { barList, columnChart, type ColumnDatum } from '../chart.ts';
 import { dayKey, dayTime, emptyState, errorState, panel, type View, mount } from '../common.ts';
-import { getConfig, getLists } from '../store.ts';
+import { getConfig } from '../store.ts';
 
 const DAYS = 30;
 const TOP_N = 8;
-const KIND_KEYS: Record<ActivityKind, string> = {
-  blocked: 'ovKindBlocked',
-  redirected: 'ovKindRedirected',
-  stripped: 'ovKindStripped',
-  debounced: 'ovKindDebounced',
-  strict: 'ovKindStrict',
-};
 
 function sumInto(target: Record<string, number>, src: Record<string, number> | undefined): void {
   if (!src) return;
@@ -42,9 +36,8 @@ export function overviewView(): View {
     async render(root) {
       const today = new Date();
       const from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (DAYS - 1), 12);
-      const [cfgR, listsR, histR] = await Promise.all([
+      const [cfgR, histR] = await Promise.all([
         getConfig(),
-        getLists(),
         call<HistoryResult>({ type: 'history:query', fromDay: dayKey(from), toDay: dayKey(today) }),
       ]);
       if (!cfgR.ok) {
@@ -52,55 +45,31 @@ export function overviewView(): View {
         return;
       }
       const cfg = cfgR.data;
-      const lists = listsR.ok ? listsR.data : null;
       const hist = histR.ok && histR.data ? histR.data : { days: [] as DailyAggregate[], totals: { since: 0, blocked: 0, byKind: {} } };
       const days = Array.isArray(hist.days) ? hist.days : [];
-      const totals = hist.totals ?? { since: 0, blocked: 0, byKind: {} };
 
-      // ---- Status strip + hero figure ------------------------------------
-      const enabledCount = lists ? Object.values(lists.enabled).filter(Boolean).length : 0;
-      const listCount = lists?.meta?.lists?.length ?? 0;
-      const statusItems: [string, string][] = [
-        [t('ovStatusMode'), cfg.settings.defaultMode === 'aggressive' ? t('modeAggressive') : t('modeStandard')],
-        [t('ovStatusLists'), lists ? t('ovListsOf', [fmtNumber(enabledCount), fmtNumber(listCount)]) : '–'],
-        [t('ovStatusRules'), lists ? fmtNumber(lists.budget.used) : '–'],
-      ];
-      if (cfg.managed.organizationName) statusItems.push([t('managedByLabel'), cfg.managed.organizationName]);
-
-      const kinds: ActivityKind[] = ['blocked', 'redirected', 'stripped', 'debounced', 'strict'];
-      const kindRows = kinds
-        .map((k) => [k, totals.byKind?.[k] ?? 0] as const)
-        .filter(([k, v]) => v > 0 || k === 'blocked');
-
+      // ---- Header + tiles (last 30 days) -----------------------------------
       // Managed fleet-wide kill switch (policy protectionEnabled: false).
       const globalOff = cfg.managed.protectionEnabled === false;
-      const head = h(
-        'header',
-        { class: 'ov-hero' },
-        h(
-          'div',
-          { class: 'ov-hero__status' },
-          h('span', { class: `ov-hero__dot${globalOff ? ' ov-hero__dot--off' : ''}`, attrs: { 'aria-hidden': 'true' } }),
-          h('h1', { class: 'ov-hero__title', text: globalOff ? t('ovTitleOff') : t('ovTitle'), attrs: { tabindex: -1 } }),
-        ),
-        h('dl', { class: 'ov-strip' }, ...statusItems.map(([k, v]) => h('div', { class: 'ov-strip__item' }, h('dt', { text: k }), h('dd', { text: v })))),
-      );
+      const byType: Record<string, number> = {};
+      let period = 0;
+      for (const d of days) {
+        sumInto(byType, d.byType);
+        period += d.total ?? 0;
+      }
+      const est = estimateSavings(byType);
+      const data = fmtBytes(est.bytes);
+      const time = fmtDuration(est.ms, { s: t('unitSeconds'), min: t('unitMinutes'), h: t('unitHours') });
+      const tileEl = (value: string, unit: string, label: string, dark = false): HTMLElement =>
+        h('div', { class: `site-tile${dark ? ' site-tile--dark' : ''}` }, h('div', { class: 'site-tile__value' }, h('span', { class: 'num', text: value }), unit ? h('span', { class: 'site-tile__unit', text: ` ${unit}` }) : null), h('div', { class: 'site-tile__label', text: label }));
+      const head = h('header', { class: 'db-head' }, h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: t('navOverview'), attrs: { tabindex: -1 } })));
       const offNotice = globalOff ? h('div', { class: 'db-gap' }, notice(t('popupGlobalOffTitle'), t('popupGlobalOffText'), 'info')) : null;
-
       const hero = h(
         'section',
-        { class: 'ov-total', attrs: { 'aria-labelledby': 'ov-total-label' } },
-        h(
-          'div',
-          { class: 'ov-total__main' },
-          h('div', { class: 'ov-total__value', text: fmtNumber(totals.blocked ?? 0) }),
-          h('p', { class: 'ov-total__label', attrs: { id: 'ov-total-label' }, text: totals.since ? t('ovTotalSince', fmtDateLong(totals.since)) : t('ovTotalLabel') }),
-        ),
-        h(
-          'dl',
-          { class: 'ov-kinds' },
-          ...kindRows.map(([k, v]) => h('div', { class: 'ov-kinds__row' }, h('dt', { text: t(KIND_KEYS[k]) || kindLabel(k) }), h('dd', { class: 'num', text: fmtNumber(v) }))),
-        ),
+        { class: 'site-tiles ov-tiles', attrs: { 'aria-label': t('ovPeriodLabel', fmtNumber(DAYS)), title: t('savingsEstimateNote') } },
+        tileEl(fmtNumber(period), '', t('ovTileBlocked', fmtNumber(DAYS)), true),
+        tileEl(data.value, data.unit, t('popupDataSaved')),
+        tileEl(time.value, time.unit, t('ovTileTime')),
       );
 
       // ---- Chart ------------------------------------------------------------

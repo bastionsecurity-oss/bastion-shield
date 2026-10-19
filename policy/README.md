@@ -37,7 +37,7 @@ The two stores assign **different** ids. In the `.mobileconfig` files the placeh
 
 Every key is optional; a key that is set overrides the user's choice and locks the control. Full table with defaults: [DEPLOYMENT-INTUNE.md, section 4.2](../docs/DEPLOYMENT-INTUNE.md#42-keys).
 
-`organizationName`, `supportUrl`, `supportEmail`, `reportBrokenSite`, `defaultMode`, `aggressiveSites`, `disabledSites`, `allowUserSiteToggle`, `lists`, `lockLists`, `customFilters`, `allowUserFilters`, `lockSettings`, `gpc`, `stripParams`, `debounce`, `deAmp`, `fingerprinting`, `blockHyperlinkAuditing`, `disablePrivacySandboxAds`, `webrtcPolicy`, `blockThirdPartyCookies`, `showBadge`, `activityLog`, `historyEnabled`, `historyRetentionDays`, `protectionEnabled` (emergency switch: `false` turns protection off everywhere).
+`organizationName`, `supportUrl`, `supportEmail`, `reportBrokenSite`, `defaultMode`, `aggressiveSites`, `disabledSites`, `allowUserSiteToggle`, `lists`, `lockLists`, `customFilters`, `allowUserFilters`, `lockSettings`, `gpc`, `stripParams`, `debounce`, `deAmp`, `fingerprinting`, `blockHyperlinkAuditing`, `disablePrivacySandboxAds`, `webrtcPolicy`, `blockThirdPartyCookies`, `showBadge`, `activityLog`, `showIncidentCta`, `historyEnabled`, `historyRetentionDays`, `protectionEnabled` (emergency switch: `false` turns protection off everywhere).
 
 `lockSettings: true` also locks the filter lists, the per-site mode, script and fingerprinting settings, and the user filter editor, unless `lockLists` is explicitly `false` or `allowUserFilters` explicitly `true`. If `supportEmail` is set and `reportBrokenSite` is not, "Report a broken site" opens an e-mail to that address.
 

@@ -231,6 +231,7 @@ Every key is optional. **A key that is present overrides the user's setting and 
 | `webrtcPolicy` | `default` / `default_public_interface_only` / `disable_non_proxied_udp` | WebRTC IP handling through the extension API | `default` (browser's) |
 | `blockThirdPartyCookies` | boolean | Third-party cookie setting through the extension API | browser's setting |
 | `showBadge` | boolean | Blocked count on the toolbar icon | `true` |
+| `showIncidentCta` | boolean | «Cyber-Vorfall?» button in the popup and navigation (link to the Bastion incident contact form). `false` shows the Bastion Shield name instead | `true` |
 | `activityLog` | boolean | Live per-tab activity in popup and dashboard (memory only). `false`: no individual requests are kept, shown or written to the history. While `showBadge` and `gpc` are both on, blocked requests are still counted for the badge and the totals ([PRIVACY.md](PRIVACY.md#what-the-extension-observes)) | `true` |
 | `historyEnabled` | boolean | Keep a blocking history on the device | `true` |
 | `historyRetentionDays` | integer 0-3650 | Days of history to keep; 0 keeps only today's totals | `30` |
@@ -463,7 +464,7 @@ Force-install policies do not apply to Incognito or InPrivate ([Chrome](https://
 No. There is no telemetry, no remote configuration and no account. Blocking history stays on the device. The browser itself contacts the store to check for updates, as for every extension. Details: [PRIVACY.md](PRIVACY.md).
 
 ### Should we deploy Bastion Shield to Brave?
-Brave Shields blocks requests before any extension sees them. Running both is safe and does not double-block network requests, but on Brave: the blocked counts in Bastion Shield are lower; switching Bastion Shield off for a site does not unblock what Shields blocks (lower Shields too, or use `BraveShieldsDisabledForUrls`); cosmetic filters run twice. Recommended: keep Brave Shields on and deploy Bastion Shield to Brave only if you want its central configuration, Bastion's own filter list or the activity view.
+Brave Shields blocks requests before any extension sees them. Running both is safe and does not double-block network requests, but on Brave: the blocked counts in Bastion Shield are lower (0 on the four news sites we checked, see [PARITY.md](PARITY.md#edge-and-brave)); switching Bastion Shield off for a site does not unblock what Shields blocks (lower Shields too, or use `BraveShieldsDisabledForUrls`); cosmetic filters run twice. Recommended: keep Brave Shields on and deploy Bastion Shield to Brave only if you want its central configuration, Bastion's own filter list or the activity view.
 
 ### We already use Edge Tracking Prevention. Do we still need Bastion Shield?
 They complement each other. Tracking Prevention, based on Disconnect's lists, mainly restricts storage access for known trackers in Balanced mode (Strict also blocks more of their loads) and is not an ad blocker; Bastion Shield blocks ads, trackers, malware domains and cookie banners at network and page level. Keep both; add problem sites to both exception lists.

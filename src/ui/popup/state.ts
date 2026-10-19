@@ -59,6 +59,7 @@ export function normalisePopupState(raw: unknown, fallbackTabId: number): PopupS
       // Documented default: e-mail when a helpdesk address is set, otherwise GitHub.
       reportBrokenSite: channel === 'github' || channel === 'email' || channel === 'none' ? channel : supportEmail ? 'email' : 'github',
     },
+    incidentCta: r.incidentCta !== false,
     version: typeof r.version === 'string' ? r.version : '',
   };
 }

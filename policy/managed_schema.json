@@ -128,6 +128,11 @@
       "title": "Show blocked count on the toolbar icon",
       "description": "Default true."
     },
+    "showIncidentCta": {
+      "type": "boolean",
+      "title": "Show the «Cyber-Vorfall?» button",
+      "description": "Button in the popup and navigation that links to the Bastion incident contact form. false replaces it with the Bastion Shield name. Default true."
+    },
     "activityLog": {
       "type": "boolean",
       "title": "Live activity log",

@@ -7,6 +7,7 @@ import { append, h, type Child } from '../shared/dom.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
 import { eyebrow, lockIcon, notice } from '../shared/controls.ts';
+import { openDashboard } from '../shared/messaging.ts';
 
 export interface View {
   /** Render into root. May be async; the router shows a loading state meanwhile. */
@@ -15,6 +16,45 @@ export interface View {
   canLeave?(): boolean | Promise<boolean>;
   /** Stop timers / ports when the user navigates away. */
   dispose?(): void;
+}
+
+/**
+ * Popup mode: the app runs as the expanded popup (panel.html, 760×560)
+ * instead of the dashboard tab. Sections that need room or would lose work
+ * when the popup closes open the dashboard tab instead.
+ */
+export const popupMode = typeof document !== 'undefined' && document.body?.classList.contains('db--popup') === true;
+
+/** Expanded view running inside the compact popup's iframe (the morph, see popup/expand.ts). */
+export const embedded = popupMode && typeof window !== 'undefined' && window.parent !== window;
+
+/** Close the popup window (from the iframe: its top window). */
+export function closePopup(): void {
+  setTimeout(() => {
+    try {
+      (window.top ?? window).close();
+    } catch {
+      window.close();
+    }
+  }, 30);
+}
+
+/** Tab the expanded popup belongs to (panel.html?tabId=<n>), or null. */
+export function popupTabId(): number | null {
+  const raw = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('tabId');
+  const n = raw === null ? Number.NaN : Number(raw);
+  return Number.isInteger(n) && n >= 0 ? n : null;
+}
+
+/** Open a dashboard section in a tab; from the popup, close the popup afterwards. */
+export async function openInTab(hash: string): Promise<void> {
+  await openDashboard(hash);
+  if (popupMode) closePopup();
+}
+
+/** Button that opens a dashboard section in a tab (used in popup mode). */
+export function openTabButton(hash: string, label: string): HTMLElement {
+  return h('button', { class: 'btn btn--secondary btn--sm', attrs: { type: 'button', 'data-open-tab': hash }, on: { click: () => void openInTab(hash) } }, icon('openTab', 14), label);
 }
 
 /** Append children, skipping null/false (Element.append would render "null"). */
@@ -27,7 +67,8 @@ export function pageHead(title: string, lead?: Child, aside?: Child): HTMLElemen
   return h(
     'header',
     { class: 'db-head' },
-    h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: title, attrs: { tabindex: -1 } }), lead ? (typeof lead === 'string' ? h('p', { class: 'db-head__lead', text: lead }) : lead) : null),
+    // The lead stays for screen readers only: the title already says what the page is.
+    h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: title, attrs: { tabindex: -1 } }), lead ? (typeof lead === 'string' ? h('p', { class: 'db-head__lead sr-only', text: lead }) : lead) : null),
     aside ? h('div', { class: 'db-head__aside' }, aside) : null,
   );
 }
@@ -69,7 +110,8 @@ export function settingRow(o: RowOptions): HTMLElement {
       'div',
       { class: 'db-row__text' },
       h('div', { class: 'db-row__label', text: o.label, attrs: { id: o.labelId } }),
-      o.desc ? h('p', { class: 'db-row__desc', text: o.desc, attrs: { id: o.descId } }) : null,
+      // Kept as the control's accessible description, not shown: rows stay one line.
+      o.desc ? h('p', { class: 'db-row__desc sr-only', text: o.desc, attrs: { id: o.descId } }) : null,
     ),
     h('div', { class: 'db-row__ctl' }, o.locked ? lockIcon() : null, o.control),
   );

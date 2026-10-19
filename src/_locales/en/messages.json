@@ -1599,5 +1599,109 @@
   },
   "welcomeTitle": {
     "message": "Welcome to Bastion Shield"
+  },
+  "ctaIncident": {
+    "message": "Cyber incident?"
+  },
+  "popupDataSaved": {
+    "message": "less downloaded"
+  },
+  "popupTimeSaved": {
+    "message": "faster to load"
+  },
+  "popupBlockedShort": {
+    "message": "trackers blocked"
+  },
+  "popupAllSettings": {
+    "message": "All settings"
+  },
+  "popupProtectionOn": {
+    "message": "Protection on"
+  },
+  "popupProtectionOff": {
+    "message": "Protection off"
+  },
+  "popupHosts": {
+    "message": "$P1$ hosts",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupHostsOne": {
+    "message": "$P1$ host",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "unitSeconds": {
+    "message": "s"
+  },
+  "unitMinutes": {
+    "message": "min"
+  },
+  "unitHours": {
+    "message": "h"
+  },
+  "savingsEstimateNote": {
+    "message": "Estimate: blocked requests times the typical size and load time per type (script, image, frame …)."
+  },
+  "navSite": {
+    "message": "This website"
+  },
+  "panelCollapse": {
+    "message": "Collapse"
+  },
+  "panelEditInTab": {
+    "message": "Edit"
+  },
+  "panelOpenInTab": {
+    "message": "Open in tab"
+  },
+  "siteRulesTitle": {
+    "message": "Filter rules that matched"
+  },
+  "siteReport": {
+    "message": "Page not working? Report it"
+  },
+  "setIncidentCta": {
+    "message": "«Cyber incident?» button"
+  },
+  "setIncidentCtaDesc": {
+    "message": "Link to Bastion's emergency contact. When off, only «Bastion Shield» is shown there."
+  },
+  "setBackupInTab": {
+    "message": "Export or import"
+  },
+  "ovPeriodLabel": {
+    "message": "Last $P1$ days",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileBlocked": {
+    "message": "blocked in $P1$ days",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovTileTime": {
+    "message": "less waiting"
+  },
+  "setGroupLanguage": {
+    "message": "Language"
+  },
+  "setLanguage": {
+    "message": "Interface language"
+  },
+  "setLanguageAuto": {
+    "message": "Same as browser"
   }
 }

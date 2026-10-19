@@ -259,6 +259,10 @@ export interface Settings {
     badge: boolean;
     /** Record live per-tab activity (webRequest observers). Default true. */
     activityLog: boolean;
+    /** «Cyber-Vorfall?» button (link to bastionsecurity.ch) in popup and navigation. Default true. */
+    incidentCta: boolean;
+    /** UI language: 'de' | 'en' | 'fr' | 'it', or 'auto' (browser language). Default 'de'. */
+    language: 'auto' | 'de' | 'en' | 'fr' | 'it';
   };
   history: {
     /** Persist blocking history (IndexedDB, local only). Default true. */
@@ -318,6 +322,8 @@ export interface ManagedPolicy {
   disablePrivacySandboxAds?: boolean;
   showBadge?: boolean;
   activityLog?: boolean;
+  /** «Cyber-Vorfall?» button in popup and navigation. Default true. */
+  showIncidentCta?: boolean;
   historyEnabled?: boolean;
   historyRetentionDays?: number;
   /**
@@ -476,6 +482,8 @@ export interface PopupState {
   /** siteToggle: protection switch locked; mode: blocking mode locked by policy (e.g. aggressiveSites); settings: lockSettings. */
   locks: { siteToggle: boolean; mode: boolean; settings: boolean };
   managed: { organizationName?: string; reportBrokenSite: 'github' | 'email' | 'none'; supportEmail?: string; supportUrl?: string };
+  /** Show the «Cyber-Vorfall?» button (settings ui.incidentCta). */
+  incidentCta: boolean;
   version: string;
 }
 

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { MsgBlockedInfoResponse } from '../shared/types.ts';
-import { t, translate } from '../ui/shared/i18n.ts';
+import { initI18n, t, translate } from '../ui/shared/i18n.ts';
 import { hydrateIcons, icon } from '../ui/shared/icons.ts';
 import { call } from '../ui/shared/messaging.ts';
 
@@ -46,6 +46,7 @@ async function goBack(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  await initI18n();
   translate();
   hydrateIcons();
 

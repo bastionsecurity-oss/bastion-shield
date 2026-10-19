@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
-  Bastion Shield — dashboard (options page). Left navigation with deep links
-  (#overview, #activity, #lists, #filters, #sites, #privacy, #settings,
-  #about, #welcome); dashboard.ts renders the selected view into #db-view.
+  Bastion Shield — dashboard (options page, opens in a tab). Left navigation
+  with deep links (#overview, #activity, #lists, #filters, #sites, #privacy,
+  #settings, #about, #welcome); dashboard.ts renders the selected view into
+  #db-view. The expanded popup (panel.html) is the same app in popup mode.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <html lang="de">
@@ -22,20 +23,19 @@
   <a class="db-skip" href="#db-main" data-i18n="dashSkipToContent">Zum Inhalt springen</a>
   <div class="db-shell">
     <nav class="db-nav" data-i18n-aria-label="dashNavLabel" aria-label="Bereiche">
-      <a class="db-nav__brand" href="#overview">
+      <a class="db-nav__top db-nav__brand" href="#overview">
         <span data-mark data-mark-size="26" id="db-mark"></span>
         <span class="db-nav__word" data-i18n="extName">Bastion Shield</span>
       </a>
-      <div class="db-nav__status" id="db-status" aria-live="polite"></div>
       <ul class="db-nav__list">
-        <li><a class="db-nav__link" href="#overview" data-view="overview"><span data-icon="overview"></span><span data-i18n="navOverview">Übersicht</span></a></li>
-        <li><a class="db-nav__link" href="#activity" data-view="activity"><span data-icon="activity"></span><span data-i18n="navActivity">Aktivität</span></a></li>
-        <li><a class="db-nav__link" href="#lists" data-view="lists"><span data-icon="lists"></span><span data-i18n="navLists">Filterlisten</span></a></li>
-        <li><a class="db-nav__link" href="#filters" data-view="filters"><span data-icon="filters"></span><span data-i18n="navFilters">Eigene Filter</span></a></li>
-        <li><a class="db-nav__link" href="#sites" data-view="sites"><span data-icon="sites"></span><span data-i18n="navSites">Website-Ausnahmen</span></a></li>
-        <li><a class="db-nav__link" href="#privacy" data-view="privacy"><span data-icon="privacy"></span><span data-i18n="navPrivacy">Datenschutz</span></a></li>
-        <li><a class="db-nav__link" href="#settings" data-view="settings"><span data-icon="settings"></span><span data-i18n="navSettings">Einstellungen</span></a></li>
-        <li><a class="db-nav__link" href="#about" data-view="about"><span data-icon="about"></span><span data-i18n="navAbout">Über</span></a></li>
+        <li><a class="db-nav__link" href="#overview" data-view="overview"><span class="db-nav__tile db-nav__tile--2"><span data-icon="overview"></span></span><span data-i18n="navOverview">Übersicht</span></a></li>
+        <li class="db-nav__group-end"><a class="db-nav__link" href="#activity" data-view="activity"><span class="db-nav__tile db-nav__tile--2"><span data-icon="activity"></span></span><span data-i18n="navActivity">Aktivität</span></a></li>
+        <li><a class="db-nav__link" href="#lists" data-view="lists"><span class="db-nav__tile db-nav__tile--3"><span data-icon="lists"></span></span><span data-i18n="navLists">Filterlisten</span></a></li>
+        <li><a class="db-nav__link" href="#filters" data-view="filters"><span class="db-nav__tile db-nav__tile--3"><span data-icon="filters"></span></span><span data-i18n="navFilters">Eigene Filter</span></a></li>
+        <li class="db-nav__group-end"><a class="db-nav__link" href="#sites" data-view="sites"><span class="db-nav__tile db-nav__tile--3"><span data-icon="privacy"></span></span><span data-i18n="navSites">Website-Ausnahmen</span></a></li>
+        <li><a class="db-nav__link" href="#privacy" data-view="privacy"><span class="db-nav__tile db-nav__tile--4"><span data-icon="lock"></span></span><span data-i18n="navPrivacy">Datenschutz</span></a></li>
+        <li><a class="db-nav__link" href="#settings" data-view="settings"><span class="db-nav__tile db-nav__tile--4"><span data-icon="settings"></span></span><span data-i18n="navSettings">Einstellungen</span></a></li>
+        <li><a class="db-nav__link" href="#about" data-view="about"><span class="db-nav__tile db-nav__tile--4"><span data-icon="about"></span></span><span data-i18n="navAbout">Über</span></a></li>
       </ul>
       <div class="db-nav__foot" id="db-nav-foot"></div>
     </nav>

@@ -2,10 +2,12 @@
  * Bastion Shield — shared design tokens, self-hosted fonts and the small set
  * of controls used by the popup, the dashboard and the extension pages.
  * Brand reference: Bastion GmbH STYLEGUIDE.md (Gletscher palette, Inter Tight
- * display, Inter text, IBM Plex Mono labels, 2px radius only).
+ * display, Inter text). Product UI uses rounded, concentric shapes: pill
+ * controls, 10px fields, 20px grouped surfaces.
  *
  * Hard rule: Bundesrot is reserved for incident CTAs. In this UI it appears
- * only inside the logo mark (--mark-diamond). Never use it for status.
+ * only inside the logo mark (--mark-diamond) and on the «Cyber-Vorfall?»
+ * button (--cta). Never use it for status.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -73,12 +75,18 @@
   --tracking-display: -0.028em;
   --tracking-heading: -0.018em;
   --tracking-mono: 0.1em;
-  --radius: 2px;
+  --radius: 10px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --dur-fast: 120ms;
   --dur: 200ms;
+  /* Damped spring (response 0.42 s, damping 0.86; about 0.5 % overshoot), like
+   * SwiftUI's «snappy»: used for the compact <-> expanded popup morph. */
+  --ease-spring: linear(0, 0.038, 0.127, 0.241, 0.362, 0.479, 0.584, 0.677, 0.754, 0.818, 0.868, 0.908, 0.938, 0.960, 0.976, 0.987, 0.995, 1, 1.003, 1.004, 1.005, 1.005, 1.005, 1.004, 1);
+  --dur-morph: 480ms;
 
   /* Semantic colours — light (default) */
   color-scheme: light dark;
@@ -108,6 +116,16 @@
   --mark-diamond: var(--color-bundesrot);
   --mark-off: var(--color-nebel);
   --scrim: color-mix(in srgb, var(--color-gletscher-nacht) 45%, transparent);
+  /* Grouped surfaces (settings groups, tiles, sidebar) and their row separators. */
+  --surface: #F2F4F5;
+  --surface-sep: var(--color-eis);
+  /* Off switch track: >= 3:1 against --surface and --bg (WCAG 1.4.11). */
+  --track-off: #8E9A9F;
+  --knob: var(--color-weiss);
+  /* Incident CTA («Cyber-Vorfall?»), the only Bundesrot outside the mark. */
+  --cta: var(--color-bundesrot);
+  --cta-hover: #C02417;
+  --on-cta: var(--color-weiss);
 }
 
 /* Dark: Gletscher-Nacht surfaces with Weiss / Nebel ink. */
@@ -137,6 +155,12 @@
     --mark-diamond: var(--color-bundesrot-nacht);
     --mark-off: color-mix(in srgb, var(--color-nebel) 70%, var(--color-gletscher-nacht));
     --scrim: color-mix(in srgb, var(--color-nacht) 70%, transparent);
+    --surface: color-mix(in srgb, var(--color-weiss) 6%, var(--color-gletscher-nacht));
+    --surface-sep: color-mix(in srgb, var(--color-weiss) 8%, transparent);
+    --track-off: color-mix(in srgb, var(--color-nebel) 45%, var(--color-gletscher-nacht));
+    --knob: var(--color-weiss);
+    --cta: var(--color-bundesrot-nacht);
+    --cta-hover: #F04A3F;
   }
 }
 
@@ -175,7 +199,33 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 :focus { outline: none; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius); }
 
+/* ------------------------------------------------- Page morph (popup) --
+ * Compact popup <-> expanded popup are two documents in the same popup
+ * window. Cross-document view transitions keep shared elements (tiles, gear /
+ * collapse, CTA) continuous: they move and resize on a spring while everything
+ * else cross-fades. Pairs are named in popup.css and dashboard.css. */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: var(--dur-morph); animation-timing-function: var(--ease-spring); }
+/* Old and new snapshots keep their own aspect ratio while the group resizes:
+ * a quick cross-fade instead of a stretched image. */
+::view-transition-old(*), ::view-transition-new(*) { height: 100%; object-fit: cover; object-position: left top; }
+::view-transition-old(*) { animation: vt-fade-out 160ms var(--ease) both; }
+::view-transition-new(*) { animation: vt-fade-in 280ms var(--ease) 60ms both; }
+::view-transition-old(root) { animation: vt-fade-out 180ms var(--ease) both; }
+::view-transition-new(root) { animation: vt-fade-in 260ms var(--ease) 80ms both; }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
+/* The sidebar has no counterpart in the compact popup: it slides in and out. */
+::view-transition-new(bx-nav):only-child { animation: vt-slide-in var(--dur-morph) var(--ease-spring) both; }
+::view-transition-old(bx-nav):only-child { animation: vt-slide-out 200ms var(--ease) both; }
+@keyframes vt-slide-in { from { opacity: 0; transform: translateX(-40px); } }
+@keyframes vt-slide-out { to { opacity: 0; transform: translateX(-40px); } }
+/* Rows of «Diese Website» without a counterpart rise in after the tiles. */
+::view-transition-new(bx-more):only-child { animation: vt-rise 360ms var(--ease-spring) 90ms both; }
+@keyframes vt-rise { from { opacity: 0; transform: translateY(12px); } }
+
 @media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -195,30 +245,28 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 .mono { font-family: var(--font-mono); font-feature-settings: "zero" 0; }
 .num { font-variant-numeric: tabular-nums; }
 .mono-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-mono-xs);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
   font-weight: 500;
-  letter-spacing: var(--tracking-mono);
-  text-transform: uppercase;
+  letter-spacing: 0;
   line-height: 16px;
 }
 
-/* Eyebrow: crosshair tick + mono caps, the brand's section marker. */
+/* Group label above a set of rows: sentence case, quiet, no ornament. */
 .eyebrow {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
   color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-mono-xs);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
   font-weight: 500;
-  letter-spacing: var(--tracking-mono);
-  text-transform: uppercase;
-  line-height: 16px;
+  letter-spacing: 0;
+  line-height: 18px;
 }
-.eyebrow__tick { width: 11px; height: 11px; color: inherit; }
-.eyebrow__aside { margin-left: auto; letter-spacing: 0.04em; text-transform: none; font-weight: 400; }
+.eyebrow__tick { display: none; }
+.eyebrow__aside { margin-left: auto; font-weight: 400; }
 
 /* ------------------------------------------------------------ Logo mark -- */
 .mark { display: block; }
@@ -232,10 +280,10 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 34px;
-  padding: 7px 14px;
+  min-height: 36px;
+  padding: 7px 16px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   background: transparent;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
@@ -244,20 +292,40 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   letter-spacing: -0.005em;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 .btn svg { width: 15px; height: 15px; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
 .btn--primary { background: var(--accent); color: var(--on-accent); }
 .btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
-.btn--secondary { border-color: var(--line-strong); color: var(--text-strong); background: var(--bg-raised); }
-.btn--secondary:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--text-2); }
-.btn--ghost { color: var(--text-strong); padding-inline: 8px; }
+.btn--secondary { color: var(--text-strong); background: var(--surface); }
+.btn--secondary:hover:not(:disabled) { background: var(--bg-cool); }
+.btn--ghost { color: var(--text-strong); padding-inline: 10px; }
 .btn--ghost:hover:not(:disabled) { background: var(--bg-hover); }
-.btn--sm { min-height: 28px; padding: 4px 10px; font-size: var(--text-xs); }
+.btn--sm { min-height: 30px; padding: 4px 12px; font-size: var(--text-xs); }
 .btn--block { width: 100%; }
 .btn:disabled { opacity: 0.5; }
 
-/* Mono "link button" used for quiet actions (e.g. «Alle anzeigen»). */
+/* Incident CTA («Cyber-Vorfall?» -> bastionsecurity.ch). The only Bundesrot button. */
+.btn--cta { background: var(--cta); color: var(--on-cta); }
+.btn--cta:hover:not(:disabled) { background: var(--cta-hover); }
+.btn--cta:focus-visible { outline-color: var(--cta); }
+
+/* Stands in for the CTA when ui.incidentCta is off: mark + product name. */
+.brand-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  color: var(--text-strong);
+  font-family: var(--font-brand);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+/* Quiet text action (e.g. «Alle anzeigen»). */
 .link-btn {
   display: inline-flex;
   align-items: center;
@@ -265,15 +333,13 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   padding: 2px 0;
   border: 0;
   background: none;
-  color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-mono-xs);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: var(--text-strong);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
   text-decoration: none;
 }
-.link-btn:hover { color: var(--text-strong); }
+.link-btn:hover { text-decoration: underline; text-underline-offset: 3px; }
 .link-btn svg { width: 12px; height: 12px; }
 
 /* Organisation name linked to the managed support page (popup header, dashboard nav). */
@@ -281,56 +347,54 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 .org-link:hover, .org-link:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------------------------------------------------------------- Switch --
- * <button role="switch" aria-checked>. Off = outlined track with a Fels knob
- * (>= 3:1 boundary); on = filled Schiefer track with a white knob. Square
- * track (2px) and knob (1px) per the brand rule: 2px is the only radius. */
+ * <button role="switch" aria-checked>. Pill track with a round knob. Off =
+ * --track-off (>= 3:1 against its surface), on = --switch-on. */
 .switch {
   position: relative;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  width: 38px;
-  height: 22px;
+  width: 44px;
+  height: 26px;
   padding: 0;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: transparent;
-  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--track-off);
+  transition: background-color var(--dur) var(--ease);
 }
 .switch::after {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 14px;
-  height: 14px;
-  border-radius: 1px;
-  background: var(--text-2);
-  transition: transform var(--dur) var(--ease), background-color var(--dur) var(--ease);
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--knob);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-nacht) 25%, transparent);
+  transition: transform var(--dur) var(--ease);
 }
-.switch[aria-checked="true"] { background: var(--switch-on); border-color: var(--switch-on); }
-.switch[aria-checked="true"]::after { transform: translateX(16px); background: var(--bg); }
-.switch:hover:not(:disabled):not([aria-checked="true"]) { background: var(--bg-hover); }
+.switch[aria-checked="true"] { background: var(--switch-on); }
+.switch[aria-checked="true"]::after { transform: translateX(18px); background: var(--bg); }
 .switch:disabled { opacity: 0.45; }
-.switch:focus-visible { border-radius: var(--radius); }
-.switch--lg { width: 46px; height: 26px; border-radius: var(--radius); }
-.switch--lg::after { width: 18px; height: 18px; }
+.switch:focus-visible { border-radius: var(--radius-pill); }
+.switch--lg { width: 51px; height: 31px; }
+.switch--lg::after { width: 27px; height: 27px; }
 .switch--lg[aria-checked="true"]::after { transform: translateX(20px); }
-.switch--lg:focus-visible { border-radius: var(--radius); }
 
 /* ------------------------------------------------------ Segmented control -- */
 .seg {
   display: inline-flex;
-  padding: 2px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--bg-raised);
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-cool);
 }
 .seg__opt {
-  min-height: 26px;
-  padding: 3px 11px;
+  min-height: 28px;
+  padding: 4px 14px;
   border: 0;
-  border-radius: 1px;
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--text-2);
   font-size: var(--text-xs);
@@ -339,17 +403,17 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   white-space: nowrap;
   transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.seg__opt:hover:not([aria-checked="true"]):not(:disabled) { color: var(--text-strong); background: var(--bg-hover); }
+.seg__opt:hover:not([aria-checked="true"]):not(:disabled) { color: var(--text-strong); }
 .seg__opt[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
-.seg__opt:focus-visible { outline-offset: 0; }
+.seg__opt:focus-visible { outline-offset: 0; border-radius: var(--radius-pill); }
 .seg[aria-disabled="true"] { opacity: 0.5; }
 .seg--block { display: flex; }
 .seg--block .seg__opt { flex: 1 1 0; }
 
 /* ------------------------------------------------------- Inputs & select -- */
 .input, .select {
-  min-height: 34px;
-  padding: 6px 10px;
+  min-height: 36px;
+  padding: 7px 12px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--bg-raised);
@@ -386,11 +450,9 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--text-strong);
-  border-radius: var(--radius);
-  background: var(--bg-quiet);
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
   color: var(--text);
   font-size: var(--text-sm);
   line-height: 19px;
@@ -398,21 +460,21 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 .notice svg { width: 16px; height: 16px; margin-top: 1px; color: var(--text-strong); }
 .notice__title { font-weight: 600; color: var(--text-strong); }
 .notice__body { color: var(--text-2); }
-.notice--quiet { border-left-width: 1px; border-left-color: var(--line); }
+.notice--quiet { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 
 /* --------------------------------------------------------------- Dialog -- */
 .dialog {
   width: min(520px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 0;
+  border-radius: var(--radius-lg);
   background: var(--bg);
   color: var(--text);
   box-shadow: 0 24px 64px -24px color-mix(in srgb, var(--color-nacht) 45%, transparent);
 }
 .dialog::backdrop { background: var(--scrim); }
-.dialog__body { display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+.dialog__body { display: flex; flex-direction: column; gap: 14px; padding: 22px 22px 8px; }
 .dialog__title { font-size: 18px; line-height: 24px; }
 .dialog__text { color: var(--text-2); font-size: var(--text-sm); line-height: 20px; }
 .dialog__actions {
@@ -420,9 +482,7 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
-  padding: 12px 20px;
-  border-top: 1px solid var(--line);
-  background: var(--bg-quiet);
+  padding: 14px 22px 18px;
 }
 
 /* Key/value list used for "what will be shared" and the About page. */
@@ -440,8 +500,8 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
   align-items: center;
   gap: 10px;
   max-width: calc(100vw - 32px);
-  padding: 9px 14px;
-  border-radius: var(--radius);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent);
   font-size: var(--text-sm);

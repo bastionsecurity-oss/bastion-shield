@@ -412,7 +412,7 @@ The badge colour is Schiefer (#2A3134) with white text. Tabs with protection off
 
 | Policy | Locked |
 |---|---|
-| a key that maps to a setting (`gpc`, `defaultMode`, `showBadge`, …) | that path: `defaultMode`, `privacy.<key>`, `ui.badge`, `ui.activityLog`, `history.enabled`, `history.retentionDays` |
+| a key that maps to a setting (`gpc`, `defaultMode`, `showBadge`, …) | that path: `defaultMode`, `privacy.<key>`, `ui.badge`, `ui.activityLog`, `ui.incidentCta`, `history.enabled`, `history.retentionDays` |
 | `lists: {id: bool}` | `lists.<id>` |
 | catalog `locked: true` | `lists.<id>` |
 | `lockLists: true` | pseudo-path `lists` plus every `lists.<id>`; lists not named in `lists` use their catalog default |
@@ -523,6 +523,7 @@ Because the RE2 limit can only be checked in a browser, CI and the release build
 - `storage.managed_schema: "managed_schema.json"`.
 - `web_accessible_resources`: `pages/blocked.html`, `pages/bounce.html` and the used redirect resources, with `matches:["<all_urls>"]`, `use_dynamic_url: true`.
 - `action.default_popup: ui/popup.html`, `options_page: ui/dashboard.html`.
+- The gear in the compact popup navigates the same popup to `ui/panel.html?tabId=<n>#site` (760×560): the dashboard app in popup mode (`body.db--popup`) with «Diese Website» first. Sections where closing the popup would lose work (Eigene Filter, adding or importing site exceptions, backup files, the licence table) open `ui/dashboard.html` in a tab instead.
 
 **Limitation of `use_dynamic_url`.** It only stops direct probing: a page cannot fetch `chrome-extension://<static id>/war/noop.js` or frame our pages, and `chrome.runtime.getURL()` returns the dynamic id used for the bounce and blocked pages. DNR redirects with `extensionPath` resolve to the **static** id, and for `xmlhttprequest`/`other` resource types the page can read the result: `Response.url` / `XMLHttpRequest.responseURL` show `chrome-extension://<static id>/war/<stub>`. A page can therefore detect Bastion Shield and read its id with one `fetch` of a stubbed script. Script-type redirects (`<script>`) do not expose it. Most of these redirects are compatibility stubs that must succeed (anti-adblock checks), so they are kept; PRIVACY.md states the limitation.
 
@@ -540,4 +541,4 @@ Because the RE2 limit can only be checked in a browser, CI and the release build
   - test subjects (filters, hosts, selectors, scriptlets) are picked from the built `dist/`;
   - covers: clean load and no errors, enabled rulesets and `isRegexSupported`, the content-script budget as registered in Chromium (fewer than 30 registrations and 2,500 match + exclude patterns), blocking and stubs (including a kept third-party redirect copy beating an always-apply block), Standard vs Aggressive, per-site off and on (keyed to the top-level site: a disabled site's embeds stay filtered elsewhere), the strict-block page and proceed (only the blocked host is allowed in that tab), generic/specific/procedural cosmetics, scriptlets, parameter stripping, GPC, fingerprinting, popup (also `?tabId=`) and dashboard, a load-time sanity bound, custom filters (also a `$removeparam` on a same-site request in Standard mode), script blocking, debouncing, and a settings write that wakes a stopped service worker;
   - managed policy (`10-managed.spec.ts`): a test cannot write `chrome.storage.managed`, so this spec stages the build with a test-only service-worker entry (`test/e2e/support/managed.ts`) that serves `storage.managed.get()` from a `storage.session` key and delivers `storage.onChanged(…, 'managed')` to the shipped listeners, as a real policy push does. It covers the kill switch (off everywhere, kept across a worker restart, restored) and `lockSettings` with `lockLists: false` / `allowUserFilters: true`. Product code is unchanged.
-- **`npm run bench`** (`-- --rea` for the REA cross-check). Parity and performance against Brave on real sites: third-party ad/tracker requests that got through, load timings and memory; results in PARITY.md.
+- **`npm run bench`** (`-- --rea` for the REA cross-check). Parity and performance against Brave on real sites (`--browsers chromium,bastion,edge` adds Bastion Shield in the installed Edge): third-party ad/tracker requests that got through, load timings and memory; results in PARITY.md.
