@@ -17,7 +17,6 @@ import { persist } from './privacy.ts';
 import { revealNerd } from '../nerd-reveal.ts';
 import { shortcutLabel } from '../rail.ts';
 import { commandHelp } from '../../popup/commands.ts';
-import { keyboardLayout, localizeShortcut } from '../../shared/shortcuts.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
 
@@ -135,11 +134,10 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
   const bisectKey = h('span', { class: 'nerd-keys__key' }, keyValue());
   const paintKeys = async (): Promise<void> => {
     try {
-      const [commands, layout] = await Promise.all([chrome.commands?.getAll() ?? [], keyboardLayout()]);
-      for (const c of commands) {
+      // As the browser names them (US key positions), matching its own shortcuts page.
+      for (const c of (await chrome.commands?.getAll()) ?? []) {
         const cell = c.name === '_execute_action' ? popupKey : c.name === 'nerd-bisect' ? bisectKey : null;
-        // As printed on the user's keyboard (Swiss: the browser's "Z" is the Y key).
-        if (cell) replace(cell, c.shortcut ? kbd(localizeShortcut(c.shortcut, layout)) : keyValue());
+        if (cell) replace(cell, c.shortcut ? kbd(c.shortcut) : keyValue());
       }
     } catch {
       /* no commands API (tests) */

@@ -23,9 +23,8 @@ short "How to use it" block lists the popup's `Ctrl+K` commands
 decodes like the rest of nerd mode the first time it is opened. The first row,
 "Keyboard shortcuts", shows the popup and bisect shortcuts as Chrome reports
 them ("not set" by default) with a button to the browser's shortcuts page.
-Keys are shown as printed on the user's keyboard (`ui/shared/shortcuts.ts`,
-Keyboard API layout map): the browser names keys by US position, so its
-"Alt+Shift+Z" reads "Alt+Shift+Y" on a Swiss or German keyboard.
+Keys are shown as the browser names them, by US key position, so they match its
+shortcuts page (on a Swiss or German keyboard its "Alt+Shift+Z" is the Y key).
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |
