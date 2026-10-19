@@ -1,18 +1,29 @@
 // Bastion Shield — dashboard «Eigene Filter»: monospace editor with line
 // numbers for the user's own filters (uBO/ABP syntax), apply button, compile
 // report with per-line errors, and the organisation's admin filters shown
-// read-only. Scriptlet filters (+js) need an extension release (MV3 forbids
+// read-only. Below the editor a guided builder writes common filters for
+// people who don't know the syntax; the list exports / imports as a plain .txt
+// filter list. Scriptlet filters (+js) need an extension release (MV3 forbids
 // runtime code), which the page says plainly.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { CustomState } from '../../../shared/types.ts';
-import { h, replace, toast } from '../../shared/dom.ts';
+import { downloadText, h, pickTextFile, replace, toast } from '../../shared/dom.ts';
 import { fmtNumber, plural, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { confirmDialog, lockBadge, notice } from '../../shared/controls.ts';
-import { errorState, pageHead, panel, type View, mount } from '../common.ts';
+import { errorState, nextId, pageHead, panel, type View, mount } from '../common.ts';
 import { getCustom, setCustom } from '../store.ts';
+import { appendLine, BUILDER_ACTIONS, buildFilter, type BuilderAction, type BuilderError, exportText, hasFilter, importedFilters, mergeFilters } from '../filter-builder.ts';
+
+const BUILDER_KEYS: Record<BuilderAction, { label: string; target: string; placeholder: string; hint: string; site: boolean }> = {
+  'block-domain': { label: 'cfBuildBlockDomain', target: 'cfBuildDomain', placeholder: 'ads.example.com', hint: 'cfBuildBlockDomainHint', site: false },
+  'block-script': { label: 'cfBuildBlockScript', target: 'cfBuildScript', placeholder: 'example.com/tracker.js', hint: 'cfBuildBlockScriptHint', site: true },
+  'hide-element': { label: 'cfBuildHide', target: 'cfBuildSelector', placeholder: '.newsletter-popup', hint: 'cfBuildHideHint', site: true },
+  'allow-site': { label: 'cfBuildAllow', target: 'cfBuildSite', placeholder: 'example.com', hint: 'cfBuildAllowHint', site: false },
+};
+const BUILDER_ERRORS: Record<BuilderError, string> = { domain: 'cfBuildErrDomain', script: 'cfBuildErrScript', selector: 'cfBuildErrSelector', site: 'cfBuildErrSite' };
 
 const MAX_CHARS = 2_000_000;
 
@@ -48,6 +59,8 @@ export function filtersView(): View {
       const status = h('span', { class: 'cf-status', attrs: { id: 'cf-status', role: 'status' } });
       const applyBtn = h('button', { class: 'btn btn--primary', attrs: { type: 'button', disabled: true } }, icon('check', 15), t('actionApply'));
       const revertBtn = h('button', { class: 'btn btn--ghost', attrs: { type: 'button', disabled: true }, text: t('cfRevert') });
+      const exportBtn = h('button', { class: 'btn btn--ghost', attrs: { type: 'button' } }, icon('download', 15), t('cfExport'));
+      const importBtn = h('button', { class: 'btn btn--ghost', attrs: { type: 'button', disabled: locked } }, icon('upload', 15), t('cfImport'));
       const reportSlot = h('div', { class: 'cf-report' });
       let errorLines = new Set<number>();
 
@@ -152,6 +165,114 @@ export function filtersView(): View {
         setDirty(false);
       });
 
+      /** New text lands in the editor as an unsaved change; Apply stays the one way to save. */
+      const setEditorText = (text: string): void => {
+        area.value = text;
+        paintGutter();
+        setDirty(area.value !== (state.text ?? ''));
+        area.scrollTop = area.scrollHeight;
+        gutter.scrollTop = area.scrollTop;
+      };
+
+      exportBtn.addEventListener('click', () => {
+        const now = new Date();
+        downloadText(`bastion-shield-filters-${now.toISOString().slice(0, 10)}.txt`, exportText(area.value, now), 'text/plain');
+      });
+      importBtn.addEventListener('click', async () => {
+        if (locked) return;
+        const raw = await pickTextFile('.txt,.json,text/plain,application/json');
+        if (raw === null) return;
+        const filters = importedFilters(raw);
+        if (filters === null) {
+          toast(t('cfImportInvalid'), icon('alert', 15));
+          return;
+        }
+        const merged = mergeFilters(area.value, filters);
+        if (!merged.added) {
+          toast(t('cfImportNothing'), icon('info', 15));
+          return;
+        }
+        if (merged.text.length > MAX_CHARS) {
+          toast(t('cfTooLarge'), icon('alert', 15));
+          return;
+        }
+        setEditorText(merged.text);
+        toast(plural(merged.added, 'cfImportedOne', 'cfImported'), icon('check', 15));
+      });
+
+      // Guided builder: pick what to do, fill in the blank, the line goes into the editor.
+      const actionId = nextId('cfb-action');
+      const targetId = nextId('cfb-target');
+      const siteId = nextId('cfb-site');
+      const previewId = nextId('cfb-preview');
+      const actionSel = h('select', { class: 'select', attrs: { id: actionId, disabled: locked } }, ...BUILDER_ACTIONS.map((a) => h('option', { attrs: { value: a }, text: t(BUILDER_KEYS[a].label) })));
+      const targetLabel = h('label', { class: 'cfb-label', attrs: { for: targetId } });
+      const fieldAttrs = { type: 'text', spellcheck: 'false', autocapitalize: 'off', autocomplete: 'off', disabled: locked };
+      const targetIn = h('input', { class: 'input mono', attrs: { ...fieldAttrs, id: targetId, 'aria-describedby': previewId } });
+      const siteIn = h('input', { class: 'input mono', attrs: { ...fieldAttrs, id: siteId, placeholder: t('cfBuildSiteAny') } });
+      const siteField = h('div', { class: 'cfb-field' }, h('label', { class: 'cfb-label', attrs: { for: siteId }, text: t('cfBuildOnlyOn') }), siteIn);
+      const addBtn = h('button', { class: 'btn btn--secondary', attrs: { type: 'button', disabled: true } }, icon('plus', 15), t('cfBuildAdd'));
+      const hint = h('p', { class: 'cfb-hint' });
+      const preview = h('p', { class: 'cfb-preview', attrs: { id: previewId, 'aria-live': 'polite' } });
+
+      const builderInput = () => ({ action: actionSel.value as BuilderAction, target: targetIn.value, site: siteIn.value });
+      const paintBuilder = (): void => {
+        const keys = BUILDER_KEYS[actionSel.value as BuilderAction];
+        targetLabel.textContent = t(keys.target);
+        targetIn.placeholder = keys.placeholder;
+        siteField.hidden = !keys.site;
+        hint.textContent = t(keys.hint);
+        if (!targetIn.value.trim()) {
+          addBtn.disabled = true;
+          replace(preview);
+          return;
+        }
+        const res = buildFilter(builderInput());
+        addBtn.disabled = locked || !res.ok;
+        if (res.ok) replace(preview, h('span', { class: 'cfb-preview__label', text: t('cfBuildPreview') }), h('code', { text: res.filter }));
+        else replace(preview, h('span', { class: 'cfb-preview__err' }, icon('alert', 13), t(BUILDER_ERRORS[res.error])));
+      };
+      const addFilter = (): void => {
+        const res = buildFilter(builderInput());
+        if (!res.ok || locked) return;
+        if (hasFilter(area.value, res.filter)) {
+          toast(t('cfBuildDuplicate'), icon('info', 15));
+          return;
+        }
+        setEditorText(appendLine(area.value, res.filter));
+        status.textContent = t('cfBuildAdded');
+        targetIn.value = '';
+        paintBuilder();
+        targetIn.focus();
+      };
+      actionSel.addEventListener('change', paintBuilder);
+      targetIn.addEventListener('input', paintBuilder);
+      siteIn.addEventListener('input', paintBuilder);
+      for (const el of [targetIn, siteIn]) {
+        el.addEventListener('keydown', (ev) => {
+          if (ev.key !== 'Enter') return;
+          ev.preventDefault();
+          addFilter();
+        });
+      }
+      addBtn.addEventListener('click', addFilter);
+      paintBuilder();
+
+      const builder = panel(
+        { title: t('cfBuildTitle'), aside: locked ? lockBadge() : null, class: 'cfb' },
+        h('p', { class: 'db-muted cfb-lead', text: t('cfBuildLead') }),
+        h(
+          'div',
+          { class: 'cfb-row' },
+          h('div', { class: 'cfb-field' }, h('label', { class: 'cfb-label', attrs: { for: actionId }, text: t('cfBuildAction') }), actionSel),
+          h('div', { class: 'cfb-field cfb-field--grow' }, targetLabel, targetIn),
+          siteField,
+          addBtn,
+        ),
+        hint,
+        preview,
+      );
+
       window.addEventListener('beforeunload', beforeUnload);
 
       const editor = h('div', { class: `cf-editor${locked ? ' cf-editor--locked' : ''}` }, gutter, area);
@@ -166,7 +287,8 @@ export function filtersView(): View {
           h(
             'div',
             { class: 'cf-main' },
-            panel({ title: t('cfEditorTitle'), aside: locked ? lockBadge() : null, flush: true, class: 'cf-panel' }, editor, h('div', { class: 'cf-actions' }, applyBtn, revertBtn, status)),
+            panel({ title: t('cfEditorTitle'), aside: locked ? lockBadge() : null, flush: true, class: 'cf-panel' }, editor, h('div', { class: 'cf-actions' }, applyBtn, revertBtn, status, h('span', { class: 'cf-actions__file' }, importBtn, exportBtn))),
+            builder,
             admin.length
               ? panel(
                   { title: t('cfAdminTitle'), aside: lockBadge(), class: 'cf-admin' },

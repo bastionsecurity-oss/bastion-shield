@@ -2811,5 +2811,108 @@
   },
   "cmdkHintClose": {
     "message": "fermer"
+  },
+  "cfExport": {
+    "message": "Exporter"
+  },
+  "cfImport": {
+    "message": "Importer"
+  },
+  "cfImportInvalid": {
+    "message": "Ce fichier n’est ni une liste de filtres (.txt) ni une sauvegarde Bastion Shield."
+  },
+  "cfImportNothing": {
+    "message": "Rien de nouveau : tous les filtres de ce fichier sont déjà là."
+  },
+  "cfImported": {
+    "message": "$P1$ filtres ajoutés. Cliquez sur Appliquer pour les activer.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfImportedOne": {
+    "message": "$P1$ filtre ajouté. Cliquez sur Appliquer pour l’activer.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfBuildTitle": {
+    "message": "Créateur de filtres"
+  },
+  "cfBuildLead": {
+    "message": "Vous ne connaissez pas la syntaxe ? Choisissez l’action, remplissez le champ, et le filtre est ajouté à l’éditeur ci-dessus."
+  },
+  "cfBuildAction": {
+    "message": "Je veux"
+  },
+  "cfBuildBlockDomain": {
+    "message": "Bloquer un domaine"
+  },
+  "cfBuildBlockScript": {
+    "message": "Bloquer un script"
+  },
+  "cfBuildHide": {
+    "message": "Masquer un élément"
+  },
+  "cfBuildAllow": {
+    "message": "Désactiver le filtrage sur un site"
+  },
+  "cfBuildDomain": {
+    "message": "Domaine"
+  },
+  "cfBuildScript": {
+    "message": "Adresse du script ou domaine"
+  },
+  "cfBuildSelector": {
+    "message": "Élément (sélecteur CSS)"
+  },
+  "cfBuildSite": {
+    "message": "Site"
+  },
+  "cfBuildOnlyOn": {
+    "message": "Seulement sur le site (facultatif)"
+  },
+  "cfBuildSiteAny": {
+    "message": "Tous les sites"
+  },
+  "cfBuildAdd": {
+    "message": "Ajouter à l’éditeur"
+  },
+  "cfBuildPreview": {
+    "message": "Filtre :"
+  },
+  "cfBuildAdded": {
+    "message": "Filtre ajouté – cliquez sur Appliquer pour l’activer."
+  },
+  "cfBuildDuplicate": {
+    "message": "Ce filtre est déjà dans votre liste."
+  },
+  "cfBuildBlockDomainHint": {
+    "message": "Bloque toutes les requêtes vers ce domaine et ses sous-domaines, sur tous les sites."
+  },
+  "cfBuildBlockScriptHint": {
+    "message": "Collez l’adresse du script (p. ex. depuis le journal d’activité), ou seulement un domaine pour bloquer tous ses scripts."
+  },
+  "cfBuildHideHint": {
+    "message": "Clic droit sur l’élément › Inspecter pour trouver sa classe (.nom) ou son id (#nom). Sans site, il est masqué partout."
+  },
+  "cfBuildAllowHint": {
+    "message": "Plus rien n’est bloqué ni masqué sur ce site, comme si Bastion Shield y était en pause."
+  },
+  "cfBuildErrDomain": {
+    "message": "Saisissez un domaine comme example.com."
+  },
+  "cfBuildErrScript": {
+    "message": "Saisissez une adresse de script comme example.com/tracker.js."
+  },
+  "cfBuildErrSelector": {
+    "message": "Saisissez un sélecteur CSS comme .banner ou #popup."
+  },
+  "cfBuildErrSite": {
+    "message": "Le site doit être un domaine comme example.com, ou rester vide."
   }
 }

@@ -2811,5 +2811,108 @@
   },
   "cmdkHintClose": {
     "message": "close"
+  },
+  "cfExport": {
+    "message": "Export"
+  },
+  "cfImport": {
+    "message": "Import"
+  },
+  "cfImportInvalid": {
+    "message": "That file isn’t a filter list (.txt) or a Bastion Shield backup."
+  },
+  "cfImportNothing": {
+    "message": "Nothing new: all filters in that file are already here."
+  },
+  "cfImported": {
+    "message": "$P1$ filters added. Click Apply to use them.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfImportedOne": {
+    "message": "$P1$ filter added. Click Apply to use it.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfBuildTitle": {
+    "message": "Filter builder"
+  },
+  "cfBuildLead": {
+    "message": "Don’t know the syntax? Pick what you want, fill in the blank, and the filter is added to the editor above."
+  },
+  "cfBuildAction": {
+    "message": "I want to"
+  },
+  "cfBuildBlockDomain": {
+    "message": "Block a domain"
+  },
+  "cfBuildBlockScript": {
+    "message": "Block a script"
+  },
+  "cfBuildHide": {
+    "message": "Hide an element"
+  },
+  "cfBuildAllow": {
+    "message": "Turn off filtering on a site"
+  },
+  "cfBuildDomain": {
+    "message": "Domain"
+  },
+  "cfBuildScript": {
+    "message": "Script address or domain"
+  },
+  "cfBuildSelector": {
+    "message": "Element (CSS selector)"
+  },
+  "cfBuildSite": {
+    "message": "Site"
+  },
+  "cfBuildOnlyOn": {
+    "message": "Only on site (optional)"
+  },
+  "cfBuildSiteAny": {
+    "message": "All sites"
+  },
+  "cfBuildAdd": {
+    "message": "Add to editor"
+  },
+  "cfBuildPreview": {
+    "message": "Filter:"
+  },
+  "cfBuildAdded": {
+    "message": "Filter added – click Apply to use it."
+  },
+  "cfBuildDuplicate": {
+    "message": "That filter is already in your list."
+  },
+  "cfBuildBlockDomainHint": {
+    "message": "Blocks every request to this domain and its subdomains, on all sites."
+  },
+  "cfBuildBlockScriptHint": {
+    "message": "Paste the script’s address (e.g. from the Activity log), or just a domain to block all its scripts."
+  },
+  "cfBuildHideHint": {
+    "message": "Right-click the element › Inspect to find its class (.name) or id (#name). Leave the site empty to hide it everywhere."
+  },
+  "cfBuildAllowHint": {
+    "message": "Nothing is blocked or hidden on this site any more, like pausing Bastion Shield there."
+  },
+  "cfBuildErrDomain": {
+    "message": "Enter a domain like example.com."
+  },
+  "cfBuildErrScript": {
+    "message": "Enter a script address like example.com/tracker.js."
+  },
+  "cfBuildErrSelector": {
+    "message": "Enter a CSS selector like .banner or #popup."
+  },
+  "cfBuildErrSite": {
+    "message": "The site must be a domain like example.com, or left empty."
   }
 }
