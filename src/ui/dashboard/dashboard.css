@@ -517,9 +517,9 @@ body[data-site="off"] .site-tiles { opacity: 0.55; }
 /* --------------------------------------------------------------- Filters -- */
 .cf-layout { display: grid; grid-template-columns: 1fr; gap: 0 18px; align-items: start; }
 @media (min-width: 1200px) { .cf-layout { grid-template-columns: minmax(0, 1fr) 340px; } }
-.cf-panel { margin-top: 18px; overflow: hidden; }
+.cf-panel { margin-top: 18px; }
 .cf-panel.db-panel--flush > :not(.db-panel__head) { background: var(--surface); }
-.cf-editor { display: grid; grid-template-columns: auto minmax(0, 1fr); height: 440px; }
+.cf-editor { display: grid; grid-template-columns: auto minmax(0, 1fr); height: 440px; overflow: hidden; }
 .cf-gutter {
   margin: 0;
   min-width: 52px;
