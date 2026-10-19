@@ -629,7 +629,7 @@
     "message": "Website"
   },
   "listsLead": {
-    "message": "Bastion Shield uses the same lists as Brave Shields. They are updated with every release of the extension. You can turn lists off, but rarely need to."
+    "message": "Bastion Shield combines well-known filter lists such as EasyList, EasyPrivacy and uBlock filters with its own. They are updated with every release of the extension. You can turn lists off, but rarely need to."
   },
   "listsLicence": {
     "message": "Licence"
@@ -1636,7 +1636,7 @@
     "message": "Nothing leaves your device"
   },
   "welcomeOnText": {
-    "message": "The same filter lists as Brave Shields, plus protection against fingerprinting and tracking redirects."
+    "message": "Blocks ads and trackers with every list under «Filter lists», plus protection against fingerprinting and tracking redirects."
   },
   "welcomeOnTitle": {
     "message": "Already on"

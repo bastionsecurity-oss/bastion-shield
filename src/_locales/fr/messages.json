@@ -629,7 +629,7 @@
     "message": "Site web"
   },
   "listsLead": {
-    "message": "Bastion Shield utilise les mêmes listes que Brave Shields. Elles sont mises à jour à chaque version de l’extension. Les désactiver est possible, mais rarement utile."
+    "message": "Bastion Shield combine des listes de filtres reconnues comme EasyList, EasyPrivacy et les filtres uBlock avec les siennes. Elles sont mises à jour à chaque version de l’extension. Les désactiver est possible, mais rarement utile."
   },
   "listsLicence": {
     "message": "Licence"
@@ -1636,7 +1636,7 @@
     "message": "Rien ne quitte votre appareil"
   },
   "welcomeOnText": {
-    "message": "Les mêmes listes de filtres que Brave Shields, avec en plus une protection contre l’empreinte et les redirections de pistage."
+    "message": "Bloque publicités et traqueurs avec toutes les listes sous «Listes de filtres», avec en plus une protection contre l’empreinte et les redirections de pistage."
   },
   "welcomeOnTitle": {
     "message": "Déjà actif"
