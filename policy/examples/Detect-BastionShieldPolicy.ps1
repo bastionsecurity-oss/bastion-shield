@@ -126,6 +126,7 @@ $PolicySchema = [ordered]@{
     customFilters            = 'string[]'
     allowUserSiteToggle      = 'bool'
     allowUserFilters         = 'bool'
+    allowCustomLists         = 'bool'
     lockSettings             = 'bool'
     gpc                      = 'bool'
     stripParams              = 'bool'

@@ -14,10 +14,27 @@ import type { CustomCosmetic } from './cosmetic.ts';
 import * as log from './log.ts';
 import { errMsg } from './util.ts';
 
+/** One imported list ("My lists"), compiled. */
+export interface MyListCompiled {
+  id: string;
+  /** Rule-id slot (RULE_ID.MY_LISTS_START + slot × MY_LISTS.SLOT_SIZE). */
+  slot: number;
+  compiled: CompiledCustom;
+}
+
+/** An imported list to compile; `key` changes whenever its text does (cache key). */
+export interface MyListInput {
+  id: string;
+  slot: number;
+  text: string;
+}
+
 export interface CustomCompiled {
   user: CompiledCustom;
   admin: CompiledCustom;
-  /** user + admin cosmetic filters. */
+  /** Enabled imported lists, in slot order (empty when policy forbids them). */
+  my: MyListCompiled[];
+  /** user + admin + imported-list cosmetic filters. */
   cosmetic: CustomCosmetic;
   /** Hosts with generichide/elemhide from custom filters (excluded from generic-high CSS). */
   genericHideHosts: string[];
@@ -57,17 +74,34 @@ function compileOne(text: string, listId: string, meta: BuildMeta | null): Compi
   }
 }
 
-export function compileAllCustom(userText: string, adminLines: readonly string[], meta: BuildMeta | null): CustomCompiled {
+/**
+ * Imported lists can be megabytes; recompiling all of them whenever the user
+ * edits one filter would stall the worker. Results are kept per list id and
+ * text (the text is compared, not hashed: it is in memory anyway).
+ */
+const myCache = new Map<string, { text: string; meta: BuildMeta | null; compiled: CompiledCustom }>();
+
+function compileMyList(l: MyListInput, meta: BuildMeta | null): CompiledCustom {
+  const hit = myCache.get(l.id);
+  if (hit && hit.text === l.text && hit.meta === meta) return hit.compiled;
+  const compiled = compileOne(l.text, `my:${l.id}`, meta);
+  myCache.set(l.id, { text: l.text, meta, compiled });
+  return compiled;
+}
+
+export function compileAllCustom(userText: string, adminLines: readonly string[], meta: BuildMeta | null, myLists: readonly MyListInput[] = []): CustomCompiled {
   const user = compileOne(userText, 'custom', meta);
   const admin = compileOne(adminLines.join('\n'), 'admin', meta);
-  const specific = [...admin.specific, ...user.specific];
-  const generic = [...admin.generic, ...user.generic];
+  const my = myLists.map((l) => ({ id: l.id, slot: l.slot, compiled: compileMyList(l, meta) }));
+  for (const id of Array.from(myCache.keys())) if (!myLists.some((l) => l.id === id)) myCache.delete(id);
+  const specific = [...admin.specific, ...user.specific, ...my.flatMap((m) => m.compiled.specific)];
+  const generic = [...admin.generic, ...user.generic, ...my.flatMap((m) => m.compiled.generic)];
   const genericHideHosts = new Set<string>();
   for (const s of specific) {
     if (s.kind !== 4 || (s.payload !== 'generichide' && s.payload !== 'elemhide')) continue;
     for (const h of s.hosts) if (!h.endsWith('.*')) genericHideHosts.add(h);
   }
-  return { user, admin, cosmetic: { specific, generic }, genericHideHosts: Array.from(genericHideHosts).sort() };
+  return { user, admin, my, cosmetic: { specific, generic }, genericHideHosts: Array.from(genericHideHosts).sort() };
 }
 
 /** Report shown in the dashboard's custom-filter editor. */

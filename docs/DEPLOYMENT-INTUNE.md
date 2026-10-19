@@ -220,7 +220,8 @@ Every key is optional. **A key that is present overrides the user's setting and 
 | `lockLists` | boolean | `true`: users cannot change any list, and lists not named in `lists` use their catalog default. `lockSettings: true` implies it unless `lockLists` is explicitly `false` | `false` (`true` under `lockSettings`) |
 | `customFilters` | list of strings | Admin filters in uBlock Origin syntax (network and cosmetic; scriptlet filters are ignored) | none |
 | `allowUserFilters` | boolean | `false` makes the user filter editor read-only. `lockSettings: true` does the same unless `allowUserFilters` is explicitly `true` | `true` (`false` under `lockSettings`) |
-| `lockSettings` | boolean | Locks every dashboard setting (privacy, badge, activity log, history, default mode), every filter list, the per-site mode, script and fingerprinting settings, and the user filter editor. `"lockLists": false` keeps the lists editable and `"allowUserFilters": true` the editor. The per-site protection switch follows `allowUserSiteToggle` | `false` |
+| `allowCustomLists` | boolean | `false`: users cannot import filter lists (Filter lists › My lists), and lists they imported earlier are **not applied** and no longer downloaded. Use it for managed clients that must only run the lists you chose. `lockSettings: true` does the same unless `allowCustomLists` is explicitly `true` | `true` (`false` under `lockSettings`) |
+| `lockSettings` | boolean | Locks every dashboard setting (privacy, badge, activity log, history, default mode), every filter list, the per-site mode, script and fingerprinting settings, the user filter editor and imported lists. `"lockLists": false` keeps the lists editable, `"allowUserFilters": true` the editor and `"allowCustomLists": true` the imported lists. The per-site protection switch follows `allowUserSiteToggle` | `false` |
 | `gpc` | boolean | Global Privacy Control header and `navigator.globalPrivacyControl` | `true` |
 | `stripParams` | boolean | Remove tracking parameters on cross-site navigation | `true` |
 | `debounce` | boolean | Skip known bounce-tracking redirects | `true` |
@@ -281,7 +282,7 @@ Its input is a small JSON document ([`bastion-shield-policy.example.json`](../po
 }
 ```
 
-With `"lockSettings": true` users cannot change filter lists, per-site settings or their own filters either. Add `"lockLists": false` or `"allowUserFilters": true` to leave those editable.
+With `"lockSettings": true` users cannot change filter lists, per-site settings, their own filters or imported lists either (imported lists are then switched off). Add `"lockLists": false`, `"allowUserFilters": true` or `"allowCustomLists": true` to leave those editable.
 
 The script reads, in this order: `-ConfigPath`, `bastion-shield-policy.json` next to the script, or the `$EmbeddedConfig` block inside the script. Test it on one machine first:
 

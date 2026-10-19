@@ -49,6 +49,8 @@ export const MATCHED_RULES_HORIZON_MS = 4 * 60_000;
 export const POPUP_ATTRIBUTION_BACKOFF_MS = 60_000;
 export const CUSTOM_LIST_USER = 'custom';
 export const CUSTOM_LIST_ADMIN = 'admin';
+/** Pseudo list id for matches of imported lists ("My lists"). */
+export const CUSTOM_LIST_MY = 'my-lists';
 
 /** Minimal webRequest details we read (onErrorOccurred / onBeforeRedirect). */
 export interface RequestDetails {
@@ -240,6 +242,7 @@ export function listForRule(rulesetId: string, ruleId: number, rulesetToList: Re
   if (rulesetId === '_dynamic') {
     if (ruleId >= RULE_ID.CUSTOM_START && ruleId <= RULE_ID.CUSTOM_END) return CUSTOM_LIST_USER;
     if (ruleId >= RULE_ID.ADMIN_START && ruleId <= RULE_ID.ADMIN_END) return CUSTOM_LIST_ADMIN;
+    if (ruleId >= RULE_ID.MY_LISTS_START && ruleId <= RULE_ID.MY_LISTS_END) return CUSTOM_LIST_MY;
     return undefined;
   }
   if (rulesetId === '_session') return undefined;

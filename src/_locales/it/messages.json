@@ -2920,5 +2920,191 @@
   },
   "cfBuildErrSite": {
     "message": "Il sito deve essere un dominio come example.com o restare vuoto."
+  },
+  "myListsTitle": {
+    "message": "I miei elenchi"
+  },
+  "myListsCount": {
+    "message": "$P1$ di $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "myListsLead": {
+    "message": "Aggiungi qualsiasi elenco di filtri da un file o da un indirizzo web. Un file resta com'è finché non lo sostituisci. Un indirizzo web può aggiornarsi una volta al giorno; Bastion lo scarica allora da quel sito, che vede il tuo indirizzo IP. Gli elenchi importati usano il budget di regole dinamiche del browser, condiviso con i tuoi filtri; i loro scriptlet non vengono applicati."
+  },
+  "myListsUpload": {
+    "message": "Carica file…"
+  },
+  "myListsOr": {
+    "message": "o"
+  },
+  "myListsUrlLabel": {
+    "message": "Indirizzo web di un elenco di filtri"
+  },
+  "myListsAdd": {
+    "message": "Aggiungi"
+  },
+  "myListsDownloading": {
+    "message": "Download in corso…"
+  },
+  "myListsHint": {
+    "message": "File di testo in formato uBlock Origin, Adblock Plus o hosts, fino a 10 MB. Gli indirizzi web devono iniziare con https://."
+  },
+  "myListsEmpty": {
+    "message": "Nessun elenco importato finora."
+  },
+  "myListsSourceUrl": {
+    "message": "Web"
+  },
+  "myListsSourceFile": {
+    "message": "File"
+  },
+  "myListsChecked": {
+    "message": "Verificato"
+  },
+  "myListsScriptlets": {
+    "message": "$P1$ scriptlet non applicati",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSkipped": {
+    "message": "$P1$ filtri ignorati",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsAutoUpdate": {
+    "message": "Aggiorna ogni giorno"
+  },
+  "myListsUpdateNow": {
+    "message": "Aggiorna ora"
+  },
+  "myListsReplace": {
+    "message": "Sostituisci…"
+  },
+  "myListsReplaceHint": {
+    "message": "Sostituisci il contenuto con un file; nome e interruttore restano"
+  },
+  "myListsRemove": {
+    "message": "Rimuovi"
+  },
+  "myListsRemoveTitle": {
+    "message": "Rimuovere «$P1$»?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemoveText": {
+    "message": "I suoi filtri non vengono più applicati. Puoi importare di nuovo l'elenco in qualsiasi momento."
+  },
+  "myListsSameTitle": {
+    "message": "«$P1$» esiste già",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSameTitleText": {
+    "message": "Sostituire il contenuto di quell'elenco con questo file o aggiungere il file come elenco separato?"
+  },
+  "myListsAddNew": {
+    "message": "Aggiungi come nuovo elenco"
+  },
+  "myListsReplaceIt": {
+    "message": "Sostituisci"
+  },
+  "myListsAddedToast": {
+    "message": "«$P1$» aggiunto",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsReplacedToast": {
+    "message": "«$P1$» sostituito",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemovedToast": {
+    "message": "«$P1$» rimosso",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsUpdatedToast": {
+    "message": "«$P1$» è aggiornato",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsDownloadFailed": {
+    "message": "Ultimo aggiornamento non riuscito"
+  },
+  "myListsLockedTitle": {
+    "message": "Impostato dalla tua organizzazione"
+  },
+  "myListsLocked": {
+    "message": "La tua organizzazione non consente elenchi di filtri importati. Gli elenchi importati in precedenza sono disattivati."
+  },
+  "myListsErrTooMany": {
+    "message": "Puoi importare fino a $P1$ elenchi.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrTooLarge": {
+    "message": "L'elenco supera $P1$ MB.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrFetch": {
+    "message": "Impossibile scaricare l'elenco ($P1$).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrNotFound": {
+    "message": "Questo elenco non esiste più."
+  },
+  "myListsErrEmpty": {
+    "message": "Il file non contiene filtri."
+  },
+  "myListsErrNotAList": {
+    "message": "Questo non è un elenco di filtri (per esempio una pagina web)."
+  },
+  "myListsErrUrl": {
+    "message": "Inserisci un indirizzo che inizia con https://."
+  },
+  "myListsErrDuplicate": {
+    "message": "Questo indirizzo è già nei tuoi elenchi."
   }
 }

@@ -11,6 +11,8 @@ import type {
   DeepPartial,
   EffectiveConfig,
   ListsState,
+  Message,
+  MyListsState,
   Settings,
   SitesMap,
 } from '../../shared/types.ts';
@@ -198,4 +200,16 @@ export async function historyEvents(limit: number, before?: number, site?: strin
   const d = r.data as { events?: ActivityEvent[] } | ActivityEvent[] | null;
   const events = Array.isArray(d) ? d : Array.isArray(d?.events) ? d.events : [];
   return { ok: true, data: events };
+}
+
+function isMyListsState(d: unknown): d is MyListsState {
+  return !!d && typeof d === 'object' && Array.isArray((d as MyListsState).lists) && typeof (d as MyListsState).locked === 'boolean';
+}
+
+/** Imported lists ("My lists"). Every change answers with the new state or an error code. */
+export async function myLists(msg: Message = { type: 'mylists:get' }): Promise<Result<MyListsState>> {
+  // Downloading a large list can take a while.
+  const r = await call<unknown>(msg, msg.type === 'mylists:get' ? undefined : 90_000);
+  if (!r.ok) return r;
+  return isMyListsState(r.data) ? { ok: true, data: r.data } : { ok: false, error: 'bad-response' };
 }

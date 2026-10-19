@@ -2920,5 +2920,191 @@
   },
   "cfBuildErrSite": {
     "message": "Die Website muss eine Domain wie example.com sein oder leer bleiben."
+  },
+  "myListsTitle": {
+    "message": "Meine Listen"
+  },
+  "myListsCount": {
+    "message": "$P1$ von $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "myListsLead": {
+    "message": "Fügen Sie beliebige Filterlisten aus einer Datei oder von einer Webadresse hinzu. Eine Datei bleibt, wie sie ist, bis Sie sie ersetzen. Eine Webadresse kann sich einmal täglich aktualisieren; Bastion lädt sie dann von dieser Website, die Ihre IP-Adresse sieht. Importierte Listen belegen das dynamische Regelbudget des Browsers, gemeinsam mit Ihren eigenen Filtern; Scriptlets darin werden nicht angewendet."
+  },
+  "myListsUpload": {
+    "message": "Datei hochladen …"
+  },
+  "myListsOr": {
+    "message": "oder"
+  },
+  "myListsUrlLabel": {
+    "message": "Webadresse einer Filterliste"
+  },
+  "myListsAdd": {
+    "message": "Hinzufügen"
+  },
+  "myListsDownloading": {
+    "message": "Wird geladen …"
+  },
+  "myListsHint": {
+    "message": "Textdateien im Format von uBlock Origin, Adblock Plus oder Hosts, bis 10 MB. Webadressen müssen mit https:// beginnen."
+  },
+  "myListsEmpty": {
+    "message": "Noch keine Listen importiert."
+  },
+  "myListsSourceUrl": {
+    "message": "Web"
+  },
+  "myListsSourceFile": {
+    "message": "Datei"
+  },
+  "myListsChecked": {
+    "message": "Geprüft"
+  },
+  "myListsScriptlets": {
+    "message": "$P1$ Scriptlets nicht angewendet",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSkipped": {
+    "message": "$P1$ Filter übersprungen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsAutoUpdate": {
+    "message": "Täglich aktualisieren"
+  },
+  "myListsUpdateNow": {
+    "message": "Jetzt aktualisieren"
+  },
+  "myListsReplace": {
+    "message": "Ersetzen …"
+  },
+  "myListsReplaceHint": {
+    "message": "Inhalt durch eine Datei ersetzen; Name und Schalter bleiben"
+  },
+  "myListsRemove": {
+    "message": "Entfernen"
+  },
+  "myListsRemoveTitle": {
+    "message": "«$P1$» entfernen?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemoveText": {
+    "message": "Ihre Filter werden nicht mehr angewendet. Sie können die Liste jederzeit wieder importieren."
+  },
+  "myListsSameTitle": {
+    "message": "«$P1$» gibt es schon",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSameTitleText": {
+    "message": "Den Inhalt dieser Liste durch die Datei ersetzen oder die Datei als eigene Liste hinzufügen?"
+  },
+  "myListsAddNew": {
+    "message": "Als neue Liste hinzufügen"
+  },
+  "myListsReplaceIt": {
+    "message": "Ersetzen"
+  },
+  "myListsAddedToast": {
+    "message": "«$P1$» hinzugefügt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsReplacedToast": {
+    "message": "«$P1$» ersetzt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemovedToast": {
+    "message": "«$P1$» entfernt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsUpdatedToast": {
+    "message": "«$P1$» ist aktuell",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsDownloadFailed": {
+    "message": "Letzte Aktualisierung fehlgeschlagen"
+  },
+  "myListsLockedTitle": {
+    "message": "Von Ihrer Organisation festgelegt"
+  },
+  "myListsLocked": {
+    "message": "Ihre Organisation erlaubt keine importierten Filterlisten. Früher importierte Listen sind ausgeschaltet."
+  },
+  "myListsErrTooMany": {
+    "message": "Sie können bis zu $P1$ Listen importieren.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrTooLarge": {
+    "message": "Die Liste ist grösser als $P1$ MB.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrFetch": {
+    "message": "Die Liste konnte nicht geladen werden ($P1$).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrNotFound": {
+    "message": "Diese Liste gibt es nicht mehr."
+  },
+  "myListsErrEmpty": {
+    "message": "Die Datei enthält keine Filter."
+  },
+  "myListsErrNotAList": {
+    "message": "Das ist keine Filterliste (zum Beispiel eine Webseite)."
+  },
+  "myListsErrUrl": {
+    "message": "Geben Sie eine Adresse ein, die mit https:// beginnt."
+  },
+  "myListsErrDuplicate": {
+    "message": "Diese Adresse ist schon in Ihren Listen."
   }
 }

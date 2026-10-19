@@ -88,6 +88,9 @@ export const RULE_ID = {
   /** Dynamic: admin (managed policy) custom filters. */
   ADMIN_START: 1_000_000,
   ADMIN_END: 1_999_999,
+  /** Dynamic: imported lists ("My lists"), one block of MY_LISTS.SLOT_SIZE ids per list slot. */
+  MY_LISTS_START: 3_000_000,
+  MY_LISTS_END: 4_999_999,
   /** Dynamic: debounce (bounce-tracking) regexSubstitution redirects. */
   DEBOUNCE_START: 2_000_000,
   DEBOUNCE_END: 2_000_999,
@@ -175,6 +178,22 @@ export const STORAGE = {
   TOTALS: 'totals',
   INSTALL: 'install',
   SEED_PICK: 'seedPick',
+  /** Index of imported lists (MyListMeta[]); each text is stored under MY_LIST_PREFIX + id. */
+  MY_LISTS: 'myLists',
+  MY_LIST_PREFIX: 'myList:',
+} as const;
+
+/** Imported lists ("My lists"). */
+export const MY_LISTS = {
+  /** 20 slots of 100'000 ids fill RULE_ID.MY_LISTS_START … MY_LISTS_END. */
+  MAX: 20,
+  SLOT_SIZE: 100_000,
+  /** Per list; HaGeZi Multi PRO is about 4.5 MB, EasyList about 2 MB. */
+  MAX_BYTES: 10_000_000,
+  /** Web-address lists are refetched when the last attempt is older than this. */
+  UPDATE_AFTER_MS: 24 * 60 * 60 * 1000,
+  MAX_URL_LENGTH: 2048,
+  MAX_TITLE_LENGTH: 120,
 } as const;
 
 /** IndexedDB database used by the service worker for blocking history. */

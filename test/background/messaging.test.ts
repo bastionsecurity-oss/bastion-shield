@@ -18,6 +18,7 @@ import type { CustomCompiled } from '../../src/background/custom.ts';
 import { activityFlags, handleMessage, planSiteSet, reportBrokenSiteFor, userSitesFromInput } from '../../src/background/messaging.ts';
 import type { MessageContext } from '../../src/background/messaging.ts';
 import { NerdService } from '../../src/background/nerd.ts';
+import { MyListsService } from '../../src/background/my-lists.ts';
 import { defaultSettings, normalizeSettings } from '../../src/background/settings.ts';
 import { Store } from '../../src/background/store.ts';
 
@@ -87,7 +88,7 @@ async function context(
     report: () => emptyReport(),
     restoreReport: async () => undefined,
   };
-  const custom: CustomCompiled = { user: EMPTY_COMPILED, admin: EMPTY_COMPILED, cosmetic: { specific: [], generic: [] }, genericHideHosts: [] };
+  const custom: CustomCompiled = { user: EMPTY_COMPILED, admin: EMPTY_COMPILED, my: [], cosmetic: { specific: [], generic: [] }, genericHideHosts: [] };
   let matchedCalls = 0;
   const activity = new ActivityService({
     now: () => Date.now(),
@@ -117,6 +118,19 @@ async function context(
       siteOf: async () => null,
       describeRules: async () => ({ filters: [], lists: [] }),
       addCustomFilters: async () => undefined,
+    }),
+    myLists: new MyListsService({
+      storage: {
+        get: async (keys) => Object.fromEntries(keys.filter((k) => fake.local.has(k)).map((k) => [k, structuredClone(fake.local.get(k))])),
+        set: async (items) => {
+          for (const [k, v] of Object.entries(items)) fake.local.set(k, structuredClone(v));
+        },
+        remove: async (keys) => {
+          for (const k of keys) fake.local.delete(k);
+        },
+      },
+      fetch: async () => new Response('||from-web.example^\n'),
+      now: () => 1000,
     }),
     custom: () => custom,
     recompileCustom: () => undefined,
@@ -189,6 +203,31 @@ test('sites:set and custom filters are locked under lockSettings (ENT-2)', async
   assert.deepEqual(await send(ctx, { type: 'custom:set', text: '||x^' }), { error: 'locked' });
   const open = await context({ lockSettings: true, allowUserFilters: true });
   assert.equal(((await send(open.ctx, { type: 'custom:get' })) as { locked: boolean }).locked, false);
+});
+
+test('mylists: add, toggle and remove; allowCustomLists:false and lockSettings refuse every change', async () => {
+  const { ctx, applied } = await context();
+  const added = (await send(ctx, { type: 'mylists:add', file: { name: 'extras.txt', text: '! Title: Extras\n||ads.example^\n' } })) as { lists: { id: string; title: string; enabled: boolean }[]; locked: boolean };
+  assert.equal(added.locked, false);
+  assert.deepEqual(added.lists.map((l) => [l.title, l.enabled]), [['Extras', true]]);
+  assert.equal(applied(), 1, 'a change is applied at once');
+  const id = added.lists[0].id;
+  const off = (await send(ctx, { type: 'mylists:set', id, enabled: false })) as { lists: { enabled: boolean }[] };
+  assert.equal(off.lists[0].enabled, false);
+  assert.deepEqual(await send(ctx, { type: 'mylists:add', file: { name: 'x.html', text: '<html>' } }), { error: 'not-a-list' });
+  assert.deepEqual(await send(ctx, { type: 'mylists:add', url: 'http://insecure.example/l.txt' }), { error: 'invalid-url' });
+  const gone = (await send(ctx, { type: 'mylists:remove', id })) as { lists: unknown[] };
+  assert.deepEqual(gone.lists, []);
+
+  for (const policy of [{ allowCustomLists: false }, { lockSettings: true }] as ManagedPolicy[]) {
+    const locked = await context(policy);
+    assert.equal(((await send(locked.ctx, { type: 'mylists:get' })) as { locked: boolean }).locked, true);
+    assert.deepEqual(await send(locked.ctx, { type: 'mylists:add', file: { name: 'a.txt', text: '||a.ch^' } }), { error: 'locked' });
+    assert.deepEqual(await send(locked.ctx, { type: 'mylists:remove', id: 'aaaaaaaaaa' }), { error: 'locked' });
+    assert.equal(locked.applied(), 0);
+  }
+  const open = await context({ lockSettings: true, allowCustomLists: true });
+  assert.equal(((await send(open.ctx, { type: 'mylists:get' })) as { locked: boolean }).locked, false);
 });
 
 test('backup sites keep policy-owned fields', () => {

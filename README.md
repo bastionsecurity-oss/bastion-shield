@@ -23,6 +23,7 @@ Bastion Shield ist ein schlanker, quelloffener Werbe- und Tracker-Blocker für C
 
 **Blocking**
 - Network blocking with the same lists as Brave Shields: uBlock filters, EasyList, EasyPrivacy, Brave's lists, uBlock's badware list, URLhaus, cookie-notice and app-banner lists, plus Peter Lowe's list and Bastion's own Swiss list ([FILTER-LISTS.md](docs/FILTER-LISTS.md)).
+- More vetted lists to switch on (HaGeZi, LAN protection, chat and AI widgets, …), and any other list imported from a file or a web address («My lists»; web lists can update themselves daily).
 - Brave's two modes: **Standard** (does not block first-party requests on the lists Brave protects, for fewer broken sites) and **Aggressive**, globally or per site.
 - Cosmetic filtering (site-specific, generic, procedural `:has-text()` and friends, `:style()`), uBlock Origin scriptlets against anti-adblock walls and cookie banners, harmless stand-ins for blocked ad scripts.
 - Warning page for known malware and scam domains, with "proceed anyway".

@@ -17,6 +17,7 @@ import { CATEGORY_ORDER, categoryLabel } from '../../shared/labels.ts';
 import { meter } from '../chart.ts';
 import { errorState, nextId, pageHead, panel, type View, mount } from '../common.ts';
 import { getConfig, getLists, setList } from '../store.ts';
+import { myListsPanel } from './my-lists.ts';
 
 /** Only an administrator's policy locks a list; otherwise every list is the user's choice. */
 function listLocked(state: ListsState, l: BuiltList, policyLockAll: boolean): boolean {
@@ -260,6 +261,7 @@ export function listsView(): View {
         policyLockAll ? h('div', { class: 'db-gap' }, notice(t('listsLockedAllTitle'), t('listsLockedAllText'), 'info')) : null,
         budgetSlot,
         groupsSlot,
+        myListsPanel(),
         h('p', { class: 'db-footnote', text: t('listsFootnote') }),
       );
       draw(listsR.data);

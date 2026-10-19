@@ -71,10 +71,15 @@
       "title": "Allow users to edit their own filters",
       "description": "Default true. If false, the custom filter editor is read-only. lockSettings=true also makes it read-only unless allowUserFilters is explicitly true."
     },
+    "allowCustomLists": {
+      "type": "boolean",
+      "title": "Allow users to import filter lists",
+      "description": "Default true. If false, users cannot import filter lists from a file or web address (Filter lists > My lists), and lists imported earlier are not applied or downloaded. lockSettings=true does the same unless allowCustomLists is explicitly true."
+    },
     "lockSettings": {
       "type": "boolean",
       "title": "Lock all dashboard settings",
-      "description": "If true, users cannot change any dashboard setting, filter list or per-site mode/script/fingerprinting setting, nor their own filters. Set lockLists=false or allowUserFilters=true to leave those editable. The per-site protection switch is controlled by allowUserSiteToggle."
+      "description": "If true, users cannot change any dashboard setting, filter list or per-site mode/script/fingerprinting setting, nor their own filters or imported lists. Set lockLists=false, allowUserFilters=true or allowCustomLists=true to leave those editable. The per-site protection switch is controlled by allowUserSiteToggle."
     },
     "gpc": {
       "type": "boolean",

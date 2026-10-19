@@ -272,6 +272,7 @@ export function sanitizeManaged(raw: unknown): ManagedPolicy {
     'lockLists',
     'allowUserSiteToggle',
     'allowUserFilters',
+    'allowCustomLists',
     'lockSettings',
     'gpc',
     'stripParams',
@@ -345,6 +346,7 @@ export const SETTING_PATHS = [
 export const LOCK_SITE_TOGGLE = 'sites.enabled';
 export const LOCK_CUSTOM_FILTERS = 'customFilters';
 export const LOCK_ALL_LISTS = 'lists';
+export const LOCK_MY_LISTS = 'myLists';
 
 /** Policy key -> setting path it forces. */
 const POLICY_PATHS: [keyof ManagedPolicy, (typeof SETTING_PATHS)[number]][] = [
@@ -384,6 +386,17 @@ export function customFiltersLocked(m: ManagedPolicy): boolean {
 }
 
 /**
+ * Imported lists are not allowed: `allowCustomLists: false`, or
+ * `lockSettings` unless the policy explicitly sets `allowCustomLists: true`.
+ * Unlike the user's own filters, forbidden imported lists are also not
+ * applied: an administrator who forbids them must not inherit lists added
+ * before the policy arrived.
+ */
+export function myListsLocked(m: ManagedPolicy): boolean {
+  return m.allowCustomLists === false || (m.lockSettings === true && m.allowCustomLists !== true);
+}
+
+/**
  * Locked setting paths. `lockSettings` locks every dashboard setting, every
  * filter list and the user's own filters (an explicit `lockLists: false` or
  * `allowUserFilters: true` keeps those editable). Per-site mode, scripts and
@@ -400,6 +413,7 @@ export function lockedPaths(managed: ManagedPolicy, lists: readonly ListInfo[]):
   for (const id of Object.keys(managed.lists ?? {})) out.add(`lists.${id}`);
   if (managed.allowUserSiteToggle === false) out.add(LOCK_SITE_TOGGLE);
   if (customFiltersLocked(managed)) out.add(LOCK_CUSTOM_FILTERS);
+  if (myListsLocked(managed)) out.add(LOCK_MY_LISTS);
   return Array.from(out).sort();
 }
 

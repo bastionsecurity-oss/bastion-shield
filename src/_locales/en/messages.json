@@ -2920,5 +2920,191 @@
   },
   "cfBuildErrSite": {
     "message": "The site must be a domain like example.com, or left empty."
+  },
+  "myListsTitle": {
+    "message": "My lists"
+  },
+  "myListsCount": {
+    "message": "$P1$ of $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "myListsLead": {
+    "message": "Add any filter list from a file or a web address. A file stays as it is until you replace it. A web address can update itself once a day; Bastion then downloads it from that site, which sees your IP address. Imported lists use the browser's dynamic rule budget, shared with your own filters; scriptlets in them are not applied."
+  },
+  "myListsUpload": {
+    "message": "Upload file…"
+  },
+  "myListsOr": {
+    "message": "or"
+  },
+  "myListsUrlLabel": {
+    "message": "Web address of a filter list"
+  },
+  "myListsAdd": {
+    "message": "Add"
+  },
+  "myListsDownloading": {
+    "message": "Downloading…"
+  },
+  "myListsHint": {
+    "message": "Text files in uBlock Origin, Adblock Plus or hosts format, up to 10 MB. Web addresses must start with https://."
+  },
+  "myListsEmpty": {
+    "message": "No lists imported yet."
+  },
+  "myListsSourceUrl": {
+    "message": "Web"
+  },
+  "myListsSourceFile": {
+    "message": "File"
+  },
+  "myListsChecked": {
+    "message": "Checked"
+  },
+  "myListsScriptlets": {
+    "message": "$P1$ scriptlets not applied",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSkipped": {
+    "message": "$P1$ filters skipped",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsAutoUpdate": {
+    "message": "Update daily"
+  },
+  "myListsUpdateNow": {
+    "message": "Update now"
+  },
+  "myListsReplace": {
+    "message": "Replace…"
+  },
+  "myListsReplaceHint": {
+    "message": "Replace the contents with a file; the name and the switch stay"
+  },
+  "myListsRemove": {
+    "message": "Remove"
+  },
+  "myListsRemoveTitle": {
+    "message": "Remove «$P1$»?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemoveText": {
+    "message": "Its filters stop applying. You can import the list again at any time."
+  },
+  "myListsSameTitle": {
+    "message": "«$P1$» already exists",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSameTitleText": {
+    "message": "Replace that list's contents with this file, or add the file as a separate list?"
+  },
+  "myListsAddNew": {
+    "message": "Add as new list"
+  },
+  "myListsReplaceIt": {
+    "message": "Replace"
+  },
+  "myListsAddedToast": {
+    "message": "«$P1$» added",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsReplacedToast": {
+    "message": "«$P1$» replaced",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRemovedToast": {
+    "message": "«$P1$» removed",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsUpdatedToast": {
+    "message": "«$P1$» is up to date",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsDownloadFailed": {
+    "message": "Last update failed"
+  },
+  "myListsLockedTitle": {
+    "message": "Set by your organisation"
+  },
+  "myListsLocked": {
+    "message": "Your organisation does not allow imported filter lists. Lists imported earlier are switched off."
+  },
+  "myListsErrTooMany": {
+    "message": "You can import up to $P1$ lists.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrTooLarge": {
+    "message": "The list is larger than $P1$ MB.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrFetch": {
+    "message": "The list could not be downloaded ($P1$).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrNotFound": {
+    "message": "This list no longer exists."
+  },
+  "myListsErrEmpty": {
+    "message": "The file contains no filters."
+  },
+  "myListsErrNotAList": {
+    "message": "This is not a filter list (for example a web page)."
+  },
+  "myListsErrUrl": {
+    "message": "Enter an address that starts with https://."
+  },
+  "myListsErrDuplicate": {
+    "message": "This address is already in your lists."
   }
 }

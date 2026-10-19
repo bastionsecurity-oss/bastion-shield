@@ -83,11 +83,12 @@ export class ListDirectory {
     if (listId === RULESET_PARAMS) return t('listParams');
     if (listId === 'custom' || listId === 'user') return t('listCustom');
     if (listId === 'admin') return t('listAdmin');
+    if (listId === 'my-lists') return t('myListsTitle');
     return listId;
   }
 
   category(listId: string | null | undefined): ListCategory | 'unknown' {
-    return this.get(listId)?.category ?? (listId === 'custom' ? 'custom' : 'unknown');
+    return this.get(listId)?.category ?? (listId === 'custom' || listId === 'my-lists' ? 'custom' : 'unknown');
   }
 
   /** Static ruleset id → list id (main and .regex companions). */

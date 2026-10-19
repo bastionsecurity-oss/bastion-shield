@@ -242,3 +242,60 @@ export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
     cancel.focus();
   });
 }
+
+export interface Choice<V extends string> {
+  value: V;
+  label: string;
+  primary?: boolean;
+}
+
+/**
+ * Modal with several answers (for example «Replace», «Add as new»). Resolves
+ * the chosen value, or null for «Cancel» and Escape. Focus starts on Cancel.
+ */
+export function choiceDialog<V extends string>(opts: { title: string; body?: string; choices: Choice<V>[] }): Promise<V | null> {
+  return new Promise((resolve) => {
+    const titleId = `dlg-${Math.random().toString(36).slice(2, 8)}`;
+    let result: V | null = null;
+    const cancel = h('button', { class: 'btn btn--secondary', text: t('actionCancel'), attrs: { type: 'button' } });
+    const buttons = opts.choices.map((c) => {
+      const b = h('button', { class: `btn ${c.primary ? 'btn--primary' : 'btn--secondary'}`, text: c.label, attrs: { type: 'button' } });
+      b.addEventListener('click', () => {
+        result = c.value;
+        close();
+      });
+      return b;
+    });
+    const dlg = h(
+      'dialog',
+      { class: 'dialog', attrs: { 'aria-labelledby': titleId } },
+      h(
+        'div',
+        { class: 'dialog__body' },
+        h('h2', { class: 'dialog__title', text: opts.title, attrs: { id: titleId } }),
+        opts.body ? h('p', { class: 'dialog__text', text: opts.body }) : null,
+      ),
+      h('div', { class: 'dialog__actions' }, cancel, ...buttons),
+    );
+    const close = (): void => {
+      try {
+        dlg.close();
+      } catch {
+        dlg.remove();
+        resolve(result);
+      }
+    };
+    cancel.addEventListener('click', close);
+    dlg.addEventListener('close', () => {
+      dlg.remove();
+      resolve(result);
+    });
+    document.body.appendChild(dlg);
+    try {
+      dlg.showModal();
+    } catch {
+      dlg.setAttribute('open', '');
+    }
+    cancel.focus();
+  });
+}

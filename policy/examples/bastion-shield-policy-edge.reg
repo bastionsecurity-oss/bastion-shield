@@ -33,6 +33,7 @@ Windows Registry Editor Version 5.00
 ; (docs/DEPLOYMENT-INTUNE.md, "Emergency"). Keep 1 for normal operation.
 "protectionEnabled"=dword:00000001
 "allowUserFilters"=dword:00000000
+"allowCustomLists"=dword:00000000
 "historyRetentionDays"=dword:0000000e
 "customFilters"="[\"||ads.example.net^\",\"example.com##.promo-banner\"]"
 

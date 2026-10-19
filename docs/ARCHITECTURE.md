@@ -7,7 +7,7 @@ Bastion Shield is a Manifest V3 content blocker for Chromium browsers: Chrome, M
 1. **The browser does the heavy lifting.** Network blocking is declarative (DNR static rulesets compiled at build time), so no JavaScript runs per request. Content scripts are registered with the browser, and the service worker (SW) sleeps when nothing happens.
 2. **Small, bounded work per frame.** Chrome checks every registered content-script URL pattern in every frame, so Bastion registers few scripts with few patterns (§3, §6). Scriptlets look the current hostname up in sorted tables inside the injected script. Site-specific cosmetic data is sharded and looked up by the SW per frame. Generic cosmetic filtering costs one message per batch of new class/id tokens.
 3. **Brave-equivalent defaults.** Bastion ships the same list stack as Brave Shields (uBO filters, EasyList, EasyPrivacy, Brave lists, URLhaus, cookie notices, app promos, plus regional lists) and Brave's "Standard" first-party semantics.
-4. **Transparent.** Every DNR rule maps back to the filter text it came from (`dist/rulesets/filters/*.json`). The UI shows which list blocked what. Nothing leaves the device: no telemetry, no remote config, and all history stays local.
+4. **Transparent.** Every DNR rule maps back to the filter text it came from (`dist/rulesets/filters/*.json`). The UI shows which list blocked what. Nothing leaves the device: no telemetry, no remote config, and all history stays local. The only download the extension itself makes is a filter list the user added by web address (§4.7).
 5. **Fire and forget.** Users and admins configure nothing. Admins can configure everything through `chrome.storage.managed` (Intune), including a fleet-wide emergency switch (§10.5). Filter data refreshes through automated extension releases.
 6. **Least trust for page-facing code.** Filters that can run code on pages are accepted only from trusted sources (§11.2). Messages are accepted only from the contexts that need them (§7). Hot paths never throw: every step catches its own failures and falls back to the original behaviour.
 
@@ -192,6 +192,7 @@ What follows from the bands:
 | GPC | dynamic `modifyHeaders` `Sec-GPC: 1`, every resource type the browser reports, when `privacy.gpc` | 8,000,020 |
 | Custom filters (user) | dynamic | 1..999,999 |
 | Custom filters (admin policy) | dynamic | 1,000,000..1,999,999 |
+| Imported lists («My lists», §4.7) | dynamic, one block of 100,000 ids per list slot 0–19 | 3,000,000..4,999,999 |
 | Debounce | dynamic `redirect.regexSubstitution` → `chrome-extension://<id>/pages/bounce.html[?from=<host>]#<target>`, priority 35, from `data/debounce.json` | 2,000,000..2,000,999 |
 | Proceed anyway | session `allow` (§4.5) | 9,100,000..9,199,999 |
 | Filter bisect (nerd mode) | session `allow`, priority 950, one tab; kept across applies, removed on finish, cancel, tab close, navigation to another site, nerd mode off and stale state after a worker restart | 9,200,000..9,209,999 |
@@ -206,6 +207,17 @@ What follows from the bands:
   - When the include pattern names a fixed host, the redirect carries `?from=<host>`, and `bounce.html` refuses targets on the tracker's own registrable domain (Brave only debounces cross-site). The page decodes the fragment (repeated percent-decoding, or base64/base64url after `b64:`), requires an http(s) URL with a hostname and without credentials, and calls `location.replace`.
 - **Validation and budgets.** Every regex rule is checked with `isRegexSupported` first; then the budgets are enforced (30,000 total, 5,000 unsafe, 1,000 regex shared with session rules). If Chrome rejects the update, the offending rule id is parsed from the error and dropped, then sources are dropped in the order user filters, debounce, admin filters. Bastion's system rules always stay. IPv6 site keys cannot appear in DNR domain conditions and are left out of the DNR rules (content-script exclusion still covers them).
 - `updateDynamicRules` is atomic, so removals and additions are always batched in a single, diffed call.
+
+### 4.7 Imported lists («My lists»)
+
+Users can add any filter list from a `.txt` file or an `https://` address (`src/background/my-lists.ts`, UI in `views/my-lists.ts`).
+
+- **Storage.** `chrome.storage.local`: the index `myLists` (`MyListMeta[]`: id, stable slot, title, source, file name or address, on/off, auto-update, timestamps, validators, last error) and one key `myList:<id>` per list text. At most 20 lists of 10 MB each (`MY_LISTS`). The title comes from the list's `! Title:` / `# Title:` header, else the file name or address.
+- **Compile and apply.** Enabled lists are compiled with the custom-filter compiler (`compileAllCustom`, cached per list text): untrusted, no strict block, always-apply band, scriptlets counted and ignored. Network rules go into the dynamic budget **after** system, admin, debounce and the user's own filters, each list in its slot's id block, so the user's own filters always fit first; dropped and rejected rules are reported per list (`ApplyReport.myListErrors`). Cosmetic filters join the custom cosmetics. Matches are attributed to the pseudo list `my-lists`.
+- **Downloads.** Only for lists added by address: on add, on «Update now», and from the hourly alarm `bastion:my-lists-update` when «Update daily» is on and the last attempt is 24 h old (normal-profile worker only). `fetch` with `credentials: 'omit'`, `If-None-Match` / `If-Modified-Since`, https only (also after redirects), stopped above 10 MB. HTML, JSON, binary and comment-only answers are refused; a failed update keeps the last good copy and records the error on the list.
+- **Replace and duplicates.** «Replace…» swaps a list's text and keeps its id, slot, title and switch; a file turns an address list into a file list. The dashboard asks «Replace» or «Add as new» when an uploaded file's title matches an existing list. The same address cannot be added twice.
+- **Policy.** `allowCustomLists: false` (and `lockSettings` unless `allowCustomLists: true`) refuses every change with `{error: 'locked'}` **and** stops applying imported lists and their daily downloads: an administrator who forbids them must not inherit lists added before the policy. Removing the policy restores them as they were.
+- **Several workers.** With `incognito: split`, the incognito worker shares `storage.local`; an index change that is not an echo of the worker's own writes reloads the lists (serialised with in-flight changes).
 
 ## 5. Cosmetic filtering
 
@@ -308,6 +320,7 @@ All messages are defined in `src/shared/types.ts` (`Message`). The SW handles th
 | `settings:set`, `backup:import` | `EffectiveConfig & {ignored: string[]}` |
 | `lists:get`, `lists:set` | `ListsState`; `errors` values are `rule-limit`, `regex-limit`, `ruleset-limit`, `missing-ruleset` or the browser's error text |
 | `custom:get`, `custom:set` | `CustomState` |
+| `mylists:get`, `mylists:add`, `mylists:set`, `mylists:remove`, `mylists:update` | `MyListsState`, or `{error}` with a code: `locked`, `not-found`, `too-many`, `too-large`, `empty`, `not-a-list`, `invalid-url`, `duplicate-url`, `fetch-failed` |
 | `sites:get`, `sites:set` | `{sites: SitesMap}`, the user's own map; policy entries are reported through `EffectiveConfig.managed` |
 | `history:query` | `HistoryResult` |
 | `history:events` | `{events: ActivityEvent[]}` |
@@ -423,7 +436,8 @@ The badge colour is Schiefer (#2A3134) with white text. Tabs with protection off
 | `lockLists: true` | pseudo-path `lists` plus every `lists.<id>`; lists not named in `lists` use their catalog default |
 | `allowUserSiteToggle: false` | pseudo-path `sites.enabled` (per-site protection switch) |
 | `allowUserFilters: false` | pseudo-path `customFilters` (user filters read-only) |
-| `lockSettings: true` | every setting path above; **and** `lists` + every `lists.<id>` unless `lockLists` is explicitly `false`; **and** `customFilters` unless `allowUserFilters` is explicitly `true`; **and** per-site mode, script blocking and fingerprinting (`site:set` drops them into `ignored`, `sites:set` answers `{error: "locked"}`) |
+| `allowCustomLists: false` | pseudo-path `myLists`: no imports or changes, **and imported lists are not applied** (§4.7) |
+| `lockSettings: true` | every setting path above; **and** `lists` + every `lists.<id>` unless `lockLists` is explicitly `false`; **and** `customFilters` unless `allowUserFilters` is explicitly `true`; **and** `myLists` unless `allowCustomLists` is explicitly `true`; **and** per-site mode, script blocking and fingerprinting (`site:set` drops them into `ignored`, `sites:set` answers `{error: "locked"}`) |
 | `disabledSites` / `aggressiveSites` | per host and its subdomains: `PopupState.locks.siteToggle` / `PopupState.locks.mode` |
 
 Only a managed policy locks anything: without one, every setting and every filter list (the Bastion list included) is the user's choice. The SW enforces every lock in its handlers; the UI only mirrors them. `ListsState.locked` may contain `<id>` or `lists.<id>`.

@@ -15,6 +15,7 @@ import type {
   ListsState,
   ManagedPolicy,
   Message,
+  MyListsState,
   MsgNoticeClip,
   MsgNoticeShow,
   PopupState,
@@ -29,12 +30,14 @@ import type { CosmeticService, FrameSender } from './cosmetic.ts';
 import { customReport } from './custom.ts';
 import type { CustomCompiled } from './custom.ts';
 import type { HistoryDb } from './history-db.ts';
+import type { MyListsService } from './my-lists.ts';
+import { MY_LISTS } from '../shared/constants.ts';
 import type { NerdService } from './nerd.ts';
 import * as log from './log.ts';
 import { PROCEDURAL_SCRIPT_FILE } from './registrations.ts';
 import { classifySender, isAllowed, isKnownType } from './sender.ts';
 import type { SenderInfo } from './sender.ts';
-import { applySettingsPatch, LOCK_ALL_LISTS, LOCK_CUSTOM_FILTERS, normalizeSettings } from './settings.ts';
+import { applySettingsPatch, LOCK_ALL_LISTS, LOCK_CUSTOM_FILTERS, LOCK_MY_LISTS, normalizeSettings } from './settings.ts';
 import { effectiveSites, isFilterableUrl, keepPolicyOwnedFields, normalizeSiteKey, patchSite, resolveSite, sanitizeSites, siteKeyFromUrl } from './sites.ts';
 import type { Store } from './store.ts';
 import { MAX_CUSTOM_FILTERS_BYTES } from './store.ts';
@@ -48,6 +51,7 @@ export interface MessageContext {
   blocked: BlockedPages;
   history: HistoryDb;
   nerd: NerdService;
+  myLists: MyListsService;
   custom(): CustomCompiled;
   /** Recompile custom filters after the text or policy changed. */
   recompileCustom(): void;
@@ -249,6 +253,41 @@ function customState(ctx: MessageContext): CustomState {
   };
 }
 
+function myListsState(ctx: MessageContext): MyListsState {
+  const locked = ctx.store.lockedSet().has(LOCK_MY_LISTS);
+  const compiled = new Map(ctx.custom().my.map((m) => [m.id, m.compiled]));
+  const errors = ctx.applier.report().myListErrors ?? {};
+  const empty = { rules: [], specific: [], generic: [], scriptletsIgnored: 0, errors: [] };
+  return {
+    lists: ctx.myLists.all().map((l) => ({ ...l, filters: ctx.myLists.filterCount(l.id), report: customReport(compiled.get(l.id) ?? empty, errors[l.id] ?? []) })),
+    locked,
+    maxLists: MY_LISTS.MAX,
+    maxBytes: MY_LISTS.MAX_BYTES,
+  };
+}
+
+/** Every change to an imported list: recompile, apply, answer with the new state (or the error). */
+async function myListsChange(ctx: MessageContext, change: () => Promise<object>): Promise<unknown> {
+  if (ctx.store.lockedSet().has(LOCK_MY_LISTS)) return { error: 'locked' };
+  const r = await change();
+  if ('error' in r) return r;
+  ctx.recompileCustom();
+  await ctx.applier.now();
+  return myListsState(ctx);
+}
+
+function myListsAdd(ctx: MessageContext, msg: Extract<Message, { type: 'mylists:add' }>): Promise<unknown> {
+  const replaceId = typeof msg.replaceId === 'string' ? msg.replaceId : undefined;
+  if (isPlainObject(msg.file)) {
+    const { name, text } = msg.file as { name?: unknown; text?: unknown };
+    if (typeof name !== 'string' || typeof text !== 'string') return Promise.resolve({ error: 'not-a-list' });
+    if (text.length > MY_LISTS.MAX_BYTES) return Promise.resolve({ error: 'too-large' });
+    return myListsChange(ctx, () => ctx.myLists.add({ file: { name, text } }, replaceId));
+  }
+  if (typeof msg.url === 'string') return myListsChange(ctx, () => ctx.myLists.add({ url: msg.url as string }, replaceId));
+  return Promise.resolve({ error: 'invalid-url' });
+}
+
 /**
  * A whole user site map from the dashboard or a backup: validated, and
  * policy-owned fields keep the user's current values.
@@ -416,6 +455,24 @@ export async function handleMessage(ctx: MessageContext, msg: Message, sender: S
       return customState(ctx);
     case 'custom:set':
       return customSet(ctx, msg);
+    case 'mylists:get':
+      return myListsState(ctx);
+    case 'mylists:add':
+      return myListsAdd(ctx, msg);
+    case 'mylists:set':
+      if (typeof msg.id !== 'string') return { error: 'not-found' };
+      return myListsChange(ctx, () =>
+        ctx.myLists.set(msg.id, {
+          enabled: typeof msg.enabled === 'boolean' ? msg.enabled : undefined,
+          autoUpdate: typeof msg.autoUpdate === 'boolean' ? msg.autoUpdate : undefined,
+        }),
+      );
+    case 'mylists:remove':
+      if (typeof msg.id !== 'string') return { error: 'not-found' };
+      return myListsChange(ctx, () => ctx.myLists.remove(msg.id));
+    case 'mylists:update':
+      if (typeof msg.id !== 'string') return { error: 'not-found' };
+      return myListsChange(ctx, () => ctx.myLists.update(msg.id));
     case 'history:query':
       return historyQuery(ctx, msg);
     case 'history:events':

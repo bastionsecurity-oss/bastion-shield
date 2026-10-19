@@ -16,6 +16,7 @@
     "customFilters": ["||ads.example.net^", "example.com##.promo-banner"],
     "allowUserSiteToggle": true,
     "allowUserFilters": false,
+    "allowCustomLists": false,
     "lockSettings": true,
     "historyEnabled": true,
     "historyRetentionDays": 14,

@@ -15,6 +15,7 @@ Facts about third-party lists were checked on 2026-10-18 by downloading every li
 7. [Community and reporting](#7-community-and-reporting)
 8. [Update cadence](#8-update-cadence)
 9. [Adding a list](#9-adding-a-list)
+10. [Lists users import («My lists»)](#10-lists-users-import-my-lists)
 
 ---
 
@@ -271,3 +272,14 @@ List authors publish more often (uBlock's quick fixes every 8 hours, EasyList ev
 7. **Document**: add the list to the tables in this file and to [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 8. Open a pull request.
 
+---
+
+## 10. Lists users import («My lists»)
+
+Beyond the catalog, users can import any list under **Filter lists › My lists**: upload a `.txt` file (uBlock Origin, Adblock Plus or hosts format) or enter an `https://` address. Up to 20 lists of 10 MB each.
+
+- **Files** stay exactly as uploaded. «Replace…» swaps in a new file and keeps the list's name and switch. Uploading a file whose `! Title:` matches an existing list asks whether to replace that list or add a new one.
+- **Web addresses** are downloaded when added and, with «Update daily» on (the default), about once a day; «Update now» fetches at once. A failed download keeps the last good copy and shows the error on the list. This is the only time Bastion Shield itself downloads anything ([PRIVACY.md](PRIVACY.md)).
+- Imported lists are compiled in the browser like the user's own filters: network filters become dynamic rules (30,000 shared with «My filters», of which 5,000 redirect/header rules and 1,000 regex rules), cosmetic filters apply, **scriptlets are skipped** (Manifest V3 forbids code that is not in the package), and nothing in them is trusted. The user's own filters always get the budget first; rules that do not fit are reported on the list.
+- Licences are the user's business for lists they import; Bastion does not redistribute them.
+- Administrators: `allowCustomLists: false` (or `lockSettings` without `allowCustomLists: true`) forbids imports **and switches off lists imported earlier** ([DEPLOYMENT-INTUNE.md](DEPLOYMENT-INTUNE.md)). To give a whole fleet an extra list, use the `lists` policy for catalog lists or `customFilters` for your own filters.

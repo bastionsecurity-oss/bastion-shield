@@ -327,6 +327,11 @@ export interface ManagedPolicy {
   allowUserSiteToggle?: boolean;
   /** Allow users to edit their own custom filters. Default true. */
   allowUserFilters?: boolean;
+  /**
+   * Allow users to import filter lists ("My lists"). Default true; false (or
+   * lockSettings without allowCustomLists: true) also stops applying them.
+   */
+  allowCustomLists?: boolean;
   /** Lock all settings shown in the dashboard. */
   lockSettings?: boolean;
   gpc?: boolean;
@@ -654,6 +659,52 @@ export interface CustomState {
   locked: boolean;
 }
 export interface MsgCustomSet { type: 'custom:set'; text: string }
+
+/** One list the user imported from a file or a web address ("My lists"). */
+export interface MyListMeta {
+  /** Random id (`[a-z0-9]{10}`); the list text lives under STORAGE.MY_LIST_PREFIX + id. */
+  id: string;
+  /** Stable slot 0 … MY_LISTS.MAX - 1: its dynamic rule ids are RULE_ID.MY_LISTS_START + slot × MY_LISTS.SLOT_SIZE. */
+  slot: number;
+  title: string;
+  source: 'file' | 'url';
+  /** File name of the last upload (source 'file'). */
+  fileName?: string;
+  /** https address (source 'url'). */
+  url?: string;
+  enabled: boolean;
+  /** Refetch about once a day (source 'url' only). */
+  autoUpdate: boolean;
+  /** ms since epoch: added, contents last changed, last download attempt. */
+  added: number;
+  updated: number;
+  checked: number;
+  /** Last download or import problem, shown on the row. */
+  error?: string;
+  etag?: string;
+  lastModified?: string;
+  bytes: number;
+}
+export interface MyListInfo extends MyListMeta {
+  /** Filter lines in the list (comments and blank lines not counted). */
+  filters: number;
+  /** Compile result: DNR rules (`network`), cosmetic filters and what was skipped. */
+  report: CustomState['report'];
+}
+export interface MyListsState {
+  lists: MyListInfo[];
+  /** Policy: users may not import lists, and imported lists are not applied. */
+  locked: boolean;
+  maxLists: number;
+  maxBytes: number;
+}
+export interface MsgMyListsGet { type: 'mylists:get' }
+/** Add from a file (`file`) or a web address (`url`); `replaceId` replaces that list's contents instead. */
+export interface MsgMyListsAdd { type: 'mylists:add'; file?: { name: string; text: string }; url?: string; replaceId?: string }
+export interface MsgMyListsSet { type: 'mylists:set'; id: string; enabled?: boolean; autoUpdate?: boolean }
+export interface MsgMyListsRemove { type: 'mylists:remove'; id: string }
+/** Download a web-address list now. */
+export interface MsgMyListsUpdate { type: 'mylists:update'; id: string }
 export interface MsgHistoryQuery { type: 'history:query'; fromDay: string; toDay: string }
 export interface HistoryResult { days: DailyAggregate[]; totals: Totals }
 export interface MsgHistoryEvents { type: 'history:events'; limit: number; before?: number; site?: string; host?: string }
@@ -714,6 +765,11 @@ export type Message =
   | MsgSitesSet
   | MsgCustomGet
   | MsgCustomSet
+  | MsgMyListsGet
+  | MsgMyListsAdd
+  | MsgMyListsSet
+  | MsgMyListsRemove
+  | MsgMyListsUpdate
   | MsgHistoryQuery
   | MsgHistoryEvents
   | MsgHistoryClear

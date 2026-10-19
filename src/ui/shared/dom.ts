@@ -157,3 +157,33 @@ export function pickTextFile(accept: string): Promise<string | null> {
     input.click();
   });
 }
+
+/**
+ * Ask the user for a text file and read it, keeping its name. Resolves null
+ * when cancelled or unreadable, `{ tooLarge: true }` above `maxBytes`.
+ */
+export function pickNamedTextFile(accept: string, maxBytes: number): Promise<{ name: string; text: string } | { tooLarge: true } | null> {
+  return new Promise((resolve) => {
+    const input = h('input', { attrs: { type: 'file', accept } });
+    input.style.display = 'none';
+    let settled = false;
+    const done = (v: { name: string; text: string } | { tooLarge: true } | null): void => {
+      if (settled) return;
+      settled = true;
+      input.remove();
+      resolve(v);
+    };
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (!file) return done(null);
+      if (file.size > maxBytes) return done({ tooLarge: true });
+      file.text().then(
+        (text) => done({ name: file.name, text }),
+        () => done(null),
+      );
+    });
+    input.addEventListener('cancel', () => done(null));
+    document.body.appendChild(input);
+    input.click();
+  });
+}

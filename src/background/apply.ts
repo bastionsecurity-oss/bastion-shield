@@ -25,7 +25,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { RULE_ID } from '../shared/constants.ts';
+import { MY_LISTS, RULE_ID } from '../shared/constants.ts';
 import type { BuildMeta, CustomState, Settings, SitesMap } from '../shared/types.ts';
 import type { DnrRule } from '../compiler/types.ts';
 import type { ActivityService, BadgeMode } from './activity.ts';
@@ -55,12 +55,14 @@ export interface ApplyReport {
   /** Errors to show next to the custom-filter editor (dropped or invalid rules). */
   customErrors: CustomState['report']['errors'];
   adminErrors: CustomState['report']['errors'];
+  /** Imported list id -> rules dropped or rejected by the browser. */
+  myListErrors: Record<string, CustomState['report']['errors']>;
   problems: string[];
   budget: { used: number; available: number | null; regexUsed: number };
 }
 
 export function emptyReport(): ApplyReport {
-  return { at: 0, listErrors: {}, customErrors: [], adminErrors: [], problems: [], budget: { used: 0, available: null, regexUsed: 0 } };
+  return { at: 0, listErrors: {}, customErrors: [], adminErrors: [], myListErrors: {}, problems: [], budget: { used: 0, available: null, regexUsed: 0 } };
 }
 
 export interface ApplyDeps {
@@ -262,12 +264,20 @@ async function buildDynamic(deps: ApplyDeps, report: ApplyReport): Promise<Dynam
     target.push({ line: 0, text: r.condition.regexFilter ?? '', reason: `regex not supported by the browser: ${reason}` });
   const admin = await dropInvalidRegex(adapt(custom.admin.rules), customDrop(report.adminErrors));
   const user = await dropInvalidRegex(adapt(custom.user.rules), customDrop(report.customErrors));
+  const myErrors = (id: string): ApplyReport['customErrors'] => (report.myListErrors[id] ??= []);
+  const my: RuleSource[] = [];
+  for (const m of custom.my) {
+    const start = RULE_ID.MY_LISTS_START + m.slot * MY_LISTS.SLOT_SIZE;
+    my.push({ name: `my:${m.id}`, rules: await dropInvalidRegex(adapt(m.compiled.rules), customDrop(myErrors(m.id))), idStart: start, idEnd: start + MY_LISTS.SLOT_SIZE - 1 });
+  }
   const debounce = settings.privacy.debounce ? await debounceRules(settings.privacy.deAmp) : [];
   const sources: RuleSource[] = [
     { name: 'system', rules: system.dynamic },
     { name: 'admin', rules: admin, idStart: RULE_ID.ADMIN_START, idEnd: RULE_ID.ADMIN_END },
     { name: 'debounce', rules: debounce, idStart: RULE_ID.DEBOUNCE_START, idEnd: RULE_ID.DEBOUNCE_END },
     { name: 'user', rules: user, idStart: RULE_ID.CUSTOM_START, idEnd: RULE_ID.CUSTOM_END },
+    // Imported lists come last: the user's own filters always fit first.
+    ...my,
   ];
   const sessionRegex = system.session.filter((r) => typeof r.condition.regexFilter === 'string').length;
   const plan = planRules(sources, DYNAMIC_BUDGET, sessionRegex);
@@ -275,6 +285,7 @@ async function buildDynamic(deps: ApplyDeps, report: ApplyReport): Promise<Dynam
     const msg = { line: 0, text: '', reason: `${d.count} rule(s) not applied: ${d.reason}` };
     if (d.source === 'user') report.customErrors.push(msg);
     else if (d.source === 'admin') report.adminErrors.push(msg);
+    else if (d.source.startsWith('my:')) myErrors(d.source.slice(3)).push(msg);
     else report.problems.push(`${d.source}: ${msg.reason}`);
   }
   return { dynamic: plan.rules, session: system.session };
@@ -286,7 +297,14 @@ export function ruleIdFromError(message: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
-async function applyDynamic(plan: DynamicPlan, report: ApplyReport): Promise<void> {
+/** Imported list id owning a dynamic rule id, from its slot (custom.my lists the slots). */
+function myListOfRule(ruleId: number, my: CustomCompiled['my']): string | null {
+  if (ruleId < RULE_ID.MY_LISTS_START || ruleId > RULE_ID.MY_LISTS_END) return null;
+  const slot = Math.floor((ruleId - RULE_ID.MY_LISTS_START) / MY_LISTS.SLOT_SIZE);
+  return my.find((m) => m.slot === slot)?.id ?? null;
+}
+
+async function applyDynamic(plan: DynamicPlan, report: ApplyReport, my: CustomCompiled['my'] = []): Promise<void> {
   const dnr = chrome.declarativeNetRequest;
   const current = (await log.attempt('dynamic', () => dnr.getDynamicRules(), [] as chrome.declarativeNetRequest.Rule[])) as unknown as DnrRule[];
   let desired = plan.dynamic;
@@ -306,14 +324,19 @@ async function applyDynamic(plan: DynamicPlan, report: ApplyReport): Promise<voi
       if (badId !== null && desired.some((r) => r.id === badId) && !isSystem(badId)) {
         const bad = desired.find((r) => r.id === badId);
         const entry = { line: 0, text: bad?.condition.urlFilter ?? bad?.condition.regexFilter ?? '', reason: msg };
-        if (badId >= RULE_ID.ADMIN_START && badId <= RULE_ID.ADMIN_END) report.adminErrors.push(entry);
+        const myId = myListOfRule(badId, my);
+        if (myId !== null) (report.myListErrors[myId] ??= []).push(entry);
+        else if (badId >= RULE_ID.ADMIN_START && badId <= RULE_ID.ADMIN_END) report.adminErrors.push(entry);
         else if (badId <= RULE_ID.CUSTOM_END) report.customErrors.push(entry);
         else report.problems.push(`dynamic: ${msg}`);
         desired = desired.filter((r) => r.id !== badId);
         continue;
       }
       const inRange = (r: DnrRule, a: number, b: number) => (r.id as number) >= a && (r.id as number) <= b;
-      if (desired.some((r) => inRange(r, RULE_ID.CUSTOM_START, RULE_ID.CUSTOM_END))) {
+      if (desired.some((r) => inRange(r, RULE_ID.MY_LISTS_START, RULE_ID.MY_LISTS_END))) {
+        for (const m of my) (report.myListErrors[m.id] ??= []).push({ line: 0, text: '', reason: `list not applied: ${msg}` });
+        desired = desired.filter((r) => !inRange(r, RULE_ID.MY_LISTS_START, RULE_ID.MY_LISTS_END));
+      } else if (desired.some((r) => inRange(r, RULE_ID.CUSTOM_START, RULE_ID.CUSTOM_END))) {
         report.customErrors.push({ line: 0, text: '', reason: `custom filters not applied: ${msg}` });
         desired = desired.filter((r) => !inRange(r, RULE_ID.CUSTOM_START, RULE_ID.CUSTOM_END));
       } else if (desired.some((r) => inRange(r, RULE_ID.DEBOUNCE_START, RULE_ID.DEBOUNCE_END))) {
@@ -494,7 +517,7 @@ export function createApplier(deps: ApplyDeps, onSitesDisabledChanged: () => voi
     await step('dynamic-plan', async () => {
       plan = await buildDynamic(deps, report);
     });
-    await step('dynamic', () => applyDynamic(plan, report));
+    await step('dynamic', () => applyDynamic(plan, report, off ? [] : deps.custom().my));
     await step('session', () => applySession(plan, why, report));
     if (!deps.incognito) {
       await step('privacy', async () => {

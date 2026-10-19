@@ -24,11 +24,12 @@ import { HistoryDb } from './history-db.ts';
 import { clearSessionRules, currentSeedFiles, openWelcome, recordInstall, renewSeeds, shouldShowWelcome } from './install.ts';
 import * as log from './log.ts';
 import { createMessageListener } from './messaging.ts';
+import { MyListsService } from './my-lists.ts';
 import type { MessageContext } from './messaging.ts';
 import { NerdService } from './nerd.ts';
 import { registerNerdCommands } from './nerd-commands.ts';
 import { chromeMenus, NerdMenus } from './nerd-menus.ts';
-import { LOCK_CUSTOM_FILTERS } from './settings.ts';
+import { LOCK_CUSTOM_FILTERS, myListsLocked } from './settings.ts';
 import { explicitField, resolveSite } from './sites.ts';
 import { Store, storageChangePlan } from './store.ts';
 import { dayKey, deferred, isPlainObject, startOfDayOffset, webHostOf } from './util.ts';
@@ -52,6 +53,8 @@ const INCOGNITO = (() => {
   }
 })();
 const PRUNE_ALARM = 'bastion:history-prune';
+/** Hourly check for imported web-address lists that are a day old (normal-profile worker only). */
+const MY_LISTS_ALARM = 'bastion:my-lists-update';
 const PRUNE_PERIOD_MIN = 6 * 60;
 const GREY_TABS_KEY = 'icons:grey';
 const ICON_SIZES = [16, 24, 32] as const;
@@ -64,10 +67,21 @@ const ICONS_ON = Object.fromEntries(ICON_SIZES.map((s) => [s, `icons/icon-on-${s
 
 const store = new Store();
 const history = new HistoryDb();
+const myLists = new MyListsService({
+  storage: {
+    get: (keys) => chrome.storage.local.get(keys),
+    set: (items) => chrome.storage.local.set(items),
+    remove: (keys) => chrome.storage.local.remove(keys),
+  },
+  fetch: (url, init) => fetch(url, init),
+  now: () => Date.now(),
+});
 let customCache: CustomCompiled | null = null;
 
 function custom(): CustomCompiled {
-  if (!customCache) customCache = compileAllCustom(store.customText, store.managed.customFilters ?? [], store.meta);
+  // A policy that forbids imported lists also stops applying them.
+  const mine = myListsLocked(store.managed) ? [] : myLists.enabled();
+  if (!customCache) customCache = compileAllCustom(store.customText, store.managed.customFilters ?? [], store.meta, mine);
   return customCache;
 }
 
@@ -81,7 +95,7 @@ function settings(): Settings {
 
 function categoryOf(listId: string | undefined): ListCategory | 'unknown' {
   if (!listId) return 'unknown';
-  if (listId === 'custom' || listId === 'admin') return 'custom';
+  if (listId === 'custom' || listId === 'admin' || listId === 'my-lists') return 'custom';
   if (listId === 'bastion-params') return 'privacy';
   return store.meta?.lists.find((l) => l.id === listId)?.category ?? 'unknown';
 }
@@ -254,7 +268,7 @@ const nerdMenus = new NerdMenus({
 
 const ready = deferred<MessageContext>();
 let isReady = false;
-const ctx: MessageContext = { store, applier, cosmetic, activity, blocked, history, nerd, custom, recompileCustom, pruneHistory };
+const ctx: MessageContext = { store, applier, cosmetic, activity, blocked, history, nerd, myLists, custom, recompileCustom, pruneHistory };
 
 // ---------------------------------------------------------------------------
 // Toolbar icon for tabs with protection off
@@ -497,6 +511,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
   void ready.promise.then(async () => {
     if (area !== 'managed' && area !== 'local') return;
     const localChanged = area === 'local' && store.applyLocalChange(changes);
+    if (area === 'local' && (await myLists.onStorageChanged(changes))) {
+      recompileCustom();
+      void applier.schedule();
+    }
     const plan = storageChangePlan(area, Object.keys(changes), localChanged, cold);
     if (plan.reloadManaged) await store.reloadManaged();
     if (plan.recompileCustom) recompileCustom();
@@ -506,6 +524,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 chrome.alarms?.onAlarm.addListener((alarm) => {
+  if (alarm.name === MY_LISTS_ALARM) {
+    void ready.promise.then(async () => {
+      if (INCOGNITO || myListsLocked(store.managed)) return;
+      if (await myLists.updateDue()) {
+        recompileCustom();
+        await applier.now();
+      }
+    });
+    return;
+  }
   if (alarm.name !== PRUNE_ALARM) return;
   void ready.promise.then(pruneHistory);
 });
@@ -537,6 +565,7 @@ async function init(): Promise<void> {
   const meta = await loadBuildMeta();
   if (!meta) log.error('init', 'rulesets/meta.json missing or invalid; list toggles unavailable');
   await store.load(meta);
+  await myLists.load();
   await activity.init();
   await blocked.restore();
   await applier.restoreReport();
@@ -545,6 +574,9 @@ async function init(): Promise<void> {
   if (Array.isArray(grey)) for (const id of grey) if (typeof id === 'number') greyTabs.add(id);
   const alarm = await log.attempt('init', () => chrome.alarms.get(PRUNE_ALARM));
   if (!alarm) await log.attempt('init', () => chrome.alarms.create(PRUNE_ALARM, { delayInMinutes: 1, periodInMinutes: PRUNE_PERIOD_MIN }));
+  if (!INCOGNITO && !(await log.attempt('init', () => chrome.alarms.get(MY_LISTS_ALARM)))) {
+    await log.attempt('init', () => chrome.alarms.create(MY_LISTS_ALARM, { delayInMinutes: 5, periodInMinutes: 60 }));
+  }
 
   // Self-heal: session storage is empty after a browser restart or after the
   // extension was re-enabled (neither fires onInstalled/onStartup reliably),

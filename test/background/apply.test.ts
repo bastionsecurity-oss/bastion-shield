@@ -165,7 +165,7 @@ function installChrome(): Fake {
 
 function setup(policy: { managed: ManagedPolicy }, userSites: SitesMap, meta: BuildMeta | null = META) {
   let iconRefreshes = 0;
-  const custom: CustomCompiled = { user: EMPTY_COMPILED, admin: EMPTY_COMPILED, cosmetic: { specific: [], generic: [] }, genericHideHosts: [] };
+  const custom: CustomCompiled = { user: EMPTY_COMPILED, admin: EMPTY_COMPILED, my: [], cosmetic: { specific: [], generic: [] }, genericHideHosts: [] };
   const applier = createApplier(
     {
       settings: () => effectiveSettings(defaultSettings(), policy.managed, listInfos(meta)),
