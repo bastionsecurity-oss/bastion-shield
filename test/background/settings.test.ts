@@ -238,3 +238,16 @@ test('ui language: German by default, only known values, lockable', () => {
   assert.deepEqual(bad.ignored, ['ui.language']);
   assert.ok(SETTING_PATHS.includes('ui.language'));
 });
+
+test('nerd: context menu and filter history links default on, patchable and lockable', () => {
+  const d = defaultSettings();
+  assert.equal(d.nerd.contextMenu, true);
+  assert.equal(d.nerd.filterHistory, true);
+  assert.equal(normalizeSettings({ version: 1, nerd: { contextMenu: false, filterHistory: 'x' } }).nerd.contextMenu, false);
+  assert.equal(normalizeSettings({ version: 1, nerd: { contextMenu: false, filterHistory: 'x' } }).nerd.filterHistory, true);
+  const { settings } = applySettingsPatch(d, { nerd: { contextMenu: false, filterHistory: false } }, new Set());
+  assert.equal(settings.nerd.contextMenu, false);
+  assert.equal(settings.nerd.filterHistory, false);
+  assert.ok((SETTING_PATHS as readonly string[]).includes('nerd.contextMenu'));
+  assert.ok((SETTING_PATHS as readonly string[]).includes('nerd.filterHistory'));
+});

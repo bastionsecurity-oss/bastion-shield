@@ -205,7 +205,7 @@ export function activityView(): View {
     async render(root) {
       const [cfgR, metaR] = await Promise.all([getConfig(), getMeta()]);
       const cfg = cfgR.ok ? cfgR.data : null;
-      nerd = cfg?.settings.nerd?.enabled === true;
+      nerd = cfg?.settings.nerd?.enabled === true && cfg.settings.nerd.filterHistory !== false;
       meta = metaR;
 
       const modeSeg = segmented<Mode>({

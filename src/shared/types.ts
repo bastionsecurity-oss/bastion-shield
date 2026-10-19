@@ -279,6 +279,10 @@ export interface Settings {
   nerd: {
     /** Master switch. Default false. */
     enabled: boolean;
+    /** «Bastion Shield» entry in the page/link/selection context menu. Default true. */
+    contextMenu: boolean;
+    /** Filter history links («GitHub ↗») in the popup, Activity and the Lab's results. Default true. */
+    filterHistory: boolean;
     /** Count fingerprinting API calls per page (MAIN-world meter). Default true. */
     fingerprintMeter: boolean;
     /** Warn on lookalike domains of protected domains. Default true. */

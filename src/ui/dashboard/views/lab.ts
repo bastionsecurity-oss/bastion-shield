@@ -493,11 +493,31 @@ function playgroundSection(meta: BuildMeta | null, cfg: EffectiveConfig): Tool {
   const listsBox = h('input', { attrs: { type: 'checkbox' } });
   const listsCheck = h('label', { class: 'lab-check' }, listsBox, h('span', { text: t('nerdLabExplainToggle') }));
   const urlsBlock = h('div', { class: 'lab-field' }, h('label', { class: 'lab-label', attrs: { for: urlsId }, text: t('nerdLabUrlsLabel') }), urlsArea, h('p', { class: 'lab-hint', text: t('nerdLabUrlsHint') }), listsCheck);
-  const histBlock = h('div', { class: 'lab-field' }, h('div', { class: 'lab-label', text: t('nerdLabHistoryLabel') }), historyCtl, h('p', { class: 'lab-hint', text: t('nerdLabHistoryHint') }), historyNote);
+  // How many recorded requests a run would test: the history is only read on Run, so say up front what is there.
+  const histCount = h('p', { class: 'lab-hint lab-hist__count', attrs: { role: 'status' } });
+  const histBlock = h('div', { class: 'lab-field' }, h('div', { class: 'lab-label', text: t('nerdLabHistoryLabel') }), historyCtl, historyOn ? histCount : null, h('p', { class: 'lab-hint', text: t('nerdLabHistoryHint') }), historyNote);
+
+  let countToken = 0;
+  const paintCount = async (): Promise<void> => {
+    if (!historyOn || source === 'urls') return;
+    const token = ++countToken;
+    const site = siteIn.value.trim().toLowerCase();
+    const r = await historyEvents(Number(limitSel.value) || 2000, undefined, site);
+    if (token !== countToken) return;
+    if (!r.ok) {
+      histCount.textContent = '';
+      return;
+    }
+    const n = requestsFromEvents(r.data).length;
+    histCount.textContent = n === 0 ? t(site ? 'nerdLabHistoryCountNoneSite' : 'nerdLabHistoryCountNone') : plural(n, 'nerdLabHistoryCountOne', 'nerdLabHistoryCount');
+  };
+  siteIn.addEventListener('input', debounce(() => void paintCount(), 250));
+  limitSel.addEventListener('change', () => void paintCount());
 
   const paintSource = (): void => {
     histBlock.hidden = source === 'urls';
     urlsBlock.hidden = source === 'history';
+    void paintCount();
   };
 
   const runBtn = h('button', { class: 'btn btn--secondary', attrs: { type: 'button' } }, icon('play', 14), t('nerdLabRun'));

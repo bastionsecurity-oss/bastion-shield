@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BackupFile, BlockingMode, EffectiveConfig, Settings } from '../../../shared/types.ts';
-import { append, downloadText, h, pickTextFile, toast } from '../../shared/dom.ts';
+import { append, downloadText, h, pickTextFile, replace, toast } from '../../shared/dom.ts';
 import { clearI18nCache, fmtDateTime, fmtNumber, plural, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { call } from '../../shared/messaging.ts';
@@ -15,6 +15,8 @@ import { errorState, nextId, openTabButton, pageHead, panel, popupMode, settingR
 import { adoptConfig, getConfig, getLists, ignoredPaths, isLocked, saveSettings } from '../store.ts';
 import { persist } from './privacy.ts';
 import { revealNerd } from '../nerd-reveal.ts';
+import { shortcutLabel } from '../rail.ts';
+import { commandHelp } from '../../popup/commands.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
 
@@ -38,7 +40,7 @@ export function defaultSettings(): Settings {
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
-    nerd: { enabled: false, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
+    nerd: { enabled: false, contextMenu: true, filterHistory: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
 }
 
@@ -83,10 +85,11 @@ export function parseProtectedDomains(text: string): { domains: string[]; invali
 }
 
 /**
- * «Nerd-Modus»: a normal settings group. The master switch row carries the
- * only visible description (one sober line); the guards (fingerprinting
- * meter, lookalike warning) and the protected-domain list
- * appear only while it is on. Policy domains are shown read-only; the user's own
+ * «Nerd-Modus»: a normal settings group. The master switch row carries one
+ * sober line; while it is on, a short reference (the popup's Ctrl+K command
+ * line and the bisect shortcut), the switches for the visible extras
+ * (context menu, filter history links), the guards (fingerprinting meter,
+ * lookalike warning) and the protected-domain list appear. Policy domains are shown read-only; the user's own
  * list is the effective list minus the policy's.
  */
 function nerdPanel(cfg: EffectiveConfig): HTMLElement {
@@ -103,6 +106,32 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     const sw = switchControl({ checked: value, labelledBy: labelId, describedBy: descId, disabled: locked, onChange: (v) => persist(patch(v)) });
     return settingRow({ label: t(labelKey), desc: t(descKey), control: sw.el, locked, labelId, descId });
   };
+
+  // What nerd mode unlocks that has no switch of its own: the command line and the bisect shortcut.
+  const kbd = (k: string): HTMLElement => h('kbd', { class: 'lab-kbd', text: k });
+  const bisectKey = h('span', { class: 'nerd-help__key' }, kbd('Alt+Shift+X'));
+  void (async () => {
+    try {
+      const c = ((await chrome.commands?.getAll()) ?? []).find((x) => x.name === 'nerd-bisect');
+      if (c) replace(bisectKey, c.shortcut ? kbd(c.shortcut) : h('span', { class: 'db-muted', text: t('nerdHelpNoShortcut') }));
+    } catch {
+      /* no commands API (tests) */
+    }
+  })();
+  const shortcutsBtn = h(
+    'button',
+    { class: 'btn btn--ghost btn--sm', attrs: { type: 'button' }, on: { click: () => void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' }) } },
+    t('nerdHelpShortcuts'),
+    icon('external', 12),
+  );
+  const help = h(
+    'div',
+    { class: 'nerd-help' },
+    h('div', { class: 'db-row__label', text: t('nerdHelpTitle') }),
+    h('p', { class: 'db-muted nerd-help__lead' }, t('nerdHelpCmdLead'), ' ', kbd(shortcutLabel('K')), ' ', t('nerdHelpCmdLeadTail')),
+    h('dl', { class: 'nerd-help__cmds' }, ...commandHelp().flatMap((c) => [h('dt', { class: 'mono', text: c.usage }), h('dd', { text: t(c.desc) })])),
+    h('p', { class: 'db-muted nerd-help__lead' }, t('nerdHelpBisect'), ' ', bisectKey, ' ', shortcutsBtn),
+  );
 
   // Master switch: the sub-settings and the «Entwicklertools» (developer tools) navigation entry follow it live.
   const masterLabel = nextId('set');
@@ -156,6 +185,9 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
   });
 
   append(sub, [
+    help,
+    row('nerd.contextMenu', n.contextMenu, 'nerdSettingsContextMenu', 'nerdSettingsContextMenuDesc', (v) => ({ nerd: { contextMenu: v } })),
+    row('nerd.filterHistory', n.filterHistory, 'nerdSettingsFilterHistory', 'nerdSettingsFilterHistoryDesc', (v) => ({ nerd: { filterHistory: v } })),
     row('nerd.fingerprintMeter', n.fingerprintMeter, 'nerdSettingsFpMeter', 'nerdSettingsFpMeterDesc', (v) => ({ nerd: { fingerprintMeter: v } })),
     row('nerd.lookalike', n.lookalike, 'nerdSettingsLookalike', 'nerdSettingsLookalikeDesc', (v) => ({ nerd: { lookalike: v } })),
     h(

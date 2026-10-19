@@ -1988,6 +1988,36 @@
   "nerdSettingsEnabledDesc": {
     "message": "Outils de développement, ligne de commande (Ctrl+K), menu contextuel et bisect. Rien ne quitte cet appareil."
   },
+  "nerdHelpTitle": {
+    "message": "Mode d’emploi"
+  },
+  "nerdHelpCmdLead": {
+    "message": "Dans le popup,"
+  },
+  "nerdHelpCmdLeadTail": {
+    "message": "ouvre la ligne de commande :"
+  },
+  "nerdHelpBisect": {
+    "message": "Trouver le filtre qui casse la page actuelle :"
+  },
+  "nerdHelpShortcuts": {
+    "message": "Modifier le raccourci"
+  },
+  "nerdHelpNoShortcut": {
+    "message": "aucun raccourci défini"
+  },
+  "nerdSettingsContextMenu": {
+    "message": "Menu contextuel"
+  },
+  "nerdSettingsContextMenuDesc": {
+    "message": "Ajoute «Bastion Shield» au menu du clic droit : vérifier pourquoi un lien ou une image est bloqué, tester ou rechercher le texte de filtre sélectionné, trouver le filtre fautif, ouvrir les outils de développement."
+  },
+  "nerdSettingsFilterHistory": {
+    "message": "Liens vers l’historique des filtres"
+  },
+  "nerdSettingsFilterHistoryDesc": {
+    "message": "Affiche «GitHub ↗» à côté des filtres appliqués dans le popup et dans l’activité, avec un lien vers l’historique du filtre à la source."
+  },
   "nerdSettingsFpMeter": {
     "message": "Compteur de fingerprinting"
   },
@@ -2100,6 +2130,23 @@
   },
   "nerdLabHistoryHint": {
     "message": "L’historique ne contient que les requêtes déjà bloquées ou redirigées par Bastion. Collez des URL pour tester le reste."
+  },
+  "nerdLabHistoryCount": {
+    "message": "$P1$ requêtes enregistrées seront testées.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabHistoryCountOne": {
+    "message": "1 requête enregistrée sera testée."
+  },
+  "nerdLabHistoryCountNone": {
+    "message": "Aucune requête enregistrée pour l’instant. Elles s’ajoutent pendant la navigation, dès que Bastion bloque ou redirige quelque chose."
+  },
+  "nerdLabHistoryCountNoneSite": {
+    "message": "Aucune requête enregistrée pour ce site."
   },
   "nerdLabHistoryOffTitle": {
     "message": "L’historique est désactivé"

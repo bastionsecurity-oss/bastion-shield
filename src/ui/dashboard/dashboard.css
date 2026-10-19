@@ -674,6 +674,14 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 /* Settings: master switch, guards and protected domains. */
 .nerd-sub[hidden], .db-nav__lab[hidden] { display: none; }
 .nerd-sub { border-top: 1px solid var(--line-soft); }
+.nerd-help { padding: 16px 20px; }
+.nerd-help__lead { margin: 4px 0 0; max-width: 72ch; }
+.nerd-help__lead + .nerd-help__cmds { margin-top: 10px; }
+.nerd-help__cmds { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0 0 12px; font-size: var(--text-sm); }
+.nerd-help__cmds dt { color: var(--text-strong); font-size: 12px; }
+.nerd-help__cmds dd { margin: 0; color: var(--text-2); }
+.nerd-help__key { display: inline-flex; vertical-align: baseline; }
+@media (max-width: 520px) { .nerd-help__cmds { grid-template-columns: minmax(0, 1fr); } .nerd-help__cmds dd { margin-bottom: 6px; } }
 .nerd-domains__block { padding: 16px 20px 20px; border-top: 1px solid var(--line-soft); }
 .nerd-domains__head { display: flex; align-items: center; gap: 8px; }
 .nerd-domains__hint { margin: 2px 0 10px; max-width: 72ch; }

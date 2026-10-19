@@ -26,7 +26,7 @@ let reply: unknown = undefined;
 
 const ROOT = new URL('../../src', import.meta.url).href;
 const { fpSummary, normaliseBisect, normaliseHosts, stepLabel, bisectCall, shortcutLabel } = await import(`${ROOT}/ui/popup/nerd.ts`);
-const { fuzzyScore, suggest, hostFrom, targetUrl, labPath, buildReport, MAX_SUGGESTIONS } = await import(`${ROOT}/ui/popup/commands.ts`);
+const { fuzzyScore, suggest, hostFrom, targetUrl, labPath, buildReport, commandHelp, MAX_SUGGESTIONS } = await import(`${ROOT}/ui/popup/commands.ts`);
 const { dynamicRuleLabel } = await import(`${ROOT}/ui/shared/labels.ts`);
 const { RULE_ID } = await import(`${ROOT}/shared/constants.ts`);
 
@@ -208,4 +208,15 @@ test('nerd popup locale keys exist in every language, Swiss spelling in German, 
   const src = ['ui/popup/nerd.ts', 'ui/popup/commands.ts', 'ui/popup/matched.ts', 'ui/popup/popup.html', 'ui/shared/labels.ts', 'manifest.base.json'].map(read).join('\n');
   for (const m of src.matchAll(/['"_](nerd(?:Bisect|Popup|Sl|Cmd)[A-Za-z]*|cmdNerd[A-Za-z]*)['"_]/g)) assert.ok(de[m[1]!], `missing ${m[1]}`);
   for (const k of keys) assert.ok(src.includes(k), `unused ${k}`);
+});
+
+test('command reference: usage with argument hints, no bisect cancel', () => {
+  const help = commandHelp() as { usage: string; desc: string }[];
+  const usage = help.map((c) => c.usage);
+  assert.ok(usage.includes('why <url>'));
+  assert.ok(usage.includes('blame <filter>'));
+  assert.ok(usage.includes('allow <host>'));
+  assert.ok(usage.includes('bisect'));
+  assert.ok(!usage.includes('bisect cancel'));
+  assert.ok(help.every((c) => c.desc.startsWith('nerdCmd')));
 });

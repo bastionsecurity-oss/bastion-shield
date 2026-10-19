@@ -51,7 +51,7 @@ export function defaultSettings(): Settings {
     },
     ui: { badge: true, activityLog: true, incidentCta: true, language: 'de' },
     history: { enabled: true, retentionDays: 30 },
-    nerd: { enabled: false, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
+    nerd: { enabled: false, contextMenu: true, filterHistory: true, fingerprintMeter: true, lookalike: true, protectedDomains: [] },
   };
 }
 
@@ -132,6 +132,8 @@ export function normalizeSettings(raw: unknown): Settings {
     },
     nerd: {
       enabled: bool(n.enabled, d.nerd.enabled),
+      contextMenu: bool(n.contextMenu, d.nerd.contextMenu),
+      filterHistory: bool(n.filterHistory, d.nerd.filterHistory),
       fingerprintMeter: bool(n.fingerprintMeter, d.nerd.fingerprintMeter),
       lookalike: bool(n.lookalike, d.nerd.lookalike),
       protectedDomains: domainList(n.protectedDomains),
@@ -334,6 +336,8 @@ export const SETTING_PATHS = [
   'history.enabled',
   'history.retentionDays',
   'nerd.enabled',
+  'nerd.contextMenu',
+  'nerd.filterHistory',
   'nerd.fingerprintMeter',
   'nerd.lookalike',
   'nerd.protectedDomains',
@@ -513,7 +517,7 @@ export function applySettingsPatch(
   }
   if (isPlainObject(patch.nerd)) {
     const np = patch.nerd;
-    for (const k of ['enabled', 'fingerprintMeter', 'lookalike'] as const) {
+    for (const k of ['enabled', 'contextMenu', 'filterHistory', 'fingerprintMeter', 'lookalike'] as const) {
       if (k in np) set(`nerd.${k}`, typeof np[k] === 'boolean', () => (next.nerd[k] = np[k] as boolean));
     }
     if ('protectedDomains' in np) {

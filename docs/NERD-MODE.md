@@ -16,8 +16,11 @@ UI names (en / de): the dashboard section is "Developer tools" /
 «Entwicklertools» (hash `#lab`, command `lab`; called the Lab in code and
 below) with the tabs "Filter tester" / «Filter-Tester», "Checksums (SHA-256)"
 / «Prüfsummen (SHA-256)» and "Filter history" / «Filter-Historie». The
-settings rows are "Fingerprinting counter"
-and "Lookalike domains (typosquatting)" with "Protected domains".
+settings rows are "Context menu", "Filter history links", "Fingerprinting counter"
+and "Lookalike domains (typosquatting)" with "Protected domains". Above them, a
+short "How to use it" block lists the popup's `Ctrl+K` commands
+(`commandHelp()` in `ui/popup/commands.ts`) and the bisect shortcut as Chrome
+reports it, with a button to `chrome://extensions/shortcuts`.
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |
@@ -26,15 +29,15 @@ and "Lookalike domains (typosquatting)" with "Protected domains".
 | Unlocked settings decode in place when switched on (easter egg; also via `nerd` in the dashboard's `Ctrl+K` palette) | Dashboard, expanded popup | `nerd.enabled` |
 | Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
 | Lookalike domains (typosquatting) | Page (notice), popup | `nerd.lookalike`, `nerd.protectedDomains` / `protectedDomains` |
-| Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity and Developer tools | `nerd.enabled` |
+| Filter history links («GitHub ↗») | Popup matched rules, dashboard Activity (Developer tools always) | `nerd.filterHistory` |
 | Filter tester (dry run) | Dashboard › Developer tools | `nerd.enabled` |
 | Check URL against installed rules | Dashboard › Developer tools | `nerd.enabled` |
 | Checksums (SHA-256) self-check | Dashboard › Developer tools | `nerd.enabled` |
-| Context menu | Right-click on pages, links, media, selections, toolbar icon | `nerd.enabled` |
+| Context menu | Right-click on pages, links, media, selections, toolbar icon | `nerd.contextMenu` |
 
 ## Context menu
 
-While nerd mode is on, `background/nerd-menus.ts` adds a "Bastion Shield"
+While nerd mode and `nerd.contextMenu` (default on) are on, `background/nerd-menus.ts` adds a "Bastion Shield"
 entry to the page context menu (permission `contextMenus`, no install
 warning). The items are created and removed live when the setting flips
 (`removeAll` + `create`, ids prefixed `nerd-`) and rebuilt on install, update

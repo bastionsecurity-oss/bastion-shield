@@ -32,6 +32,13 @@ const COMMANDS: readonly CommandDef[] = [
   { id: 'nerd off', name: 'nerd off', desc: 'nerdCmdNerdOff' },
 ];
 
+const ARG_HINT: Readonly<Record<NonNullable<CommandDef['arg']>, string>> = { target: '<url>', filter: '<filter>', host: '<host>' };
+
+/** The command reference (settings › nerd mode): what to type and its i18n description key. */
+export function commandHelp(): { usage: string; desc: string }[] {
+  return COMMANDS.filter((c) => c.id !== 'bisect cancel').map((c) => ({ usage: c.arg ? `${c.name} ${ARG_HINT[c.arg]}` : c.name, desc: c.desc }));
+}
+
 /** Rows shown under the prompt. */
 export const MAX_SUGGESTIONS = 6;
 

@@ -251,7 +251,7 @@ export function siteView(): View {
       // Nerd mode: upstream history links next to each filter, live with the switch.
       const nerdOn = async (): Promise<boolean> => {
         const c = await getConfig();
-        return c.ok && c.data.settings.nerd?.enabled === true;
+        return c.ok && c.data.settings.nerd?.enabled === true && c.data.settings.nerd.filterHistory !== false;
       };
       void nerdOn().then((on) => matched.setBlame(on));
       unsubscribe = onStoreChange(() => void nerdOn().then((on) => matched.setBlame(on)));

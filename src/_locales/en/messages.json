@@ -1988,6 +1988,36 @@
   "nerdSettingsEnabledDesc": {
     "message": "Developer tools, command line (Ctrl+K), context menu and bisect. Nothing leaves this device."
   },
+  "nerdHelpTitle": {
+    "message": "How to use it"
+  },
+  "nerdHelpCmdLead": {
+    "message": "In the popup, press"
+  },
+  "nerdHelpCmdLeadTail": {
+    "message": "for the command line:"
+  },
+  "nerdHelpBisect": {
+    "message": "Find the filter that breaks the current page:"
+  },
+  "nerdHelpShortcuts": {
+    "message": "Change shortcut"
+  },
+  "nerdHelpNoShortcut": {
+    "message": "no shortcut set"
+  },
+  "nerdSettingsContextMenu": {
+    "message": "Context menu"
+  },
+  "nerdSettingsContextMenuDesc": {
+    "message": "Adds «Bastion Shield» to the right-click menu: check why a link or image is blocked, test or look up selected filter text, find the breaking filter, open the developer tools."
+  },
+  "nerdSettingsFilterHistory": {
+    "message": "Filter history links"
+  },
+  "nerdSettingsFilterHistoryDesc": {
+    "message": "Shows «GitHub ↗» next to matched filters in the popup and in Activity, linking to the filter's upstream history."
+  },
   "nerdSettingsFpMeter": {
     "message": "Fingerprinting counter"
   },
@@ -2100,6 +2130,23 @@
   },
   "nerdLabHistoryHint": {
     "message": "History only holds requests Bastion already blocked or redirected. Paste URLs to test anything else."
+  },
+  "nerdLabHistoryCount": {
+    "message": "$P1$ recorded requests will be tested.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabHistoryCountOne": {
+    "message": "1 recorded request will be tested."
+  },
+  "nerdLabHistoryCountNone": {
+    "message": "No recorded requests yet. They are added while you browse, whenever Bastion blocks or redirects something."
+  },
+  "nerdLabHistoryCountNoneSite": {
+    "message": "No recorded requests for this site."
   },
   "nerdLabHistoryOffTitle": {
     "message": "History is off"

@@ -1988,6 +1988,36 @@
   "nerdSettingsEnabledDesc": {
     "message": "Strumenti per sviluppatori, riga di comando (Ctrl+K), menu contestuale e bisect. Nulla lascia questo dispositivo."
   },
+  "nerdHelpTitle": {
+    "message": "Come si usa"
+  },
+  "nerdHelpCmdLead": {
+    "message": "Nel popup,"
+  },
+  "nerdHelpCmdLeadTail": {
+    "message": "apre la riga di comando:"
+  },
+  "nerdHelpBisect": {
+    "message": "Trovare il filtro che rompe la pagina attuale:"
+  },
+  "nerdHelpShortcuts": {
+    "message": "Modificare la scorciatoia"
+  },
+  "nerdHelpNoShortcut": {
+    "message": "nessuna scorciatoia impostata"
+  },
+  "nerdSettingsContextMenu": {
+    "message": "Menu contestuale"
+  },
+  "nerdSettingsContextMenuDesc": {
+    "message": "Aggiunge «Bastion Shield» al menu del clic destro: verificare perché un link o un'immagine è bloccato, provare o cercare il testo di filtro selezionato, trovare il filtro che causa problemi, aprire gli strumenti per sviluppatori."
+  },
+  "nerdSettingsFilterHistory": {
+    "message": "Link alla cronologia dei filtri"
+  },
+  "nerdSettingsFilterHistoryDesc": {
+    "message": "Mostra «GitHub ↗» accanto ai filtri applicati nel popup e nell'attività, con un link alla cronologia del filtro nella fonte."
+  },
   "nerdSettingsFpMeter": {
     "message": "Contatore di fingerprinting"
   },
@@ -2100,6 +2130,23 @@
   },
   "nerdLabHistoryHint": {
     "message": "La cronologia contiene solo richieste già bloccate o reindirizzate da Bastion. Incollare degli URL per provare il resto."
+  },
+  "nerdLabHistoryCount": {
+    "message": "Verranno provate $P1$ richieste registrate.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabHistoryCountOne": {
+    "message": "Verrà provata 1 richiesta registrata."
+  },
+  "nerdLabHistoryCountNone": {
+    "message": "Ancora nessuna richiesta registrata. Si aggiungono durante la navigazione, ogni volta che Bastion blocca o reindirizza qualcosa."
+  },
+  "nerdLabHistoryCountNoneSite": {
+    "message": "Nessuna richiesta registrata per questo sito."
   },
   "nerdLabHistoryOffTitle": {
     "message": "La cronologia è disattivata"

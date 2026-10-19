@@ -387,7 +387,7 @@ function syncListeners(): void {
   setListener(chrome.webRequest?.onErrorOccurred, onErrorOccurred, needActivity, ALL_URLS_FILTER);
   setListener(chrome.webRequest?.onBeforeRedirect, onSubresourceRedirect, needActivity, ALL_URLS_FILTER);
   setListener(chrome.webNavigation?.onCommitted, onCommitted, needActivity || anyDisabled || blocked.hasRecords() || s.nerd.enabled);
-  void nerdMenus.sync(s.nerd.enabled);
+  void nerdMenus.sync(s.nerd.enabled && s.nerd.contextMenu);
   nerd.onSettingsChanged();
 }
 
@@ -472,7 +472,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       log.error('install', e);
     }
     // Context menus are rebuilt from scratch on install and update.
-    await nerdMenus.sync(settings().nerd.enabled, true);
+    await nerdMenus.sync(settings().nerd.enabled && settings().nerd.contextMenu, true);
   });
 });
 
@@ -480,7 +480,7 @@ chrome.runtime.onStartup.addListener(() => {
   void ready.promise.then(async () => {
     await renewSeeds();
     await applier.now('startup');
-    await nerdMenus.sync(settings().nerd.enabled, true);
+    await nerdMenus.sync(settings().nerd.enabled && settings().nerd.contextMenu, true);
   });
 });
 

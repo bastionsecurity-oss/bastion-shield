@@ -1988,6 +1988,36 @@
   "nerdSettingsEnabledDesc": {
     "message": "Entwicklertools, Befehlszeile (Ctrl+K), Kontextmenü und Bisect. Nichts verlässt dieses Gerät."
   },
+  "nerdHelpTitle": {
+    "message": "So gehts"
+  },
+  "nerdHelpCmdLead": {
+    "message": "Im Popup öffnet"
+  },
+  "nerdHelpCmdLeadTail": {
+    "message": "die Befehlszeile:"
+  },
+  "nerdHelpBisect": {
+    "message": "Den Filter finden, der die aktuelle Seite kaputt macht:"
+  },
+  "nerdHelpShortcuts": {
+    "message": "Tastenkürzel ändern"
+  },
+  "nerdHelpNoShortcut": {
+    "message": "kein Tastenkürzel gesetzt"
+  },
+  "nerdSettingsContextMenu": {
+    "message": "Kontextmenü"
+  },
+  "nerdSettingsContextMenuDesc": {
+    "message": "Fügt «Bastion Shield» zum Rechtsklick-Menü hinzu: prüfen, warum ein Link oder Bild blockiert wird, markierten Filtertext testen oder nachschlagen, den störenden Filter finden, die Entwicklertools öffnen."
+  },
+  "nerdSettingsFilterHistory": {
+    "message": "Links zur Filter-Historie"
+  },
+  "nerdSettingsFilterHistoryDesc": {
+    "message": "Zeigt «GitHub ↗» neben getroffenen Filtern im Popup und in der Aktivität, mit Link zur Historie des Filters in der Quelle."
+  },
   "nerdSettingsFpMeter": {
     "message": "Fingerprinting-Zähler"
   },
@@ -2100,6 +2130,23 @@
   },
   "nerdLabHistoryHint": {
     "message": "Der Verlauf enthält nur Anfragen, die Bastion schon blockiert oder umgeleitet hat. Für alles andere URLs einfügen."
+  },
+  "nerdLabHistoryCount": {
+    "message": "$P1$ aufgezeichnete Anfragen werden getestet.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdLabHistoryCountOne": {
+    "message": "1 aufgezeichnete Anfrage wird getestet."
+  },
+  "nerdLabHistoryCountNone": {
+    "message": "Noch keine aufgezeichneten Anfragen. Sie kommen beim Surfen dazu, sobald Bastion etwas blockiert oder umleitet."
+  },
+  "nerdLabHistoryCountNoneSite": {
+    "message": "Keine aufgezeichneten Anfragen für diese Website."
   },
   "nerdLabHistoryOffTitle": {
     "message": "Der Verlauf ist aus"
