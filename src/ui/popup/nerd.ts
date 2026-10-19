@@ -17,6 +17,7 @@ import { h, replace } from '../shared/dom.ts';
 import { fmtNumber, plural, t } from '../shared/i18n.ts';
 import { ListDirectory } from '../shared/labels.ts';
 import { call, fetchPackaged, type Result } from '../shared/messaging.ts';
+import { keyboardLayout, localizeShortcut } from '../shared/shortcuts.ts';
 import { buildReport, hostFrom, labPath, suggest, targetUrl, type CommandContext, type CommandId, type Suggestion } from './commands.ts';
 
 type Described = BisectCandidate & { filters: string[]; lists: string[] };
@@ -197,8 +198,9 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
 
   void (async () => {
     try {
-      for (const c of (await chrome.commands?.getAll()) ?? []) {
-        if (c.name === 'nerd-bisect' && c.shortcut) shortcuts.bisect = shortcuts['bisect cancel'] = shortcutLabel(c.shortcut);
+      const [commands, layout] = await Promise.all([chrome.commands?.getAll() ?? [], keyboardLayout()]);
+      for (const c of commands) {
+        if (c.name === 'nerd-bisect' && c.shortcut) shortcuts.bisect = shortcuts['bisect cancel'] = shortcutLabel(localizeShortcut(c.shortcut, layout));
       }
     } catch {
       /* no commands API (popup opened as a tab in tests) */

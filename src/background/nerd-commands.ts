@@ -24,9 +24,15 @@ export interface NerdCommandDeps {
   bisect(msg: MsgNerdBisect): Promise<unknown>;
   /** Nerd mode and the activity log are on. */
   canBisect(): boolean;
+  /** The worker is initialised, so canBisect() reads the real settings. */
+  isReady(): boolean;
   /** Fallback when the command event carries no tab. */
   activeTabId(): Promise<number | null>;
-  /** Show the popup after a start: without it the shortcut seems to do nothing. */
+  /**
+   * Show the popup, where the bisect asks its questions. Called synchronously from
+   * the command event when possible: after the awaits of a start the key press no
+   * longer counts as a user action and the browser may refuse to open it.
+   */
   openPopup(): Promise<void>;
 }
 
@@ -38,7 +44,7 @@ const viewOf = (r: unknown): BisectView | null => {
 };
 
 /** Toggle: a bisect shown on the tab (testing or a result) is ended, otherwise one starts. */
-export async function runNerdCommand(command: string, tabId: number | null | undefined, deps: NerdCommandDeps): Promise<NerdCommandResult> {
+export async function runNerdCommand(command: string, tabId: number | null | undefined, deps: NerdCommandDeps, popupOpened = false): Promise<NerdCommandResult> {
   if (command !== NERD_BISECT_COMMAND || !deps.canBisect()) return 'ignored';
   const id = typeof tabId === 'number' && tabId >= 0 ? tabId : await deps.activeTabId();
   if (id === null || id < 0) return 'ignored';
@@ -48,15 +54,19 @@ export async function runNerdCommand(command: string, tabId: number | null | und
     return 'cancelled';
   }
   await deps.bisect({ type: 'nerd:bisect', action: 'start', tabId: id });
-  await deps.openPopup();
+  if (!popupOpened) await deps.openPopup();
   return 'started';
 }
 
 export function registerNerdCommands(deps: NerdCommandDeps): void {
   try {
     chrome.commands?.onCommand.addListener((command, tab) => {
+      // Open the popup now, while the key press still counts as a user action; it picks
+      // the bisect up once started. A cold worker cannot tell yet and opens it afterwards.
+      const eager = command === NERD_BISECT_COMMAND && deps.isReady() && deps.canBisect();
+      if (eager) void deps.openPopup();
       void deps.ready
-        .then(() => runNerdCommand(command, tab?.id, deps))
+        .then(() => runNerdCommand(command, tab?.id, deps, eager))
         .catch((e: unknown) => log.warn('commands', command, e));
     });
   } catch (e) {

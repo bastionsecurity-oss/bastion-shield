@@ -572,6 +572,7 @@ test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log
   const cmdDeps = (can: boolean): NerdCommandDeps => ({
     ready: Promise.resolve(),
     canBisect: () => can,
+    isReady: () => true,
     activeTabId: async () => 5,
     openPopup: async () => {
       popups++;
@@ -592,5 +593,9 @@ test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log
   assert.equal(await runNerdCommand(NERD_BISECT_COMMAND, undefined, cmdDeps(true)), 'started');
   assert.deepEqual(sent, ['state:3', 'start:3', 'state:3', 'cancel:3', 'state:5', 'start:5']);
   // The popup opens after each start, not after a cancel.
+  assert.equal(popups, 2);
+  // Already opened from the command event: not again.
+  shown = null;
+  assert.equal(await runNerdCommand(NERD_BISECT_COMMAND, 9, cmdDeps(true), true), 'started');
   assert.equal(popups, 2);
 });
