@@ -19,8 +19,10 @@ below) with the tabs "Filter tester" / «Filter-Tester», "Checksums (SHA-256)"
 settings rows are "Context menu", "Filter history links", "Fingerprinting counter"
 and "Lookalike domains (typosquatting)" with "Protected domains". Above them, a
 short "How to use it" block lists the popup's `Ctrl+K` commands
-(`commandHelp()` in `ui/popup/commands.ts`) and the bisect shortcut as Chrome
-reports it, with a button to `chrome://extensions/shortcuts`.
+(`commandHelp()` in `ui/popup/commands.ts`) and the popup and bisect shortcuts
+as Chrome reports them ("not set" when Chrome did not assign the suggested
+key), with a button to `chrome://extensions/shortcuts`. It is collapsed by
+default and decodes like the rest of nerd mode when opened.
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |

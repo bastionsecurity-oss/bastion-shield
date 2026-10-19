@@ -1997,8 +1997,11 @@
   "nerdHelpCmdLeadTail": {
     "message": "ouvre la ligne de commande :"
   },
-  "nerdHelpBisect": {
-    "message": "Trouver le filtre qui casse la page actuelle :"
+  "nerdHelpKeyPopup": {
+    "message": "Ouvrir le popup"
+  },
+  "nerdHelpKeyBisect": {
+    "message": "Trouver le filtre fautif"
   },
   "nerdHelpShortcuts": {
     "message": "Modifier le raccourci"

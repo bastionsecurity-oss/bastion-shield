@@ -1997,8 +1997,11 @@
   "nerdHelpCmdLeadTail": {
     "message": "die Befehlszeile:"
   },
-  "nerdHelpBisect": {
-    "message": "Den Filter finden, der die aktuelle Seite kaputt macht:"
+  "nerdHelpKeyPopup": {
+    "message": "Popup öffnen"
+  },
+  "nerdHelpKeyBisect": {
+    "message": "Störenden Filter finden"
   },
   "nerdHelpShortcuts": {
     "message": "Tastenkürzel ändern"

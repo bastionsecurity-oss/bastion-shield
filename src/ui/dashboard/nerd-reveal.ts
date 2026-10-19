@@ -75,7 +75,7 @@ function decode(el: HTMLElement, delay: number, duration: number): Promise<void>
 }
 
 /** Text inside `root` that nerd mode unlocks: setting labels and short hints. */
-const TARGETS = '.db-row__label, .nerd-domains__hint, .nerd-domains__policy-head > span:first-child';
+const TARGETS = '.db-row__label, .nerd-domains__hint, .nerd-domains__policy-head > span:first-child, .nerd-help__body dt, .nerd-help__body dd, .nerd-help__lead > span';
 
 /**
  * Decode the given elements (or the decodable text inside them) one after
@@ -89,15 +89,18 @@ export function revealNerd(...roots: (Element | null | undefined)[]): void {
     if (root.matches('.db-nav__label, ' + TARGETS)) els.push(root as HTMLElement);
     else els.push(...Array.from(root.querySelectorAll<HTMLElement>(TARGETS)));
   }
-  els.forEach((el, i) => {
+  // Text in a closed <details> decodes when it is opened, not now.
+  const shown = els.filter((el) => !el.closest('details:not([open]) > :not(summary)'));
+  shown.forEach((el, i) => {
     const row = el.closest<HTMLElement>('.db-row, .nerd-domains__block');
     if (row && !row.classList.contains('nerd-rise')) {
-      row.style.setProperty('--d', `${i * 90}ms`);
+      row.style.setProperty('--d', `${i * (shown.length > 10 ? 35 : 90)}ms`);
       row.classList.add('nerd-rise');
       row.addEventListener('animationend', () => row.classList.remove('nerd-rise'), { once: true });
     }
-    // Long hints decode a little longer, but never drag.
+    // Long hints decode a little longer, but never drag; long lists stagger faster.
     const len = (el.textContent ?? '').length;
-    void decode(el, i * 90, Math.min(900, 380 + len * 9));
+    const step = shown.length > 10 ? 35 : 90;
+    void decode(el, i * step, Math.min(900, 380 + len * 9));
   });
 }

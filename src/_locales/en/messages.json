@@ -1997,8 +1997,11 @@
   "nerdHelpCmdLeadTail": {
     "message": "for the command line:"
   },
-  "nerdHelpBisect": {
-    "message": "Find the filter that breaks the current page:"
+  "nerdHelpKeyPopup": {
+    "message": "Open the popup"
+  },
+  "nerdHelpKeyBisect": {
+    "message": "Find the breaking filter"
   },
   "nerdHelpShortcuts": {
     "message": "Change shortcut"

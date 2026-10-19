@@ -107,13 +107,19 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     return settingRow({ label: t(labelKey), desc: t(descKey), control: sw.el, locked, labelId, descId });
   };
 
-  // What nerd mode unlocks that has no switch of its own: the command line and the bisect shortcut.
+  // What nerd mode unlocks that has no switch of its own: the command line and the
+  // shortcuts. Collapsed by default; opening it decodes the text like the switch does.
   const kbd = (k: string): HTMLElement => h('kbd', { class: 'lab-kbd', text: k });
-  const bisectKey = h('span', { class: 'nerd-help__key' }, kbd('Alt+Shift+X'));
+  const keyCell = (fallback: string): HTMLElement => h('dd', { class: 'nerd-help__key' }, kbd(fallback));
+  const popupKey = keyCell('Alt+Shift+B');
+  const bisectKey = keyCell('Alt+Shift+X');
   void (async () => {
     try {
-      const c = ((await chrome.commands?.getAll()) ?? []).find((x) => x.name === 'nerd-bisect');
-      if (c) replace(bisectKey, c.shortcut ? kbd(c.shortcut) : h('span', { class: 'db-muted', text: t('nerdHelpNoShortcut') }));
+      // Chrome assigns a suggested key only on first install and only when it is free: show what is really set.
+      for (const c of (await chrome.commands?.getAll()) ?? []) {
+        const cell = c.name === '_execute_action' ? popupKey : c.name === 'nerd-bisect' ? bisectKey : null;
+        if (cell) replace(cell, c.shortcut ? kbd(c.shortcut) : h('span', { class: 'nerd-help__unset', text: t('nerdHelpNoShortcut') }));
+      }
     } catch {
       /* no commands API (tests) */
     }
@@ -124,14 +130,30 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     t('nerdHelpShortcuts'),
     icon('external', 12),
   );
-  const help = h(
+  const helpBody = h(
     'div',
-    { class: 'nerd-help' },
-    h('div', { class: 'db-row__label', text: t('nerdHelpTitle') }),
-    h('p', { class: 'db-muted nerd-help__lead' }, t('nerdHelpCmdLead'), ' ', kbd(shortcutLabel('K')), ' ', t('nerdHelpCmdLeadTail')),
+    { class: 'nerd-help__body' },
+    h('p', { class: 'db-muted nerd-help__lead' }, h('span', { text: t('nerdHelpCmdLead') }), ' ', kbd(shortcutLabel('K')), ' ', h('span', { text: t('nerdHelpCmdLeadTail') })),
     h('dl', { class: 'nerd-help__cmds' }, ...commandHelp().flatMap((c) => [h('dt', { class: 'mono', text: c.usage }), h('dd', { text: t(c.desc) })])),
-    h('p', { class: 'db-muted nerd-help__lead' }, t('nerdHelpBisect'), ' ', bisectKey, ' ', shortcutsBtn),
+    h(
+      'dl',
+      { class: 'nerd-help__cmds nerd-help__keys' },
+      h('dt', { text: t('nerdHelpKeyPopup') }),
+      popupKey,
+      h('dt', { text: t('nerdHelpKeyBisect') }),
+      bisectKey,
+    ),
+    shortcutsBtn,
   );
+  const help = h(
+    'details',
+    { class: 'nerd-help' },
+    h('summary', { class: 'db-row nerd-help__summary' }, h('span', { class: 'db-row__label', text: t('nerdHelpTitle') }), icon('chevronRight', 14, 'nerd-help__chev')),
+    helpBody,
+  );
+  help.addEventListener('toggle', () => {
+    if ((help as HTMLDetailsElement).open) revealNerd(helpBody);
+  });
 
   // Master switch: the sub-settings and the «Entwicklertools» (developer tools) navigation entry follow it live.
   const masterLabel = nextId('set');
