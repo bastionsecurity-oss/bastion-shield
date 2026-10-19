@@ -1988,6 +1988,9 @@
   "nerdSettingsEnabledDesc": {
     "message": "Outils de développement, ligne de commande (Ctrl+K), menu contextuel et bisect. Rien ne quitte cet appareil."
   },
+  "nerdKeysTitle": {
+    "message": "Raccourcis clavier"
+  },
   "nerdHelpTitle": {
     "message": "Mode d’emploi"
   },
@@ -2004,10 +2007,10 @@
     "message": "Trouver le filtre fautif"
   },
   "nerdHelpShortcuts": {
-    "message": "Modifier le raccourci"
+    "message": "Définir les raccourcis"
   },
   "nerdHelpNoShortcut": {
-    "message": "aucun raccourci défini"
+    "message": "non défini"
   },
   "nerdSettingsContextMenu": {
     "message": "Menu contextuel"

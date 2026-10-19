@@ -1988,6 +1988,9 @@
   "nerdSettingsEnabledDesc": {
     "message": "Strumenti per sviluppatori, riga di comando (Ctrl+K), menu contestuale e bisect. Nulla lascia questo dispositivo."
   },
+  "nerdKeysTitle": {
+    "message": "Scorciatoie da tastiera"
+  },
   "nerdHelpTitle": {
     "message": "Come si usa"
   },
@@ -2004,10 +2007,10 @@
     "message": "Trovare il filtro che causa problemi"
   },
   "nerdHelpShortcuts": {
-    "message": "Modificare la scorciatoia"
+    "message": "Impostare le scorciatoie"
   },
   "nerdHelpNoShortcut": {
-    "message": "nessuna scorciatoia impostata"
+    "message": "non impostata"
   },
   "nerdSettingsContextMenu": {
     "message": "Menu contestuale"

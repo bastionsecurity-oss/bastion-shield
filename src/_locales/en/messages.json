@@ -1988,6 +1988,9 @@
   "nerdSettingsEnabledDesc": {
     "message": "Developer tools, command line (Ctrl+K), context menu and bisect. Nothing leaves this device."
   },
+  "nerdKeysTitle": {
+    "message": "Keyboard shortcuts"
+  },
   "nerdHelpTitle": {
     "message": "How to use it"
   },
@@ -2004,10 +2007,10 @@
     "message": "Find the breaking filter"
   },
   "nerdHelpShortcuts": {
-    "message": "Change shortcut"
+    "message": "Set shortcuts"
   },
   "nerdHelpNoShortcut": {
-    "message": "no shortcut set"
+    "message": "not set"
   },
   "nerdSettingsContextMenu": {
     "message": "Context menu"

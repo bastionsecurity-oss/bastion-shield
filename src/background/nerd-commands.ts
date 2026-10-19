@@ -1,5 +1,6 @@
 // Bastion Shield service worker — nerd mode keyboard shortcuts (manifest
-// "commands", docs/NERD-MODE.md). `nerd-bisect` (suggested Alt+Shift+X)
+// "commands", docs/NERD-MODE.md). `nerd-bisect` (no default key; set in
+// Settings › Nerd mode)
 // starts the filter bisect on the active tab and opens the popup, where it
 // asks its questions, or ends the one shown there.
 // It does nothing while nerd mode is off or the activity log (which lists the

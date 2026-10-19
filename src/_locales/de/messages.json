@@ -1988,6 +1988,9 @@
   "nerdSettingsEnabledDesc": {
     "message": "Entwicklertools, Befehlszeile (Ctrl+K), Kontextmenü und Bisect. Nichts verlässt dieses Gerät."
   },
+  "nerdKeysTitle": {
+    "message": "Tastenkürzel"
+  },
   "nerdHelpTitle": {
     "message": "So gehts"
   },
@@ -2004,10 +2007,10 @@
     "message": "Störenden Filter finden"
   },
   "nerdHelpShortcuts": {
-    "message": "Tastenkürzel ändern"
+    "message": "Tastenkürzel festlegen"
   },
   "nerdHelpNoShortcut": {
-    "message": "kein Tastenkürzel gesetzt"
+    "message": "nicht festgelegt"
   },
   "nerdSettingsContextMenu": {
     "message": "Kontextmenü"

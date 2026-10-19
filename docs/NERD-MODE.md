@@ -19,14 +19,14 @@ below) with the tabs "Filter tester" / «Filter-Tester», "Checksums (SHA-256)"
 settings rows are "Context menu", "Filter history links", "Fingerprinting counter"
 and "Lookalike domains (typosquatting)" with "Protected domains". Above them, a
 short "How to use it" block lists the popup's `Ctrl+K` commands
-(`commandHelp()` in `ui/popup/commands.ts`) and the popup and bisect shortcuts
-as Chrome reports them ("not set" when Chrome did not assign the suggested
-key), with a button to `chrome://extensions/shortcuts`. It is collapsed by
-default and decodes like the rest of nerd mode when opened.
+(`commandHelp()` in `ui/popup/commands.ts`); it is collapsed by default and
+decodes like the rest of nerd mode the first time it is opened. The first row,
+"Keyboard shortcuts", shows the popup and bisect shortcuts as Chrome reports
+them ("not set" by default) with a button to the browser's shortcuts page.
 
 | Feature | Where | Setting / policy |
 | --- | --- | --- |
-| Find the breaking filter (bisect) | Popup (statusline), shortcut `Alt+Shift+X` | `nerd.enabled` |
+| Find the breaking filter (bisect) | Popup (statusline), optional keyboard shortcut | `nerd.enabled` |
 | Command line (`Ctrl+K`) | Popup | `nerd.enabled` |
 | Unlocked settings decode in place when switched on (easter egg; also via `nerd` in the dashboard's `Ctrl+K` palette) | Dashboard, expanded popup | `nerd.enabled` |
 | Fingerprinting counter | Popup | `nerd.fingerprintMeter` |
@@ -136,8 +136,11 @@ fuzzy subsequence matching, at most six suggestions, `↑`/`↓` or
 | `lab` | Open developer tools |
 | `nerd off` | Switch nerd mode off |
 
-Keyboard shortcuts (`chrome://extensions/shortcuts`): `Alt+Shift+B` opens the
-popup, `Alt+Shift+X` starts the bisect on the active tab (and opens the popup,
+Keyboard shortcuts (`chrome://extensions/shortcuts`) have no default: a
+suggested key that clashes with a browser shortcut (Shift+Alt+B is Chromium's
+"focus bookmarks bar") shows as set but never fires until the user sets it
+again. Settings › Nerd mode lists both and opens the shortcuts page. "Open the
+popup" is `_execute_action`; the bisect command starts the bisect on the active tab (and opens the popup,
 where it asks its questions) or ends the one shown
 there (`background/nerd-commands.ts`; nothing happens while nerd mode or the
 activity log is off).

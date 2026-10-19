@@ -685,8 +685,8 @@ body[data-view="welcome"] .db-view { max-width: none; padding: 0; }
 .nerd-help__cmds { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px; margin: 0 0 12px; font-size: var(--text-sm); }
 .nerd-help__cmds dt { color: var(--text-strong); font-size: 12px; }
 .nerd-help__cmds dd { margin: 0; color: var(--text-2); }
-.nerd-help__keys { padding-top: 12px; border-top: 1px solid var(--line-soft); }
-.nerd-help__keys dt { font-size: var(--text-sm); }
+.nerd-keys__list { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 0; color: var(--text-2); font-size: var(--text-sm); }
+.nerd-keys__item { display: inline-flex; align-items: center; gap: 8px; }
 .nerd-help__unset { color: var(--accent); font-size: var(--text-sm); }
 @media (max-width: 520px) { .nerd-help__cmds { grid-template-columns: minmax(0, 1fr); } .nerd-help__cmds dd { margin-bottom: 6px; } }
 .nerd-domains__block { padding: 16px 20px 20px; border-top: 1px solid var(--line-soft); }
