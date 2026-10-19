@@ -24,7 +24,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { LookalikeHit } from '../shared/types.ts';
-import { clipKey, clipOffer, Deduper, MAX_CLIP_NOTICES, MAX_NOTICE_TEXT, overflow } from './notice-model.ts';
+import { clipKey, Deduper, MAX_CLIP_NOTICES, MAX_NOTICE_TEXT, overflow } from './notice-model.ts';
 import type { NoticeSource } from './notice-model.ts';
 
 const FALLBACK: Readonly<Record<string, string>> = {
@@ -32,10 +32,7 @@ const FALLBACK: Readonly<Record<string, string>> = {
   noticeClipTitle: 'Bastion Shield blocked a possible ClickFix attack',
   noticeClipBody: 'This page tried to put a command on your clipboard. Never paste commands from websites into Run, Terminal or PowerShell.',
   noticeClipCommandLabel: 'Blocked command',
-  noticeClipCopyAnyway: 'Copy anyway',
-  noticeClipCopied: 'Copied. Check the command before you paste it.',
-  noticeClipCopyFailed: 'Could not copy. Select the command to copy it yourself.',
-  noticeClipHighRisk: 'Clear attack pattern – copying is not offered. You can select the command if you need to inspect it.',
+  noticeClipManual: 'If you really need this command, select and copy it yourself – after checking what it does.',
   noticeSourceUbo: 'Detected by: uBlock filters',
   noticeSourceBastion: 'Detected by: Bastion ClickFix protection',
   noticeLookalikeTitle: 'Warning: possible phishing',
@@ -87,7 +84,7 @@ const HOST_STYLE: readonly [string, string][] = [
 ];
 
 // Gletscher palette (src/ui/shared/tokens.css). Bundesrot appears only in
-// the mark's diamond and, as an outline, on «Copy anyway».
+// the mark's diamond.
 const CSS = `
 :host { all: initial; }
 * { box-sizing: border-box; }
@@ -95,7 +92,7 @@ const CSS = `
 .card {
   --bg: #FFFFFF; --ink: #17171A; --ink-strong: #171C1E; --ink-2: #4C575D; --ink-3: #5F6B71;
   --line: #D7DDDF; --code-bg: #F2F4F5; --code-line: #E4E8E9; --hover: rgba(228, 232, 233, 0.7);
-  --ring: #2A3134; --diamond: #DA291C; --red: #DA291C; --red-hover: rgba(218, 41, 28, 0.07);
+  --ring: #2A3134; --diamond: #DA291C;
   --primary: #171C1E; --primary-hover: #2A3134; --on-primary: #FFFFFF; --focus: #2A3134;
   pointer-events: auto;
   position: relative;
@@ -119,7 +116,7 @@ const CSS = `
   .card {
     --bg: #171C1E; --ink: #FFFFFF; --ink-strong: #FFFFFF; --ink-2: #A9B6BA; --ink-3: #8D9A9F;
     --line: #2A3134; --code-bg: #1F2629; --code-line: #2A3134; --hover: rgba(255, 255, 255, 0.07);
-    --ring: #D7DDDF; --diamond: #E6392E; --red: #E6392E; --red-hover: rgba(230, 57, 46, 0.12);
+    --ring: #D7DDDF; --diamond: #E6392E;
     --primary: #FFFFFF; --primary-hover: #D7DDDF; --on-primary: #171C1E; --focus: #D7DDDF;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.5);
   }
@@ -169,8 +166,6 @@ button { font: inherit; margin: 0; }
   transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
 }
 .btn:active { transform: scale(0.98); }
-.btn.danger { border-color: var(--red); color: var(--red); }
-.btn.danger:hover { background: var(--red-hover); }
 .btn.primary { background: var(--primary); color: var(--on-primary); }
 .btn.primary:hover { background: var(--primary-hover); }
 .btn.text { padding: 0 10px; }
@@ -187,7 +182,6 @@ button { font: inherit; margin: 0; }
 .close:hover { background: var(--hover); color: var(--ink-strong); }
 .close svg { width: 14px; height: 14px; }
 .btn:focus-visible, .close:focus-visible, .cmd:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.btn.danger:focus-visible { outline-color: var(--red); }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } .btn:active { transform: none; } }
 `;
 
@@ -386,48 +380,15 @@ export function createNotices(opts: NoticeOptions): NoticeApi {
     const text = raw.length > MAX_NOTICE_TEXT ? raw.slice(0, MAX_NOTICE_TEXT) : raw;
     if (clipShown >= MAX_CLIP_NOTICES || dedupe.seen(clipKey(text), Date.now())) return;
     clipShown++;
-    const offer = clipOffer(text);
     const { card: c, main } = card(t('noticeClipTitle'));
     main.appendChild(el('p', 'body', t('noticeClipBody')));
     const cmd = el('code', 'cmd', text);
     cmd.tabIndex = 0;
     cmd.setAttribute('aria-label', t('noticeClipCommandLabel'));
     main.appendChild(cmd);
-    if (offer.copyAnyway) {
-      const actions = el('div', 'actions');
-      const copy = button('danger', t('noticeClipCopyAnyway'), () => {
-        // Inside the click handler (user activation), from the isolated
-        // world: the page's (and uBO's) clipboard traps live in the MAIN
-        // world and do not see this call.
-        const done = (ok: boolean): void => {
-          actions.remove();
-          const note = el('p', ok ? 'note ok' : 'note', t(ok ? 'noticeClipCopied' : 'noticeClipCopyFailed'));
-          note.setAttribute('role', 'status');
-          src.before(note);
-          if (!ok) {
-            try {
-              const sel = getSelection();
-              sel?.selectAllChildren(cmd);
-            } catch {
-              // nothing to select
-            }
-          }
-        };
-        try {
-          navigator.clipboard.writeText(text).then(
-            () => done(true),
-            () => done(false),
-          );
-        } catch {
-          done(false);
-        }
-      });
-      actions.appendChild(copy);
-      main.appendChild(actions);
-    } else {
-      // 'high': never copied (a universal override would become part of the lure).
-      main.appendChild(el('p', 'note', t('noticeClipHighRisk')));
-    }
+    // No «copy anyway»: an override button would become part of the lure. The
+    // command above stays selectable for anyone who really needs it.
+    main.appendChild(el('p', 'note', t('noticeClipManual')));
     const src = el('p', 'src', t(source === 'ubo' ? 'noticeSourceUbo' : 'noticeSourceBastion'));
     main.appendChild(src);
     show(c);

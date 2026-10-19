@@ -768,17 +768,8 @@
   "noticeClipCommandLabel": {
     "message": "Blockierter Befehl"
   },
-  "noticeClipCopyAnyway": {
-    "message": "Trotzdem kopieren"
-  },
-  "noticeClipCopied": {
-    "message": "Kopiert. Prüfen Sie den Befehl vor dem Einfügen."
-  },
-  "noticeClipCopyFailed": {
-    "message": "Kopieren nicht möglich. Markieren Sie den Befehl, um ihn selbst zu kopieren."
-  },
-  "noticeClipHighRisk": {
-    "message": "Eindeutiges Angriffsmuster – Kopieren nicht angeboten. Den Befehl können Sie markieren, falls Sie ihn prüfen müssen."
+  "noticeClipManual": {
+    "message": "Falls Sie diesen Befehl wirklich brauchen, markieren und kopieren Sie ihn selbst – nachdem Sie geprüft haben, was er tut."
   },
   "noticeSourceUbo": {
     "message": "Erkannt durch: uBlock-Filter"

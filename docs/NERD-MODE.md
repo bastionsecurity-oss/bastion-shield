@@ -232,17 +232,13 @@ cannot restyle it and ours does not leak. Light and dark follow
 with `prefers-reduced-motion`. Identical text from either source within 2 s
 gives one notice.
 
-**«Trotzdem kopieren» («Copy anyway»).** Offered only when Bastion's own
-detector does not rate the text 'high' (medium or no verdict). ClickFix pages
-tell visitors what to click («press the button, then Win+R, Ctrl+V, Enter»);
-a universal override would become one more step of the lure. For 'high'
-shapes the notice says «Eindeutiges Angriffsmuster – Kopieren nicht
-angeboten. Den Befehl können Sie markieren, falls Sie ihn prüfen müssen.» and
-nothing is ever copied. The copy runs in the click handler (user activation)
-with `navigator.clipboard.writeText` from the isolated world, so neither the
-page's nor uBO's MAIN-world traps see it; the card then says «Kopiert. Prüfen
-Sie den Befehl vor dem Einfügen.» The button is outlined in Bundesrot
-(transparent fill), not a filled CTA.
+**No «copy anyway».** The notice never offers to copy the blocked command.
+ClickFix pages tell visitors what to click («press the button, then Win+R,
+Ctrl+V, Enter»), so any override button would become one more step of the
+lure. The command stays visible and selectable in the card, with the line
+«Falls Sie diesen Befehl wirklich brauchen, markieren und kopieren Sie ihn
+selbst – nachdem Sie geprüft haben, was er tut.» Copying by hand is a
+deliberate act that a page cannot script.
 
 **uBO's alert, routed.** The vendored `prevent-clipboard-write.js` stays
 unchanged (`npm run vendor:check`). `tools/lib/notice-transform.ts` rewrites
@@ -271,10 +267,9 @@ keeps it in a closure; the dispatch uses `EventTarget#dispatchEvent`,
 document_start, before page code can wrap them), event names cannot be
 enumerated, and the listener stops the event before page listeners. A page
 that learnt the token (or forged the nerd channel, whose name derives from
-the extension id) could show a notice with text of its choice; for a
-'medium' text that notice offers «Copy anyway». That is no worse than asking
-the visitor to select and copy the text by hand, and never possible for a
-'high' shape.
+the extension id) could show a notice with text of its choice. The notice
+has no copy button, so the worst outcome is a card telling the visitor that a
+command was blocked.
 
 ## Lookalike domains (typosquatting)
 

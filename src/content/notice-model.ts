@@ -7,19 +7,15 @@
 //              routed here by tools/lib/notice-transform.ts);
 //   'bastion'  the nerd mode clipboard guard (main/clipguard.ts).
 //
-// «Copy anyway» is offered only when Bastion's own detector does not rate
-// the text 'high' (medium or no verdict). ClickFix pages instruct visitors
-// to click things («press the button, then Win+R, Ctrl+V, Enter»); a
-// universal override would become part of the lure. For 'high' shapes
-// (hidden or policy-bypassing PowerShell, mshta, cmd tricks, lure comments,
-// …) no web page has a legitimate reason to hand the text out, so nothing is
-// ever copied; the command stays selectable for people who need to inspect
-// it.
+// There is no «copy anyway» button: ClickFix pages instruct visitors to click
+// things («press the button, then Win+R, Ctrl+V, Enter»), and any override
+// button would become one more step of the lure. The blocked command stays
+// visible and selectable in the notice, so someone who really needs it can
+// copy it by hand after reading it.
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { collapseWs, detectDangerousCommand } from '../main/clip-detect.ts';
-import type { ClipVerdict } from '../main/clip-detect.ts';
+import { collapseWs } from '../main/clip-detect.ts';
 
 export type NoticeSource = 'ubo' | 'bastion';
 export const NOTICE_SOURCES: ReadonlySet<string> = new Set<NoticeSource>(['ubo', 'bastion']);
@@ -28,30 +24,12 @@ export const NOTICE_SOURCES: ReadonlySet<string> = new Set<NoticeSource>(['ubo',
 export const MAX_NOTICES = 3;
 /** Identical clipboard text within this window gives one notice. */
 export const DEDUPE_MS = 2000;
-/** Characters of a blocked command kept (display and «copy anyway»). */
+/** Characters of a blocked command kept for display. */
 export const MAX_NOTICE_TEXT = 20_000;
 /** ClickFix notices per page load (a page looping over writeText cannot keep the stack busy). */
 export const MAX_CLIP_NOTICES = 30;
 /** Detail prefix of the uBO scriptlet event (tools/lib/notice-transform.ts NOTICE_DETAIL_UBO). */
 export const UBO_DETAIL_PREFIX = 'ubo|';
-
-export interface ClipOffer {
-  verdict: ClipVerdict | null;
-  /** Show «Copy anyway» (never for 'high'). */
-  copyAnyway: boolean;
-}
-
-/** What the notice offers for a blocked clipboard text. Never throws. */
-export function clipOffer(text: string): ClipOffer {
-  let verdict: ClipVerdict | null = null;
-  try {
-    verdict = detectDangerousCommand(text);
-  } catch {
-    // An unrated text is treated like 'high': nothing is offered.
-    return { verdict: { severity: 'high', rule: 'error' }, copyAnyway: false };
-  }
-  return { verdict, copyAnyway: verdict === null || verdict.severity !== 'high' };
-}
 
 /** Text of a uBO notice event detail ("ubo|<text>"), or null for anything else. */
 export function parseUboDetail(detail: unknown): string | null {

@@ -84,14 +84,14 @@
     <div class="env" id="env"></div>
   </div>
 
-  <h2>Eindeutige Angriffsmuster – werden ersetzt, kein «Trotzdem kopieren»</h2>
+  <h2>Eindeutige Angriffsmuster – werden ersetzt</h2>
   <div class="grid">
     <section class="card">
       <div class="meta"><span class="tag tag--high">hoch</span><span class="tag">navigator.clipboard.writeText</span></div>
       <h3>1 · Fake-Captcha «Ich bin kein Roboter»</h3>
       <p>Der Klick auf die Checkbox kopiert heimlich einen PowerShell-Befehl mit Köder-Kommentar. Die Seite fordert dann zu Win+R, Ctrl+V, Enter auf.</p>
       <div class="captcha" id="captcha"><span class="box"></span><span>Ich bin kein Roboter</span></div>
-      <div class="expect">Bastion-Hinweis oben rechts, ohne Kopier-Button</div>
+      <div class="expect">Bastion-Hinweis oben rechts, Befehl ersetzt</div>
     </section>
 
     <section class="card">
@@ -151,14 +151,14 @@
     </section>
   </div>
 
-  <h2>Installations-Einzeiler – mit «Trotzdem kopieren»</h2>
+  <h2>Installations-Einzeiler – versteckt blockiert, sichtbar erlaubt</h2>
   <div class="grid">
     <section class="card">
       <div class="meta"><span class="tag tag--medium">mittel</span><span class="tag">writeText · nicht sichtbar</span></div>
       <h3>9 · Versteckter <code>curl … | sh</code></h3>
       <p>Ein Install-Befehl, der nirgends auf der Seite steht. Kann legitim sein, ist hier aber verdächtig.</p>
       <button data-run="hiddenInstall">Installieren</button>
-      <div class="expect">Hinweis mit rotem «Trotzdem kopieren»</div>
+      <div class="expect">Hinweis, Befehl ersetzt (im Hinweis markierbar)</div>
     </section>
 
     <section class="card">
@@ -166,7 +166,7 @@
       <h3>10 · Install-Befehl über unverschlüsseltes http</h3>
       <p>Gleicher Einzeiler, aber das Skript kommt über <code>http://</code> von einer IP-Adresse. Das macht keine echte Anleitung.</p>
       <button data-run="insecureInstall">Installieren</button>
-      <div class="expect">Hinweis, ohne Kopier-Button</div>
+      <div class="expect">Hinweis, Befehl ersetzt</div>
     </section>
   </div>
 

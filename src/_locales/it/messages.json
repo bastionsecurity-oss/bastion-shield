@@ -768,17 +768,8 @@
   "noticeClipCommandLabel": {
     "message": "Comando bloccato"
   },
-  "noticeClipCopyAnyway": {
-    "message": "Copia comunque"
-  },
-  "noticeClipCopied": {
-    "message": "Copiato. Controllare il comando prima di incollarlo."
-  },
-  "noticeClipCopyFailed": {
-    "message": "Impossibile copiare. Selezionare il comando per copiarlo manualmente."
-  },
-  "noticeClipHighRisk": {
-    "message": "Schema di attacco evidente – la copia non viene offerta. È possibile selezionare il comando se occorre esaminarlo."
+  "noticeClipManual": {
+    "message": "Se questo comando vi serve davvero, selezionatelo e copiatelo voi stessi, dopo aver verificato che cosa fa."
   },
   "noticeSourceUbo": {
     "message": "Rilevato da: filtri uBlock"

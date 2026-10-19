@@ -93,7 +93,7 @@ export function collapseWs(text: string): string {
 //   'medium' download-and-run one-liners that real install docs print
 //            (curl … | sh, irm … | iex, msiexec of a local package, a
 //            bash line with an aligned comment): allowed when visible on
-//            the page, and the notice offers «Copy anyway».
+//            the page (copy buttons next to a code block), blocked otherwise.
 
 export interface Forms {
   s: string;

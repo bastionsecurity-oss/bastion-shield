@@ -768,17 +768,8 @@
   "noticeClipCommandLabel": {
     "message": "Blocked command"
   },
-  "noticeClipCopyAnyway": {
-    "message": "Copy anyway"
-  },
-  "noticeClipCopied": {
-    "message": "Copied. Check the command before you paste it."
-  },
-  "noticeClipCopyFailed": {
-    "message": "Could not copy. Select the command to copy it yourself."
-  },
-  "noticeClipHighRisk": {
-    "message": "Clear attack pattern – copying is not offered. You can select the command if you need to inspect it."
+  "noticeClipManual": {
+    "message": "If you really need this command, select and copy it yourself – after checking what it does."
   },
   "noticeSourceUbo": {
     "message": "Detected by: uBlock filters"

