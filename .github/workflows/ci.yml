@@ -5,6 +5,7 @@
 # extension with an invalid static DNR rule, so a green e2e run means every
 # shipped rule is valid.
 #
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 name: CI

@@ -4,6 +4,7 @@
 // selector in a grouped `sel1, sel2 {…}` rule disables the whole rule in the
 // browser, so anything we are not sure Chromium accepts is rejected.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type SelToken =

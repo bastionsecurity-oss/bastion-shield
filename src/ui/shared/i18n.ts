@@ -4,6 +4,7 @@
 // The UI language is the user's choice (Einstellungen › Sprache, default
 // the browser's); initI18n() loads that bundle, chrome.i18n is the fallback.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type UiLang = 'de' | 'en' | 'fr' | 'it';

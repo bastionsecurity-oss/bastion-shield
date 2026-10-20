@@ -3,6 +3,7 @@
 // categories). Inline SVG, hairline grid, one ink colour, keyboard and
 // pointer tooltips, and a screen-reader table so no value is hover-only.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { debounce, h, replace, s } from '../shared/dom.ts';

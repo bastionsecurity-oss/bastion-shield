@@ -1,6 +1,7 @@
 // Preprocessor tests: !#if / !#else / !#endif with uBO token semantics, and
 // !#include through a caller-supplied resolver.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

@@ -4,6 +4,7 @@
 // cookies. Each setting carries a
 // one-line plain-language explanation and a lock when managed by policy.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DeepPartial, EffectiveConfig, FingerprintLevel, Settings, WebRtcPolicy } from '../../../shared/types.ts';

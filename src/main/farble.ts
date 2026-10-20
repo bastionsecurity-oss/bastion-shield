@@ -20,6 +20,7 @@
 // The hash core uses operators and typed arrays only (no crypto.subtle: it is
 // asynchronous and page-patchable).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 const imul = Math.imul;

@@ -9,6 +9,7 @@
 //   node tools/package.ts
 //   BASTION_CRX_KEY=key.pem BASTION_UPDATE_BASE_URL=https://updates.example.ch/shield node tools/package.ts
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFile } from 'node:fs/promises';

@@ -5,6 +5,7 @@
 // `layerScopes` turns nested site overrides into include/exclude groups that
 // DNR conditions and content-script match patterns can express exactly.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { hostnameCandidates, isIpAddress, matchPatternFor, siteKeyOf } from '../shared/hash.ts';

@@ -4,6 +4,7 @@
 // Playwright restarts the worker after a failure, which gives the remaining
 // tests a fresh install.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test as base, expect } from '@playwright/test';

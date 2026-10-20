@@ -2,6 +2,7 @@
 // clipboard counter counts blocks by uBlock filters' prevent-clipboard-write
 // too, which happen with Bastion's own ClickFix protection switched off.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

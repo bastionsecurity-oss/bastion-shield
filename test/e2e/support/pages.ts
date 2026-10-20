@@ -5,6 +5,7 @@
 // redirect to a neutered script); in both cases the fixture server never sees
 // it. A request counts as loaded when the fixture server received it.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page, Request } from '@playwright/test';

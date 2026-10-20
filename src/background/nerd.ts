@@ -4,6 +4,7 @@
 // memory only and resets on every top-level navigation; a sleeping service
 // worker forgets it, which is fine for a live meter.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { DEFAULT_PROTECTED, findLookalike } from '../shared/lookalike.ts';

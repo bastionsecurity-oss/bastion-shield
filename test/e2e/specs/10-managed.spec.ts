@@ -5,6 +5,7 @@
 // policy changes reach the shipped code through storage.onChanged('managed'),
 // as a real Intune/GPO push does.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

@@ -2,6 +2,7 @@
 // time saved (estimate) over 30 days, blocked requests per day, top hosts, top
 // sites and the split by list category. Reads history:query once per visit.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DailyAggregate, HistoryResult } from '../../../shared/types.ts';

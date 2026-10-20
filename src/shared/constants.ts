@@ -2,6 +2,7 @@
 // contract (docs/ARCHITECTURE.md): the build tools, the compiler and the
 // extension runtime all import from here, so values must stay in sync.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
@@ -225,9 +226,9 @@ export const PORT_LIVE = 'live';
 
 /** Project links. Change REPO_URL when the public repository is created. */
 export const LINKS = {
-  REPO_URL: 'https://github.com/bastion-security/bastion-shield',
+  REPO_URL: 'https://github.com/bastionsecurity-ch/bastion-shield',
   HOMEPAGE: 'https://bastionsecurity.ch',
-  PRIVACY: 'https://github.com/bastion-security/bastion-shield/blob/main/docs/PRIVACY.md',
+  PRIVACY: 'https://github.com/bastionsecurity-ch/bastion-shield/blob/main/docs/PRIVACY.md',
   /** Incident contact form on bastionsecurity.ch («Cyber-Vorfall?»), German and English pages. */
   INCIDENT_DE: 'https://www.bastionsecurity.ch/kontakt#vorfall',
   INCIDENT_EN: 'https://www.bastionsecurity.ch/en/contact#vorfall',

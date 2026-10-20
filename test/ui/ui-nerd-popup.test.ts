@@ -6,6 +6,7 @@
 // four languages. Runs with a minimal chrome.* stub (i18n returns the key
 // and its substitutions).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import test from 'node:test';

@@ -2,6 +2,7 @@
 // surveyor, incl. nodes added later), highly generic CSS, hostname-specific
 // selectors from the shards, and $generichide exceptions.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

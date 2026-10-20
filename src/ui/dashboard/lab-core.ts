@@ -9,6 +9,7 @@
 //   - provenance and blame: what the build fetched (BuildMeta), and upstream
 //     history links for a filter (src/shared/blame.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, ActivityKind, BuildMeta, RuleSourceMap } from '../../shared/types.ts';

@@ -1,6 +1,6 @@
 # Third-party notices
 
-Bastion Shield is Copyright (C) 2026 Bastion GmbH i. Gr. and contributors, licensed under the GNU General Public License, version 3 or (at your option) any later version ([LICENSE](LICENSE)).
+Bastion Shield is Copyright (C) 2026 Bastion Security GmbH and contributors, licensed under the GNU General Public License, version 3 or (at your option) any later version ([LICENSE](LICENSE)).
 
 The extension package contains code, data and fonts from the projects below. Each keeps its own licence and copyright. Licence texts are in this repository at the paths given, and in the extension package in the `licenses/` folder (together with this file and `VENDOR.json`).
 
@@ -57,7 +57,7 @@ The extension contains rulesets compiled from the filter lists below. The lists 
 
 | List (catalog id) | Source | Licence | Attribution |
 |---|---|---|---|
-| Bastion filters (`bastion`) | this repository, `filters/bastion.txt` | GPL-3.0-or-later | Bastion GmbH i. Gr. and contributors |
+| Bastion filters (`bastion`) | this repository, `filters/bastion.txt` | GPL-3.0-or-later | Bastion Security GmbH and contributors |
 | uBlock filters (`ublock`), uBlock filters – Privacy (`ublock-privacy`), Badware risks (`ublock-badware`), Tracking parameters (`url-tracking`) | https://github.com/uBlockOrigin/uAssets | GPL-3.0 | uBlock Origin / uAssets contributors; `privacy-removeparam.txt` builds on the AdGuard URL Tracking filter (AdGuard, GPL-3.0) |
 | EasyList (`easylist`), EasyPrivacy (`easyprivacy`), EasyList Germany (`regional-de`), EasyList Italy (`regional-it`), Fanboy's Social (`social`) | https://easylist.to/ | GPL-3.0-or-later or CC BY-SA 3.0 (dual; used under the GPL) | The EasyList authors (https://easylist.to/) |
 | Fanboy's Cookiemonster, Mobile Notifications and Annoyance lists, uBlock Origin flavour (parts of `cookies`, `app-promos`, `annoyances`) | https://secure.fanboy.co.nz/ | CC BY 3.0 (per file headers) | The EasyList authors (Fanboy). Converted to Chromium DNR format by Bastion Shield. |

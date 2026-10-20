@@ -1,5 +1,6 @@
 // compileCustom(): user / admin filters at runtime (dynamic rules).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

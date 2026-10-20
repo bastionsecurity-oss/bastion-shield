@@ -3,6 +3,7 @@
 // keyboard-driven filter bisect with its toolbar badge step, and switching
 // nerd mode off ending a running bisect (rules gone, badge handed back).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

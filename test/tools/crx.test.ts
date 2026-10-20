@@ -1,6 +1,7 @@
 // Tests for tools/lib/crx.ts: extension-id derivation (known vector), CRX3
 // signing/verification round trip, tamper detection and update.xml output.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

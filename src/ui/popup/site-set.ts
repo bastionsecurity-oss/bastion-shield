@@ -2,6 +2,7 @@
 // expanded view («Diese Website»): site:set, the policy refusals it reports,
 // and the settings the site resolves to afterwards.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { PopupState, SiteSettings } from '../../shared/types.ts';

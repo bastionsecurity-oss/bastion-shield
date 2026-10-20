@@ -21,6 +21,7 @@
 // themselves. Texts come from chrome.i18n (`notice*` keys) with English
 // fallbacks for an invalidated extension context.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { LookalikeHit } from '../shared/types.ts';

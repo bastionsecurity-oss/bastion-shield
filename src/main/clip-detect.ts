@@ -27,6 +27,7 @@
 // Only the first MAX_SCAN characters are examined (lure payloads are short;
 // a page that pads a payload beyond that gets it replaced as 'high').
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type ClipSeverity = 'high' | 'medium';

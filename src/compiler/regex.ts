@@ -6,6 +6,7 @@
 // spelling, and turn regexes that are plain literals into urlFilter patterns
 // (which do not count against the 1,000 regex-rule budget).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 const MAX_RE2_REPEAT = 1000;

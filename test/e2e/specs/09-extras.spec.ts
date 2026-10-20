@@ -4,6 +4,7 @@
 // bounce-tracking protection (debounce rules → pages/bounce.html → target
 // site), and a settings change that wakes a stopped service worker (SW-1).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFileSync } from 'node:fs';

@@ -1,5 +1,6 @@
 // Unit tests for src/content/tokens.ts (cosmetic content-script helpers).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

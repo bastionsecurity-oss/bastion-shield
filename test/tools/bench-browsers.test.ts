@@ -2,6 +2,7 @@
 // which keep their component lists, and that every profile is seeded before
 // the browser starts (see tools/lib/chromium-profile.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

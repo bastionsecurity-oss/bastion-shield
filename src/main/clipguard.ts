@@ -27,6 +27,7 @@
 // and same-origin about:blank iframes used in the same task they were
 // created in (their prototypes are unpatched until our scripts run there).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { CLIP_REPLACEMENT } from './clip-replacement.ts';

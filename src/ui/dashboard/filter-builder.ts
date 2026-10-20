@@ -3,6 +3,7 @@
 // element on that site», …) into one filter line in uBO/ABP syntax, and merges
 // an imported filter file into the editor text. The view wires it up.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { normaliseHost } from './common.ts';

@@ -13,6 +13,7 @@
 // visible and selectable in the notice, so someone who really needs it can
 // copy it by hand after reading it.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { collapseWs } from '../main/clip-detect.ts';

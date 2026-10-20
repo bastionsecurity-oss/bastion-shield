@@ -2,6 +2,7 @@
 # popup opens issues/new?template=broken-site.yml&title=...&site=...&browser=...
 # &version=...&mode=...&lists=... to prefill them. Rename ids only together
 # with the UI code.
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 name: Broken website

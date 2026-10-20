@@ -3,6 +3,7 @@
 // «Zurück» as the primary action and «Trotzdem fortfahren» behind an explicit
 // confirmation (blocked:proceed → the SW adds a per-tab session allow rule).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { MsgBlockedInfoResponse } from '../shared/types.ts';

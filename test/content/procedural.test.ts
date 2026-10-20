@@ -2,6 +2,7 @@
 // and selector evaluation (procedural-engine.ts) on a tiny fake DOM. The
 // real-DOM behaviour is covered by test/fixtures/procedural.html in e2e.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

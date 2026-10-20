@@ -7,6 +7,7 @@
 // settings do not need are removed after initialisation, so the worker is not
 // woken for every blocked request when nobody wants the log or the badge.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { PORT_LIVE, PRIORITY, STORAGE } from '../shared/constants.ts';

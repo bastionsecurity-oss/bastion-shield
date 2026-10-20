@@ -7,6 +7,7 @@
 // the same site, this is not a cross-site bounce: we do not follow it and
 // explain why instead (the user may still open the target themselves).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { decodeBounceTarget, isSameSiteBounce, parseFromHost } from './bounce-decode.ts';

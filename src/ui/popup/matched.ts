@@ -4,6 +4,7 @@
 // original filter text through dist/rulesets/filters/<rulesetId>.json, which
 // is only fetched when the user opens a list (the files can be large).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ListCategory, RuleSourceMap } from '../../shared/types.ts';

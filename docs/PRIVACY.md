@@ -2,7 +2,7 @@
 
 **Bastion Shield does not send any data anywhere.** It has no telemetry, no analytics, no crash reporting, no remote configuration, no account and no server. Everything it records stays in your browser profile on your device, and you can switch recording off or delete it at any time.
 
-This page describes exactly what is stored, for how long, what is never collected, and why the extension needs each browser permission. It applies to all builds published by Bastion GmbH i. Gr. in the Chrome Web Store, in Microsoft Edge Add-ons and on GitHub.
+This page describes exactly what is stored, for how long, what is never collected, and why the extension needs each browser permission. It applies to all builds published by Bastion Security GmbH in the Chrome Web Store, in Microsoft Edge Add-ons and on GitHub.
 
 ## Network traffic
 
@@ -104,4 +104,4 @@ Bastion Shield does not request `cookies`, `history`, `downloads`, `bookmarks`, 
 
 ## Contact
 
-Questions about privacy: open an issue on GitHub, or contact Bastion GmbH i. Gr., Zurich, through https://bastionsecurity.ch. Security problems: see [SECURITY.md](../SECURITY.md).
+Questions about privacy: open an issue on GitHub, or contact Bastion Security GmbH, Zurich, through https://bastionsecurity.ch. Security problems: see [SECURITY.md](../SECURITY.md).

@@ -3,6 +3,7 @@
 // late list attribution on the live port, list filter counts, the managed
 // support link and the bounce page's same-site refusal.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import test from 'node:test';

@@ -1,6 +1,7 @@
 // Tests for the «Eigene Filter» guided builder and .txt import / export
 // (src/ui/dashboard/filter-builder.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

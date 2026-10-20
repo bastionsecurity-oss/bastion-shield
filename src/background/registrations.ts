@@ -21,6 +21,7 @@
 // registrations whose `matches` cover only the re-included hosts, using the
 // groups from layerScopes (excludeMatches always wins in Chrome).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { CosmeticMeta, FingerprintLevel, ScriptletIndex, Settings, SitesMap } from '../shared/types.ts';

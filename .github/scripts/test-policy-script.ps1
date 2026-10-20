@@ -3,6 +3,7 @@
 # HKCU test key (-TestRoot) so nothing touches real browser policy.
 # Run: pwsh -File .github/scripts/test-policy-script.ps1 [-Shell powershell.exe]
 #
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 param(

@@ -8,6 +8,7 @@
 // and edge (installed Microsoft Edge with Bastion Shield, tracking prevention
 // at its default "Balanced").
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { spawn, spawnSync } from 'node:child_process';

@@ -2,6 +2,7 @@
 // under rulesets/ (rulesets, transparency maps, meta.json), never itself, with
 // sorted package-relative paths, and leaves the hashed files unchanged.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

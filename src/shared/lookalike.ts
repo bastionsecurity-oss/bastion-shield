@@ -23,6 +23,7 @@
 // their TLD. The public suffix is approximated with registrableDomain
 // (hash.ts), so "brand.evil.co.uk" is judged on "evil".
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { isIpAddress, registrableDomain, siteKeyOf } from './hash.ts';

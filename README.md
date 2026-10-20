@@ -1,11 +1,14 @@
 # Bastion Shield
 
-[![CI](https://github.com/bastion-security/bastion-shield/actions/workflows/ci.yml/badge.svg)](https://github.com/bastion-security/bastion-shield/actions/workflows/ci.yml)
+[![CI](https://github.com/bastionsecurity-ch/bastion-shield/actions/workflows/ci.yml/badge.svg)](https://github.com/bastionsecurity-ch/bastion-shield/actions/workflows/ci.yml)
 [![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 A lean, open-source ad and tracker blocker for Chromium browsers (Google Chrome, Microsoft Edge, Brave), built on Manifest V3. It blocks as well as Brave Shields in its default mode, shows exactly what it blocked and why, keeps everything on your device, and can be deployed and configured centrally with Microsoft Intune.
 
-Made by [Bastion GmbH i. Gr.](https://bastionsecurity.ch), a cyber-security MSP in Zurich, for its customers and for everyone else.
+Made by [Bastion Security GmbH](https://bastionsecurity.ch), a cyber-security MSP in Zurich, for its customers and for everyone else.
+
+Created by **Luca Seeberger**, Bastion Shield is Bastion Security GmbH's first open-source project.
+Original project code is Copyright (C) 2026 Bastion Security GmbH and contributors, licensed under GPL-3.0-or-later. See [AUTHORS.md](AUTHORS.md) for project credits and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for upstream code, filter lists and fonts.
 
 ## Kurz auf Deutsch
 

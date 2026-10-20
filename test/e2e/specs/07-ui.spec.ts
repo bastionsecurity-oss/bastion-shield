@@ -2,6 +2,7 @@
 // the popup feed) and (m) dashboard smoke test: every section renders without
 // console errors.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ConsoleMessage, Page } from '@playwright/test';

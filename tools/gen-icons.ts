@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Renders the Bastion shield-and-diamond mark into the PNG sizes Chromium needs
 // for the toolbar action and the extensions page. Run: node tools/gen-icons.ts
 // Output is committed (src/icons/*.png) so normal builds need no browser.

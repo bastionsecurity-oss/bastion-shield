@@ -7,6 +7,7 @@
 // BASTION_DIST). HEADED=1 shows the browser. One worker on purpose: all specs
 // share one installed extension, and settings changes must not race.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import path from 'node:path';

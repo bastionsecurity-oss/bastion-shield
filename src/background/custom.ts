@@ -4,6 +4,7 @@
 // cosmetic.ts. Scriptlets cannot be added at runtime in MV3 without the
 // userScripts toggle, so they are counted and ignored (ARCHITECTURE §6).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { compileCustom } from '../compiler/index.ts';

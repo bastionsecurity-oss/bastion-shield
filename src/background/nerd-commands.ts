@@ -10,6 +10,7 @@
 // The listener is added synchronously from index.ts so Chrome can wake the
 // worker for it; the work waits for the worker's `ready` promise.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BisectView, MsgNerdBisect } from '../shared/types.ts';

@@ -1,6 +1,7 @@
 // Tests for tools/vendor.ts: path mapping from VENDOR.json patterns and the
 // tar reader (ustar names, pax path overrides, GitHub's global commit header).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

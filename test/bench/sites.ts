@@ -2,6 +2,7 @@
 // large international ones. Home pages only, as a first-time visitor (fresh
 // profile, consent banners left alone).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export interface BenchSite {

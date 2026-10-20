@@ -2,6 +2,7 @@
 // merging shard entries with list masks, exceptions and flags, CSS assembly,
 // generic token lookup and the service's insertCSS flow (src/background/cosmetic.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

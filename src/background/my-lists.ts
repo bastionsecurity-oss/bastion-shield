@@ -9,6 +9,7 @@
 // (conditional requests, so an unchanged list costs one small response).
 // Nothing is downloaded unless the user added a web address.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { MY_LISTS, STORAGE } from '../shared/constants.ts';

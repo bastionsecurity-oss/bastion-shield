@@ -1,5 +1,6 @@
 // Network filter -> DNR mapping tests (ARCHITECTURE §4.2–§4.4).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

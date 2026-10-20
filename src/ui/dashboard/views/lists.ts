@@ -5,6 +5,7 @@
 // (30'000 guaranteed rules, 1'000 regex rules) and per-list errors reported
 // by the service worker.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BuiltList, ListsState } from '../../../shared/types.ts';

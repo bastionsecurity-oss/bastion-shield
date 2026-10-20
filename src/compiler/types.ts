@@ -2,6 +2,7 @@
 // TypeScript (no Node or DOM APIs) so the same code runs in tools/build.ts at
 // build time and in the extension (custom filters) at runtime.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Subset of chrome.declarativeNetRequest.Rule we emit (plain JSON). `id` is assigned by the caller. */

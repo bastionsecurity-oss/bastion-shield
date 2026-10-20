@@ -3,6 +3,7 @@
 // hostnames, and the cosmetic shards are keyed by the same form, so every
 // hostname that leaves the compiler goes through here.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** uBO's "plain ASCII hostname" test: the fast path that needs no normalization. */

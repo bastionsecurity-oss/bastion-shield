@@ -9,6 +9,7 @@
 // urlFilter-based allow rules at the same priority (allow beats redirect on
 // equal priority), without spending any regex budget.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { PRIORITY } from '../../src/shared/constants.ts';

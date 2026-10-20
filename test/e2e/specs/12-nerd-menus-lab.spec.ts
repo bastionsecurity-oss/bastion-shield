@@ -4,6 +4,7 @@
 // id that does not exist) and the Lab is opened with the URLs the click
 // handler builds (unit-tested in test/background/nerd-menus.test.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

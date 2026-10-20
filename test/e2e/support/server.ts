@@ -11,6 +11,7 @@
 // Every request is recorded, so a test can tell "blocked by the extension"
 // (never reached us) from "loaded" without trusting page-side signals alone.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, readFileSync, statSync } from 'node:fs';

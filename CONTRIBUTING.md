@@ -1,6 +1,6 @@
 # Contributing to Bastion Shield
 
-Thank you for helping. Bastion Shield is maintained by Bastion GmbH i. Gr. in Zurich and developed in the open. Contributions of every size are welcome: a broken-site report, a filter, a translation fix, code.
+Thank you for helping. Bastion Shield is maintained by Bastion Security GmbH in Zurich and developed in the open. Contributions of every size are welcome: a broken-site report, a filter, a translation fix, code.
 
 By contributing you agree that your contribution is licensed under the GNU General Public License, version 3 or later (GPL-3.0-or-later), the licence of the project. Only contribute work you have the right to license this way; for code or data copied from elsewhere, say where it comes from and under which licence.
 
@@ -36,7 +36,7 @@ For Swiss specifics, Bastion customer environments, and urgent fixes until upstr
 3. Put a comment with the issue URL on the line above:
 
    ```
-   ! https://github.com/bastion-security/bastion-shield/issues/123
+   ! https://github.com/bastionsecurity-ch/bastion-shield/issues/123
    example.ch##.ad-container
    ```
 
@@ -71,7 +71,7 @@ Node.js 22.18 or newer (CI: Node 24). Load `dist/` as an unpacked extension for 
 ### Style
 
 - **TypeScript, ESM, strict.** Node runs `.ts` files directly through type stripping, so use only erasable syntax: no `enum`, no `namespace`, no parameter properties, no `import =`. Import local files **with** the `.ts` extension and use `import type` for type-only imports.
-- Every source file starts with a short header comment and `// SPDX-License-Identifier: GPL-3.0-or-later`.
+- Every source file starts with a short header comment, `// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors` and `// SPDX-License-Identifier: GPL-3.0-or-later` (use the file format's comment syntax). Preserve upstream copyright and licence notices in adapted code. Project and creator credits are in [AUTHORS.md](AUTHORS.md).
 - Comments explain *why*, not *what*.
 - The architecture contract is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) with `src/shared/constants.ts`, `src/shared/types.ts` and `src/compiler/types.ts`. Change the document and the code together, never one without the other.
 - **Performance:** nothing may run per network request; content scripts must stay small and do nothing on pages that need nothing; let the service worker sleep.

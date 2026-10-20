@@ -3,6 +3,7 @@
 // with an empty password at startup; repeated launches lock the developer's
 // Windows account (see tools/lib/chromium-profile.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import test from 'node:test';

@@ -2,6 +2,7 @@
 // menu specs, the Lab deep links built from a click, and show / hide / click
 // handling against a fake chrome.contextMenus.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

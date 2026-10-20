@@ -7,6 +7,7 @@
 // easter egg (nerd-reveal.ts). The same app runs as
 // the dashboard tab (dashboard.html) and as the expanded popup (panel.html).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { $, $$, h, replace } from '../shared/dom.ts';

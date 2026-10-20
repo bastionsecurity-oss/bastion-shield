@@ -1,5 +1,6 @@
 # Report an ad, tracker, cookie banner or annoyance that Bastion Shield does
 # not block. Field ids match broken-site.yml so the extension can prefill them.
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 name: Missed ad or tracker

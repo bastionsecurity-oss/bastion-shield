@@ -2,6 +2,7 @@
 // worker after installation unless a managed policy sets organizationName.
 // States plainly that protection is already on and nothing leaves the device.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { h } from '../../shared/dom.ts';

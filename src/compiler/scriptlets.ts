@@ -4,6 +4,7 @@
 // "…", '…' or `…` (so it can contain commas), "\," escapes a comma in an
 // unquoted argument, and surrounding whitespace is trimmed.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ScriptletInfo } from './types.ts';

@@ -16,6 +16,7 @@
 // storage change plan, the applier, registrations, privacy APIs) is the
 // shipped code. Product code is unchanged; only the staged manifest differs.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFileSync, writeFileSync } from 'node:fs';

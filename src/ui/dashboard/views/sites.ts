@@ -3,6 +3,7 @@
 // add / remove, search, import / export. Sites forced by policy are shown
 // read-only with a lock.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BlockingMode, EffectiveConfig, FingerprintLevel, SiteSettings, SitesMap } from '../../../shared/types.ts';

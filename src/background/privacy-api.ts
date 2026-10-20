@@ -4,6 +4,7 @@
 // (levelOfControl) and release control when the feature is switched off, so
 // enterprise policy and other extensions always win and nothing is fought over.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Settings, SitesMap } from '../shared/types.ts';

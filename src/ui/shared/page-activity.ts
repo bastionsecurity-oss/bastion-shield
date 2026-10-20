@@ -4,6 +4,7 @@
 // moves, and the savings sample (types of requests that never loaded).
 // DOM-free.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { savesRequest } from '../../shared/constants.ts';

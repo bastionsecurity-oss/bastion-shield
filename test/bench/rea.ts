@@ -12,6 +12,7 @@
 //   - an ad/tracker resource with content that our capture calls hard-blocked,
 //     or a host our capture never saw, is a disagreement worth a look.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { spawn } from 'node:child_process';

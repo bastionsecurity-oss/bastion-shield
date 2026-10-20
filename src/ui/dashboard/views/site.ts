@@ -3,6 +3,7 @@
 // per-site blocking mode, fingerprinting level and script blocking, the DNR
 // rules that matched on the page, and «Seite funktioniert nicht richtig?».
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BlockingMode, FingerprintLevel, PopupState, SiteSettings } from '../../../shared/types.ts';

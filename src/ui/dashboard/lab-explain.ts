@@ -15,6 +15,7 @@
 // https://<site>/) is evaluated too, as Chromium applies it to the requests of
 // that page.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BuildMeta, RuleSourceMap } from '../../shared/types.ts';

@@ -5,6 +5,7 @@
 // Fixtures are assembled from pieces (x(...)) so the file holds no command
 // line verbatim (antivirus engines flag such files).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

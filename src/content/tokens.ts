@@ -3,6 +3,7 @@
 // arithmetic and the de-AMP target check. No DOM access, so they are unit
 // tested under Node (test/content/tokens.test.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export interface FrameContext {

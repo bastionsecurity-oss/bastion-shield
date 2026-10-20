@@ -21,6 +21,7 @@
 // The isolated world has its own JS built-ins, so page prototype tampering
 // cannot reach this script; only the shared DOM is untrusted.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {

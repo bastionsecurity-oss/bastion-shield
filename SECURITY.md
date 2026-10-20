@@ -6,8 +6,8 @@ Bastion Shield runs with broad access to the pages its users visit. We take repo
 
 Please **do not open a public issue**.
 
-- Preferred: GitHub's private vulnerability reporting: [Report a vulnerability](https://github.com/bastion-security/bastion-shield/security/advisories/new) (repository **Security** tab).
-- Or contact Bastion GmbH i. Gr., Zurich, through [bastionsecurity.ch](https://bastionsecurity.ch) and ask for the security contact. <!-- TODO (Bastion): add the dedicated security e-mail address and, optionally, a PGP key before the first public release. -->
+- Preferred: GitHub's private vulnerability reporting: [Report a vulnerability](https://github.com/bastionsecurity-ch/bastion-shield/security/advisories/new) (repository **Security** tab).
+- Or contact Bastion Security GmbH, Zurich, through [bastionsecurity.ch](https://bastionsecurity.ch) and ask for the security contact. <!-- TODO (Bastion): add the dedicated security e-mail address and, optionally, a PGP key before the first public release. -->
 
 Please include the affected version (popup or dashboard "About"), browser and version, steps to reproduce or a proof of concept, and the impact you see. English or German is fine.
 

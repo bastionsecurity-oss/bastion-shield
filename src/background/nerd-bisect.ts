@@ -17,6 +17,7 @@
 // activity badge leaves that tab alone until the test phase ends
 // (holdsBadge). Nothing here throws to the caller.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DnrRule } from '../compiler/types.ts';

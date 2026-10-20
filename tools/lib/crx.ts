@@ -11,6 +11,7 @@
 // The extension id is the first 16 bytes of SHA-256(SPKI DER) written as
 // hex with digits mapped 0-f -> a-p (components/crx_file/id_util.cc).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { createHash, createPublicKey, createSign, createVerify, type KeyObject } from 'node:crypto';

@@ -2,6 +2,7 @@
 // JSON comparison, a debounced serial runner, URL and date helpers). Nothing
 // here touches chrome.*, so every function is unit-testable under Node.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Least-recently-used map with a fixed capacity (Map keeps insertion order). */

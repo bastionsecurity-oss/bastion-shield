@@ -10,6 +10,7 @@
 // reloads after every answer and the popup may close, so everything here is
 // re-rendered from popup:state / nerd:bisect 'state' when it opens again.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BisectCandidate, BisectView, BuildMeta, FpVector, MsgNerdBisect, NerdBlockedHost, PopupState } from '../../shared/types.ts';

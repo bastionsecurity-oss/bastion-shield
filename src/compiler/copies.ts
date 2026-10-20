@@ -18,6 +18,7 @@
 // Funding Choices …) at a few dozen rules instead of every protected
 // redirect. A rule it cannot analyse keeps its copy.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { PRIORITY } from '../shared/constants.ts';

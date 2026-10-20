@@ -5,6 +5,7 @@
 // pages/blocked.html, and UI messages from one of our extension pages. Every
 // request gets a JSON reply; failures are `{error}`.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {

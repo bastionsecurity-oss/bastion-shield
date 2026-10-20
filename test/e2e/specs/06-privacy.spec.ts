@@ -2,6 +2,7 @@
 // cross-site navigations, (j) Global Privacy Control, (k) fingerprinting
 // protection (canvas farbling per site and per session).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync } from 'node:fs';

@@ -2,6 +2,7 @@
 // scriptlet data gets its abort-on-property-read / set-constant applied in the
 // MAIN world before page scripts run; an unrelated host does not.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { expect, test } from '../support/fixtures.ts';

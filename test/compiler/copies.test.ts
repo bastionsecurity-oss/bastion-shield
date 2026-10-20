@@ -1,6 +1,7 @@
 // restrictRedirectCopies(): keep the third-party copies of protected-list
 // redirects only where an always-apply block can meet them (BS-1).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

@@ -5,6 +5,7 @@
 // filter's upstream history (views/lab.ts openRuleHistory).
 // Everything stays local; exports are files the user saves themselves.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, BuildMeta } from '../../../shared/types.ts';

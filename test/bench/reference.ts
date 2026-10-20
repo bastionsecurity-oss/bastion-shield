@@ -4,6 +4,7 @@
 // domains both Brave and we are expected to block as third parties. It is
 // deliberately not derived from our own DNR output.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';

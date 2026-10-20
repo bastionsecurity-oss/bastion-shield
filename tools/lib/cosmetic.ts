@@ -13,6 +13,7 @@
 // one entry whose mask has every list's bit, so the service worker filters by
 // the enabled-list mask with a single AND.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { join } from 'node:path';

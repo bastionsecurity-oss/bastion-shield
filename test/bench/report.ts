@@ -2,6 +2,7 @@
 // (test/bench/results/summary.md, meant to be pasted into docs/PARITY.md
 // "Measured results" by the docs owner).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BrowserKind } from './browsers.ts';

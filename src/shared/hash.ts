@@ -2,6 +2,7 @@
 // and the content scripts. Keep these dependency-free and deterministic: the
 // build shards data with them and the runtime must find it again.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { COSMETIC_SHARDS } from './constants.ts';

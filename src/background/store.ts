@@ -4,6 +4,7 @@
 // configuration. All reads are tolerant: broken or missing data falls back to
 // defaults so the extension always keeps protecting.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { STORAGE } from '../shared/constants.ts';

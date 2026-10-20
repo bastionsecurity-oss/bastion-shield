@@ -12,9 +12,10 @@
 // per attribute in a constructed stylesheet. The Bastion prefix keeps the
 // effect inspectable in DevTools (transparency principle).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/*! Procedural filtering engine: port of uBlock Origin Lite css-procedural-api.js, Copyright (C) Raymond Hill, GPL-3.0-or-later. Modified by Bastion Shield. */
+/*! Procedural filtering engine: port of uBlock Origin Lite css-procedural-api.js, Copyright (C) Raymond Hill, GPL-3.0-or-later. Modified by Bastion Security GmbH. */
 
 import type { ProceduralFilter } from '../shared/types.ts';
 import type { CssArg } from './procedural-args.ts';

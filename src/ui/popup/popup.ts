@@ -6,6 +6,7 @@
 // Budget: well under 30 ms of script before first meaningful paint, so the
 // static skeleton is in popup.html and everything here is incremental.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, BlockingMode, PopupState, SiteSettings } from '../../shared/types.ts';

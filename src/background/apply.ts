@@ -23,6 +23,7 @@
 // are left to the regular instance: their regular-scope settings cannot be
 // changed from incognito and are inherited by it.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { MY_LISTS, RULE_ID } from '../shared/constants.ts';

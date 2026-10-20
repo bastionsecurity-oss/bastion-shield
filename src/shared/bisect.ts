@@ -25,6 +25,7 @@
 // A single culprit among n candidates therefore takes at most
 // 2 + ceil(log2 n) answers (1 for n = 1); bisectProgress shows that bound.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { RULE_ID } from './constants.ts';

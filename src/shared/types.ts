@@ -2,6 +2,7 @@
 // (docs/ARCHITECTURE.md). Build tools write the dist/* data formats declared
 // here; the service worker, content scripts and UI read them.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // ---------------------------------------------------------------------------

@@ -2,6 +2,7 @@
 // database `bastion-activity` with `events` (auto key, index `t`) and `daily`
 // (keyPath `day`). Local only; pruned by retention via chrome.alarms.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { HISTORY_MAX_EVENTS, IDB } from '../shared/constants.ts';

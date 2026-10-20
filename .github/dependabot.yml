@@ -3,6 +3,7 @@
 # Origin and Brave sources are pinned in vendor/VENDOR.json and updated
 # deliberately (tools/vendor.ts --update-vendor), not by Dependabot.
 #
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 version: 2

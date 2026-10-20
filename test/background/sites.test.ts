@@ -1,6 +1,7 @@
 // Tests for site keys, per-site resolution and the include/exclude layering
 // used by DNR rules and content-script match patterns (src/background/sites.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

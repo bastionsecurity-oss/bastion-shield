@@ -13,6 +13,7 @@
 //   node tools/fetch-lists.ts            # online (uses the cache for 304s)
 //   node tools/fetch-lists.ts --offline  # cache only, fails if something is missing
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { randomBytes } from 'node:crypto';
@@ -205,7 +206,7 @@ async function downloadUncached(url: string, offline: boolean, log: Logger, cach
     return fromCache(cached);
   }
 
-  const ua = `BastionShield-build/${await readPackageVersion()} (+https://github.com/bastion-security/bastion-shield)`;
+  const ua = `BastionShield-build/${await readPackageVersion()} (+https://github.com/bastionsecurity-ch/bastion-shield)`;
   let lastError = '';
   let attempts = 0;
   for (let attempt = 0; attempt <= RETRIES; attempt++) {

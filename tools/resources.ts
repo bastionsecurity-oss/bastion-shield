@@ -6,6 +6,7 @@
 //
 //   node tools/resources.ts   # prints a summary (sanity check of vendor/)
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFile } from 'node:fs/promises';

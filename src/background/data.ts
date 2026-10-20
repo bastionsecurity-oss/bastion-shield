@@ -2,6 +2,7 @@
 // the package (dist/*). Files are fetched on first use and cached for the
 // lifetime of the service worker; nothing is loaded at startup unless needed.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BuildMeta, CosmeticMeta, CosmeticShard, ScriptletIndex } from '../shared/types.ts';

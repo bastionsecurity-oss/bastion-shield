@@ -10,6 +10,7 @@
 // Prints the verdict and reasons; writes eligible=true|false to $GITHUB_OUTPUT
 // when set. Exit code 0 for a verdict either way, 2 for usage/IO errors.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { createHash } from 'node:crypto';

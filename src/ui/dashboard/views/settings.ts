@@ -3,6 +3,7 @@
 // reset to defaults, and the nerd-mode switches. Backups are plain JSON files
 // the user saves locally.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BackupFile, BlockingMode, EffectiveConfig, Settings } from '../../../shared/types.ts';

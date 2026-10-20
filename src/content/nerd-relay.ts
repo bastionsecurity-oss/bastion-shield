@@ -20,6 +20,7 @@
 // The relay stops the event's propagation so page listeners never see the
 // clipboard text or the counts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { FpVector, MsgNerdSignal } from '../shared/types.ts';

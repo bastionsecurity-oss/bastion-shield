@@ -2,6 +2,7 @@
 // and rule matches: list ids, ruleset ids, resource types, activity kinds and
 // dynamic-rule id ranges (docs/ARCHITECTURE.md §4.6).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityKind, BuildMeta, BuiltList, ListCategory } from '../../shared/types.ts';

@@ -2,6 +2,7 @@
 // ruleset, CSS selector checks, version numbers, cosmetic data output,
 // ruleset finalization (ids + transparency maps) and manifest order.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

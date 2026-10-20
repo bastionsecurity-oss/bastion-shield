@@ -4,6 +4,7 @@
 // so tools/build.ts uses it at build time and the service worker uses
 // compileCustom() for user and admin filters at runtime.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {

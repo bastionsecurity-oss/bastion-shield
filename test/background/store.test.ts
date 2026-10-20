@@ -2,6 +2,7 @@
 // worker's own storage writes must not revert newer state (SW-3), and policy
 // site locks cover subdomains (ENT-4). chrome.storage is faked in memory.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

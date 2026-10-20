@@ -3,6 +3,7 @@
 # Intune: platform script, Win32 app or Remediation (see docs/DEPLOYMENT-INTUNE.md).
 # Default mode: Apply. Detect-BastionShieldPolicy.ps1 is this script with default mode Detect.
 #
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 <#

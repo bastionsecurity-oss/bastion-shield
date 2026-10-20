@@ -4,6 +4,7 @@
 // world of a frame, so they meet on `self`. The page cannot see
 // isolated-world globals.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ProceduralFilter } from '../shared/types.ts';

@@ -2,6 +2,7 @@
 // (never interpolated with data), parsed once per use through a <template>.
 // Icons follow the Bastion line style: 1.5px strokes, square ends, currentColor.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 const P = 'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter"';

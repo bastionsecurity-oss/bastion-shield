@@ -3,6 +3,7 @@
 // come from a tab, UI messages from one of our extension pages, and the
 // strict-block messages only from the top frame of pages/blocked.html.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { parseUrl } from './util.ts';

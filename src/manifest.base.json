@@ -46,7 +46,9 @@
     "tabs",
     "contextMenus"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "incognito": "split",
   "storage": {
     "managed_schema": "managed_schema.json"
@@ -57,5 +59,6 @@
   "declarative_net_request": {
     "rule_resources": []
   },
-  "web_accessible_resources": []
+  "web_accessible_resources": [],
+  "author": "Bastion Security GmbH"
 }

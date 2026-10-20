@@ -2,6 +2,7 @@
 // Every call resolves to a Result and never throws: the service worker may be
 // starting up, restarting after an update, or (in a broken install) missing.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, LivePortMessage, Message } from '../../shared/types.ts';

@@ -8,6 +8,7 @@
 //
 // Usage: node tools/integrity.ts [distDir]   (also called by tools/build.ts)
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFile } from 'node:fs/promises';

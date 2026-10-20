@@ -2,6 +2,7 @@
 // easy to filter in chrome://extensions; recent problems are also kept in a
 // small in-memory ring for troubleshooting views. Nothing leaves the device.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { errMsg } from './util.ts';

@@ -5,6 +5,7 @@
 // whose title matches an existing list asks «Replace» or «Add as new».
 // Under the allowCustomLists policy the panel is read-only and says why.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { MY_LISTS } from '../../../shared/constants.ts';

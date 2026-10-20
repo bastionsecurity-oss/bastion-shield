@@ -2,6 +2,7 @@
 // (src/background/debounce.ts). The generated regexes use only RE2 syntax,
 // which JavaScript RegExp also understands, so we can test matching here.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

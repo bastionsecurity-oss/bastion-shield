@@ -3,6 +3,7 @@
 // unit tested. Accepts a percent-encoded URL (possibly encoded several times)
 // or "b64:<base64 / base64url>" and returns a safe http(s) URL or null.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { registrableDomain } from '../shared/hash.ts';

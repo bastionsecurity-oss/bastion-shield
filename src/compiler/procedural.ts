@@ -6,6 +6,7 @@
 // can mirror uBO's well-tested semantics (selector, then tasks, spath for
 // plain CSS between operators, optional final action).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ProceduralFilter, ProceduralTask } from '../shared/types.ts';

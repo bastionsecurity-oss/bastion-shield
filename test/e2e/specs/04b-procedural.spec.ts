@@ -4,6 +4,7 @@
 // cosmetic:frame response, the cosmetic:procedural injection and the engine.
 // The fixture evaluates its own expectations into window.__procResults.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, readFileSync } from 'node:fs';

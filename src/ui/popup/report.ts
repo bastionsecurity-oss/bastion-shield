@@ -3,6 +3,7 @@
 // list ids, shows the user exactly that text, and only then opens a prefilled
 // GitHub issue or an e-mail draft. Nothing is sent automatically.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ListsState, PopupState } from '../../shared/types.ts';

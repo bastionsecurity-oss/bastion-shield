@@ -3,6 +3,7 @@
 // the list of locked setting paths the UI shows lock icons for. Pure: storage
 // I/O lives in store.ts so this module can be tested under Node.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {

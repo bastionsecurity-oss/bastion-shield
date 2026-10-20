@@ -4,6 +4,7 @@
 // drop selectors that are structurally broken or use pseudo-classes Chromium
 // does not know (typically procedural operators that leaked through).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**

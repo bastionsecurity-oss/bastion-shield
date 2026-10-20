@@ -6,6 +6,7 @@
 // ~host exclusions, trust, dedupe across lists, the merged data file, the
 // trusted-click-element collapse (review PERF-4) and the ScriptletIndex.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { before, test } from 'node:test';

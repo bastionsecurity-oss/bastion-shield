@@ -7,6 +7,7 @@
 // is forgotten on the tab's next top-level commit, so it never outlives the
 // blocked page.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { RULE_ID } from '../shared/constants.ts';

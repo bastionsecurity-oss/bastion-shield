@@ -11,6 +11,7 @@
 //   node tools/build.ts --release      # minified, consumes a version counter
 //   node tools/build.ts --keep-going   # a list that fails to compile ships empty
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { randomInt, randomUUID } from 'node:crypto';

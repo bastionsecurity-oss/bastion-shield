@@ -18,6 +18,7 @@
 // to each browser's CDP endpoint and its Evidence is saved under
 // test/bench/results/rea/<browser>/<site>.json as an independent cross-check.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';

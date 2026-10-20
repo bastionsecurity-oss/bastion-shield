@@ -3,6 +3,7 @@
 // a trusted list is wrapped in `!#trusted off/on <secret>`, and the compiler
 // honours only markers with the build's secret.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { after, before, test } from 'node:test';

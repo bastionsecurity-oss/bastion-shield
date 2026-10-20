@@ -2,6 +2,7 @@
 // statement, licence and source code, contact, and full attribution of every
 // filter list, vendored component and font shipped in the package.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { LINKS } from '../../../shared/constants.ts';
@@ -74,7 +75,8 @@ export function aboutView(): View {
       );
 
       const contactItems: HTMLElement[] = [
-        h('div', null, h('dt', { text: t('aboutPublisher') }), h('dd', null, 'Bastion GmbH i. Gr., Zürich', h('br'), ext(LINKS.HOMEPAGE, LINKS.HOMEPAGE.replace(/^https:\/\//, '')))),
+        h('div', null, h('dt', { text: t('aboutCreator') }), h('dd', { text: 'Luca Seeberger' })),
+        h('div', null, h('dt', { text: t('aboutPublisher') }), h('dd', null, 'Bastion Security GmbH, Zürich', h('br'), ext(LINKS.HOMEPAGE, LINKS.HOMEPAGE.replace(/^https:\/\//, '')))),
         h('div', null, h('dt', { text: t('aboutIssues') }), h('dd', null, ext(`${LINKS.REPO_URL}/issues`, t('aboutIssuesLink')))),
       ];
       if (managed.organizationName || managed.supportUrl || managed.supportEmail) {

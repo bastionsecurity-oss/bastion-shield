@@ -174,7 +174,7 @@ Compiling a filter list into Chromium's rule format creates an adapted version o
 
 | List(s) | Licence | Attribution | Notes |
 |---|---|---|---|
-| `bastion` | GPL-3.0-or-later | Bastion GmbH i. Gr. and contributors | |
+| `bastion` | GPL-3.0-or-later | Bastion Security GmbH and contributors | |
 | `ublock`, `ublock-privacy`, `ublock-badware`, `url-tracking`, uAssets parts of `cookies` and `annoyances` | GPL-3.0 | uBlock Origin / uAssets contributors | `privacy-removeparam.txt` builds on AdGuard's URL tracking list (GPL-3.0). |
 | `easylist`, `easyprivacy`, `regional-de`, `regional-it`, `social` | GPL-3.0-or-later **or** CC BY-SA 3.0 (dual) | The EasyList authors (https://easylist.to/) | We use them under the GPL option. The dual licence explicitly covers EasyList, EasyPrivacy, EasyList Germany, EasyList Italy and the contents of the EasyList repository ([easylist.to/pages/licence.html](https://easylist.to/pages/licence.html)). |
 | Fanboy `_ubo` files (`cookies`, `app-promos`, `annoyances`) | CC BY 3.0 (per the file headers on secure.fanboy.co.nz) | The EasyList authors (Fanboy) | Attribution and change marking. |

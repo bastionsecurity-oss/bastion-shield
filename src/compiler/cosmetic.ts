@@ -3,6 +3,7 @@
 // AdGuard-only (#$#, #%#, #@$#…) and HTML filters (##^) are reported as
 // unsupported, as in uBO Lite.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { GenericCosmetic, ScriptletFilter, ScriptletInfo, SpecificCosmetic } from './types.ts';

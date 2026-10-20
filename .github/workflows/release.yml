@@ -6,6 +6,7 @@
 # the previous release (unless started by hand with "force").
 # Details: docs/RELEASING.md
 #
+# SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 name: Release

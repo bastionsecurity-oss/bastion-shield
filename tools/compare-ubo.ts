@@ -15,6 +15,7 @@
 // pre-pass mirrors uBOL: lists earlier in its rulesets.json (--rulesets,
 // default <ubol-out>/../build/rulesets.json) cancel filters in later lists.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import fs from 'node:fs';

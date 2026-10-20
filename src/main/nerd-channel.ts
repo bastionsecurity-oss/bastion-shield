@@ -17,6 +17,7 @@
 // forged check's answer is ignored. Encoding uses string concatenation
 // only (no JSON), so nothing page-modifiable runs on the MAIN side.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { fnv1a32 } from '../shared/hash.ts';

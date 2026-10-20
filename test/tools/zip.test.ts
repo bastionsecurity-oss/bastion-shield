@@ -1,6 +1,7 @@
 // Tests for tools/lib/zip.ts: CRC-32 vector, round trip, determinism, and
 // the Edge package variant in tools/package.ts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

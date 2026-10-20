@@ -15,6 +15,7 @@
 // Reduced motion, or a panel that does not report ready, falls back to the
 // plain page change.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { reducedMotion } from '../shared/dom.ts';

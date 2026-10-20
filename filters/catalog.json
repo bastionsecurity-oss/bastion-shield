@@ -26,9 +26,9 @@
           "path": "filters/bastion.txt"
         }
       ],
-      "homepage": "https://github.com/bastion-security/bastion-shield/tree/main/filters",
+      "homepage": "https://github.com/bastionsecurity-ch/bastion-shield/tree/main/filters",
       "license": "GPL-3.0-or-later",
-      "attribution": "Bastion GmbH i. Gr. and contributors"
+      "attribution": "Bastion Security GmbH and contributors"
     },
     {
       "id": "ublock",

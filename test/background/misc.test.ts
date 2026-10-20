@@ -2,6 +2,7 @@
 // canonical JSON, sender validation, privacy-API decisions, per-site script
 // blocking and blocked-page helpers.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

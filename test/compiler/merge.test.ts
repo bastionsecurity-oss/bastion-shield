@@ -1,5 +1,6 @@
 // Rule minimization (ARCHITECTURE §4.4 "Merging") on hand-made drafts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

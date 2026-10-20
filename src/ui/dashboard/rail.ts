@@ -6,6 +6,7 @@
 // command palette). The choice is remembered per surface (tab / popup) in
 // localStorage, a per-device convenience only.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { h } from '../shared/dom.ts';

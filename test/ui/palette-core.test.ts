@@ -1,6 +1,7 @@
 // Unit tests for the dashboard command palette matching (palette-core.ts).
 // Run with npm test.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import test from 'node:test';

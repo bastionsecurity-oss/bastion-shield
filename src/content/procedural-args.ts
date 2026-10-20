@@ -9,9 +9,10 @@
 // pre-compiled object forms ({attr, value}, {name, pseudo, value}) so the
 // engine works with either compiler output. Pure: unit-tested under Node.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-/*! Procedural argument parsing: follows uBlock Origin static-filtering-parser.js, Copyright (C) Raymond Hill, GPL-3.0-or-later. Modified by Bastion Shield. */
+/*! Procedural argument parsing: follows uBlock Origin static-filtering-parser.js, Copyright (C) Raymond Hill, GPL-3.0-or-later. Modified by Bastion Security GmbH. */
 
 const RE_LITERAL = /^\/(.+)\/([imu]*)$/;
 const RE_SPECIALS = /[.*+?^${}()|[\]\\]/g;

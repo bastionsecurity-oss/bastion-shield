@@ -3,6 +3,7 @@
 // dependency; Chromium runs with --ignore-certificate-errors, so the
 // certificate only has to be well-formed, not trusted.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { generateKeyPairSync, randomBytes, sign, X509Certificate } from 'node:crypto';

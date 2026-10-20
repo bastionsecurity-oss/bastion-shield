@@ -20,6 +20,9 @@
   "aboutContactTitle": {
     "message": "Kontakt"
   },
+  "aboutCreator": {
+    "message": "Initiator"
+  },
   "aboutFootnote": {
     "message": "Bastion Shield ist freie Software unter der GNU General Public License, Version 3 oder neuer. Filterlisten und Komponenten stehen unter den Lizenzen ihrer Urheber."
   },

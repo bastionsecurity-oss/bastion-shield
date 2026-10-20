@@ -13,6 +13,7 @@
 // a closed shadow root: the specs read them through the browser's
 // accessibility tree (CDP), as assistive technology does.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

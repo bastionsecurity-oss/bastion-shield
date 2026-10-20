@@ -4,6 +4,7 @@
 // union of what the inputs matched. (uBOL also unions exclusion lists across
 // different inclusion lists, which can narrow a rule; we do not.)
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DnrAction, DnrRule } from './types.ts';

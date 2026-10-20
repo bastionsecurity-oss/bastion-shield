@@ -4,6 +4,7 @@
 // PERF-1/PERF-2), and the diff against Chrome's registered scripts
 // (src/background/registrations.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

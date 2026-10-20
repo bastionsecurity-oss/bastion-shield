@@ -6,6 +6,7 @@
 // filter list. Scriptlet filters (+js) need an extension release (MV3 forbids
 // runtime code), which the page says plainly.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { CustomState } from '../../../shared/types.ts';

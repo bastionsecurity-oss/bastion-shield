@@ -3,6 +3,7 @@
 // deep links and the "copy report" JSON. DOM-free so it can be unit tested;
 // nerd.ts draws the statusline and runs the commands.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { FpVector, LookalikeHit, NerdBlockedHost } from '../../shared/types.ts';

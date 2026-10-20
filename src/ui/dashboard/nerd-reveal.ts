@@ -9,6 +9,7 @@
 // keep their accessible names throughout (aria-label while scrambling), and
 // with reduced motion nothing animates.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { reducedMotion } from '../shared/dom.ts';

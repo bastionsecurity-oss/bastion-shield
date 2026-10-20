@@ -1,6 +1,7 @@
 // Tests for the settings model: defaults, validation, managed-policy overlay
 // and locked paths (src/background/settings.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

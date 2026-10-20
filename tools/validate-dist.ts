@@ -10,6 +10,7 @@
 //
 //   node tools/validate-dist.ts [--dist=dist] [--headed] [--strict]
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { cp, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';

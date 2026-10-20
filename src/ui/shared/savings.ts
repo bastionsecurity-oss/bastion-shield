@@ -4,6 +4,7 @@
 // values (HTTP Archive medians for third-party ad/tracker resources, rounded
 // down) and always show the result as an estimate («ca.»).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DailyAggregate } from '../../shared/types.ts';

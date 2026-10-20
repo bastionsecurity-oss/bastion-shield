@@ -2,6 +2,7 @@
 // that several views share (effective config, list state, build meta) and
 // normalises response shapes, so views stay small and the SW is asked once.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type {

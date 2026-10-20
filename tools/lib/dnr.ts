@@ -4,6 +4,7 @@
 // through here: checks mirror Chromium's indexed_rule.cc, unknown keys are
 // stripped, domains lower-cased, arrays sorted and de-duplicated.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DnrAction, DnrCondition, DnrHeaderOp, DnrRule } from '../../src/compiler/types.ts';

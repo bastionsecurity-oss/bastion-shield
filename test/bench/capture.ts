@@ -4,6 +4,7 @@
 // loadingFinished, navigation timings, the page's JS heap and, for the
 // extension run, the service worker's heap.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { registrableDomain } from '../../src/shared/hash.ts';

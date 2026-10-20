@@ -3,6 +3,7 @@
 // (static-filtering-parser.js, utils.preparser) so lists that branch on
 // "ext_ubol" or "env_mv3" compile the way their maintainers test them.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /**

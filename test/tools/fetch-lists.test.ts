@@ -2,6 +2,7 @@
 // expansion rules (same origin, same directory, depth, conditional blocks),
 // HTML refusal, retries, ETag revalidation, offline mode and lock entries.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { after, before, test } from 'node:test';

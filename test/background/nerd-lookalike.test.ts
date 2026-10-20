@@ -3,6 +3,7 @@
 // homoglyph / typo / combo rules with their false-positive guards
 // (src/shared/lookalike.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

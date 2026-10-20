@@ -35,6 +35,7 @@
 // toDataURL would count twice. Both scripts chain their
 // Function.prototype.toString masks, so either order keeps toString native.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { encodeFp, FP_ORDER } from './nerd-channel.ts';

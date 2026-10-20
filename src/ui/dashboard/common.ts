@@ -1,6 +1,7 @@
 // Bastion Shield — dashboard building blocks: page header, panels, setting
 // rows, loading / error / empty states and date keys shared by all views.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { append, h, type Child } from '../shared/dom.ts';

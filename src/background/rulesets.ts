@@ -4,6 +4,7 @@
 // over `.regex` companions; when the regex budget is exceeded only the
 // companion is skipped, never the main list.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { LIMITS, REGEX_RULESET_SUFFIX, RULESET_PARAMS } from '../shared/constants.ts';

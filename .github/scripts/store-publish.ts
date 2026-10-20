@@ -11,6 +11,7 @@
 // Edge: EDGE_CLIENT_ID, EDGE_API_KEY, EDGE_PRODUCT_ID
 //       https://learn.microsoft.com/microsoft-edge/extensions/update/api/using-addons-api
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFileSync, statSync } from 'node:fs';
@@ -205,7 +206,7 @@ async function main(): Promise<void> {
   }
   if (store === 'cws') await publishCws(zip, arg('--skip-review') === 'true', dryRun);
   else {
-    const notes = arg('--notes') ?? 'Automated weekly update of the bundled filter lists. Source code and build inputs: https://github.com/bastion-security/bastion-shield';
+    const notes = arg('--notes') ?? 'Automated weekly update of the bundled filter lists. Source code and build inputs: https://github.com/bastionsecurity-ch/bastion-shield';
     await publishEdge(zip, notes, dryRun);
   }
 }

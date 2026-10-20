@@ -2,6 +2,7 @@
 // switch (role=switch), segmented control (radiogroup with roving tabindex),
 // eyebrow labels, lock badges and a promise-based confirm dialog.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { h, type Child } from './dom.ts';

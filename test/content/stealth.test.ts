@@ -2,6 +2,7 @@
 // own node:test process, so patching Function.prototype.toString here does
 // not leak into other test files.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

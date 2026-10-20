@@ -24,6 +24,7 @@
 // pages/bounce.html?from=<host>#<target>, so the page can refuse targets on
 // the tracker's own registrable domain (Brave only debounces cross-site).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { DnrRule } from '../compiler/types.ts';

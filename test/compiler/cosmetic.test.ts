@@ -1,6 +1,7 @@
 // Cosmetic filter tests: kinds, exceptions, entities, generic token
 // extraction, selector validation and unsupported syntaxes (ARCHITECTURE §5.1).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

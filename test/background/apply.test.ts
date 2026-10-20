@@ -3,6 +3,7 @@
 // fleet kill switch (policy protectionEnabled: false) turns everything off
 // and back on.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

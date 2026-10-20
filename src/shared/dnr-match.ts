@@ -22,6 +22,7 @@
 //   - responseHeaders conditions cannot be known from a URL: they are ignored
 //     and reported as `uncertain`.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { isIpAddress, registrableDomain } from './hash.ts';

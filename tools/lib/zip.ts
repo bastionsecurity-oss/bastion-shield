@@ -3,6 +3,7 @@
 // ZIP64 (store packages are far below 4 GB / 65'535 entries). Deterministic:
 // fixed timestamps and caller-defined entry order give byte-identical output.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { deflateRawSync } from 'node:zlib';

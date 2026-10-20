@@ -5,6 +5,7 @@
 // keeps working when the lists change upstream. Formats are the ones declared
 // in src/shared/types.ts and src/compiler/types.ts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

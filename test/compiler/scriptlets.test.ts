@@ -1,5 +1,6 @@
 // Scriptlet filter tests: argument parsing, aliases, trust, exceptions, hosts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

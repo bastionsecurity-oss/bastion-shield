@@ -2,6 +2,7 @@
 // trimming, totals, getMatchedRules attribution and the ActivityService flow
 // with injected storage/history/badge (src/background/activity.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

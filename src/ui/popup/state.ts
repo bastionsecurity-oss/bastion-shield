@@ -3,6 +3,7 @@
 // rendering) and reading the optional ?tabId=<n> override. DOM-free so it can
 // be unit tested.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { PopupState } from '../../shared/types.ts';

@@ -2,6 +2,7 @@
 // mode protected domains): shared by the dashboard, which says which lines it
 // could not read, and the service worker, which keeps only valid entries.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 /** Hostname syntax: dot-separated labels of letters, digits and hyphens, a last label of two or more. */

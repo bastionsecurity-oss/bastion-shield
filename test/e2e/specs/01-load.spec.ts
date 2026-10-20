@@ -3,6 +3,7 @@
 // RE2 support of every shipped regexFilter. Also checks package integrity that
 // only shows up at runtime (redirect targets, WAR entries, transparency maps).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { LIMITS } from '../../../src/shared/constants.ts';

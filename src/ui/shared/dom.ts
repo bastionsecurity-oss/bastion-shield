@@ -3,6 +3,7 @@
 // interpolate untrusted strings into HTML (hostnames and URLs come from the
 // web and are always inserted as text).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type Child = Node | string | number | null | undefined | false;

@@ -2,6 +2,7 @@
 // form on bastionsecurity.ch in the UI language (German page for de, English
 // page otherwise). The only Bundesrot button in the UI (.btn--cta).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { LINKS } from '../../shared/constants.ts';

@@ -4,6 +4,7 @@
 // character scans instead of an AST: lists are maintained against uBO, so
 // parity matters more than any particular grammar.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { normalizeHostname, normalizeHostOrEntity, reHostnameAscii, isEntity } from './hostname.ts';

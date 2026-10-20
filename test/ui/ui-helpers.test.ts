@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Unit tests for the UI pure helpers (bounce decoding, host normalisation,
 // site import, backup validation, broken-site report). Run with npm test.
 import test from 'node:test';
@@ -68,7 +71,7 @@ test('validateBackup', () => {
 test('broken-site report never contains path or query', () => {
   const d = { site: 'www.20min.ch', version: '0.1.0.2910', browser: 'Google Chrome 155', mode: 'standard', protection: 'on', lists: ['easylist', 'ublock'] };
   const url = new URL(githubUrl(d));
-  assert.equal(url.origin + url.pathname, 'https://github.com/bastion-security/bastion-shield/issues/new');
+  assert.equal(url.origin + url.pathname, 'https://github.com/bastionsecurity-ch/bastion-shield/issues/new');
   assert.equal(url.searchParams.get('template'), 'broken-site.yml');
   assert.equal(url.searchParams.get('site'), 'www.20min.ch');
   assert.match(reportText(d), /^Site: www\.20min\.ch$/m);

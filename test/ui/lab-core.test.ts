@@ -3,6 +3,7 @@
 // the DNR matcher), pasted request lists, integrity helpers, provenance and
 // blame lookups.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

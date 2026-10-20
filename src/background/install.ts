@@ -7,6 +7,7 @@
 // install and on every browser start, persisted so a service-worker restart
 // keeps the same seed for the rest of the session.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { SEED_FILES_PER_SET, SEED_SETS, STORAGE } from '../shared/constants.ts';

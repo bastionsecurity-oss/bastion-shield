@@ -9,6 +9,7 @@
 // filters/lock.json is read defensively (any object with "url" and "sha256"
 // counts as a source entry) so the helper survives format tweaks in tools/.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';

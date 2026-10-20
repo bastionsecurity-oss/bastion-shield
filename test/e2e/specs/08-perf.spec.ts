@@ -3,6 +3,7 @@
 // a report with a generous sanity bound, not a micro-benchmark; the real-world
 // comparison lives in test/bench/run.ts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { writeFileSync, mkdirSync } from 'node:fs';

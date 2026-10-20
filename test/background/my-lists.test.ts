@@ -1,6 +1,7 @@
 // Imported filter lists ("My lists"): parsing, limits, storage, downloads,
 // daily updates and the allowCustomLists policy.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

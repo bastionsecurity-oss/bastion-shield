@@ -15,6 +15,7 @@
 // explicit ":port" would stop path-anchored filters such as
 // `||host/path$redirect=...` from matching and let broader `||host^` blocks win.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export const HOSTS = {

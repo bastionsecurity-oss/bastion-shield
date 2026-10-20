@@ -5,6 +5,7 @@
 // iframes are almost always cross-site OOPIFs, so we need this to see all
 // requests.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 type Listener = (params: any, sessionId: string | undefined) => void;

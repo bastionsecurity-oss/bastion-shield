@@ -2,6 +2,7 @@
 // (ARCHITECTURE §4.3, §4.5, §4.6). Pure functions: inputs are settings and
 // site maps, outputs are plain rule objects. apply.ts sends them to Chrome.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { LIMITS, PRIORITY, RULE_ID } from '../shared/constants.ts';

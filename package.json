@@ -23,7 +23,10 @@
     "check:budget": "node .github/scripts/check-budget.ts dist",
     "bench:rea": "node test/bench/run.ts --rea"
   },
-  "author": "Bastion GmbH i. Gr. (Zürich)",
+  "author": {
+    "name": "Bastion Security GmbH",
+    "url": "https://bastionsecurity.ch"
+  },
   "license": "GPL-3.0-or-later",
   "type": "module",
   "description": "Bastion Shield - lean, open-source ad and tracker blocker for Chromium browsers (Chrome, Edge, Brave)",
@@ -40,5 +43,19 @@
   "private": true,
   "engines": {
     "node": ">=22.18"
+  },
+  "contributors": [
+    {
+      "name": "Luca Seeberger",
+      "email": "luca@bastionsecurity.ch"
+    }
+  ],
+  "homepage": "https://bastionsecurity.ch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bastionsecurity-ch/bastion-shield.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bastionsecurity-ch/bastion-shield/issues"
   }
 }

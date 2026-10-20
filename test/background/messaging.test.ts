@@ -2,6 +2,7 @@
 // strict-block proceed flow (src/background/blocked.ts) against in-memory
 // chrome.* fakes.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

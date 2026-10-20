@@ -15,6 +15,7 @@
 // Everything runs in this page; nothing is sent anywhere except when the user
 // follows a GitHub link.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BuildMeta, EffectiveConfig, RuleSourceMap } from '../../../shared/types.ts';

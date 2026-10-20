@@ -2,6 +2,7 @@
 // supportUrl when the policy sets one (policy schema: "shown next to the
 // organisation name"). Shared by the popup header and the dashboard nav.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { h } from './dom.ts';

@@ -1,7 +1,7 @@
 /*
  * Bastion Shield — shared design tokens, self-hosted fonts and the small set
  * of controls used by the popup, the dashboard and the extension pages.
- * Brand reference: Bastion GmbH STYLEGUIDE.md (Gletscher palette, Inter Tight
+ * Brand reference: Bastion Security GmbH STYLEGUIDE.md (Gletscher palette, Inter Tight
  * display, Inter text). Product UI uses rounded, concentric shapes: pill
  * controls, 10px fields, 20px grouped surfaces.
  *
@@ -9,6 +9,7 @@
  * only inside the logo mark (--mark-diamond) and on the «Cyber-Vorfall?»
  * button (--cta). Never use it for status.
  *
+ * SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 

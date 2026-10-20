@@ -1,6 +1,7 @@
 // Tests for runtime compilation of user and admin custom filters through the
 // shared compiler (src/background/custom.ts).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

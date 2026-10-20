@@ -3,6 +3,7 @@
 // licences, managed-storage schema) into dist/. Entry points that do not
 // exist yet are skipped with a warning so partial trees still build.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readdir } from 'node:fs/promises';
@@ -213,6 +214,7 @@ async function copyLicenses(outDir: string, log: Logger): Promise<void> {
     ['LICENSE', 'LICENSE.txt'],
     ['COPYING', 'LICENSE.txt'],
     ['THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_NOTICES.md'],
+    ['AUTHORS.md', 'AUTHORS.md'],
     ['vendor/ublock/LICENSE.txt', 'uBlock-Origin-GPL-3.0.txt'],
     ['vendor/brave-resources/LICENSE', 'brave-adblock-resources-MPL-2.0.txt'],
     ['vendor/brave-lists/LICENSE', 'brave-adblock-lists-MPL-2.0.txt'],

@@ -3,6 +3,7 @@
 // strict-block interstitial for listed malware domains, including "proceed
 // anyway" (which allows only the blocked host in that tab).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { Page } from '@playwright/test';

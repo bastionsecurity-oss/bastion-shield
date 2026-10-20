@@ -8,6 +8,7 @@
 // setting navigates to its section, scrolls it into view, highlights the row
 // and focuses its control. Matching lives in palette-core.ts.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { $$, h, replace } from '../shared/dom.ts';

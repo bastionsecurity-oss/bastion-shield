@@ -1,5 +1,6 @@
 // Procedural selector parsing (uBO #?# / ABP :-abp-*) into ProceduralFilter.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test, describe } from 'node:test';

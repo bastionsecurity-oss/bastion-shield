@@ -8,6 +8,7 @@
 // The data-processing functions are pure and exported for tests; the
 // CosmeticService class gets its I/O (shard loading, insertCSS) injected.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { entityCandidates, hostnameCandidates, shardName, shardOf } from '../shared/hash.ts';

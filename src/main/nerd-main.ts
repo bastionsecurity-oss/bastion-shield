@@ -3,6 +3,7 @@
 // the "already patched" probe. Built-ins are captured when the bundle loads,
 // before any page script runs (document_start).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { nerdEventName, nerdSentinel } from './nerd-channel.ts';

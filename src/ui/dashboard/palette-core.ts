@@ -1,6 +1,7 @@
 // Bastion Shield — command palette (Ctrl+K) matching: normalisation, scoring
 // and ranking. DOM-free so it can be unit tested; palette.ts draws the dialog.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export type PaletteGroup = 'views' | 'settings' | 'lists' | 'actions';

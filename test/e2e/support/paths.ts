@@ -2,6 +2,7 @@
 // benchmark. BASTION_DIST overrides the unpacked build directory (e.g. to
 // test a build produced elsewhere in CI).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync } from 'node:fs';

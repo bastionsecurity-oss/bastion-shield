@@ -9,6 +9,7 @@
 // chrome.* reads that do not need the SW (DNR state, registered scripts) are
 // also done from that page, which avoids racing the SW's idle shutdown.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { spawn, spawnSync } from 'node:child_process';

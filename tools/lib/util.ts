@@ -1,6 +1,7 @@
 // Bastion Shield build tools — small filesystem, hashing, logging and
 // concurrency helpers shared by fetch-lists, build and package. Node-only.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { createHash } from 'node:crypto';

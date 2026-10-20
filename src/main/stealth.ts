@@ -31,6 +31,7 @@
 // All built-ins used at call time are captured when this module loads, which
 // happens before any page script (document_start, MAIN world).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 const RApply = Reflect.apply;

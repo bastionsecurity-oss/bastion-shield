@@ -5,6 +5,7 @@
 // .reg / .json / .mobileconfig / .ps1 examples against the schema.
 // Run: node .github/scripts/check-policy.ts   (exit code 1 on any error)
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFileSync, readdirSync } from 'node:fs';

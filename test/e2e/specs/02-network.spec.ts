@@ -2,6 +2,7 @@
 // third-party copies of protected-list redirects (stub instead of a hard
 // block), and (d) Brave "Standard" first-party semantics vs "Aggressive".
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { PRIORITY } from '../../../src/shared/constants.ts';

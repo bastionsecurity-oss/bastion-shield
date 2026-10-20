@@ -39,6 +39,7 @@
 // the LSB noise away (as with Brave's farbling); fonts and screen metrics
 // are not farbled.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { FingerprintLevel } from '../shared/types.ts';

@@ -33,6 +33,7 @@
 // fails on the vendored file), so a vendor update cannot silently bring the
 // beige bar back.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { randomBytes } from 'node:crypto';

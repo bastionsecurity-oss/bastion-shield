@@ -4,6 +4,7 @@
 // matching rules (priority, then allow > allowAllRequests > block >
 // upgradeScheme > redirect; modifyHeaders above the winning allow).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { test } from 'node:test';

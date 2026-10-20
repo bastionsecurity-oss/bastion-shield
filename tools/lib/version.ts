@@ -3,6 +3,7 @@
 // (UTC) × 10 + same-day counter (0–9). Chrome requires each part <= 65535,
 // which this scheme satisfies until the 2040s.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { join } from 'node:path';

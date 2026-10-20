@@ -6,6 +6,7 @@
 // real content to morph into instead of an empty page. Live data is fetched
 // right after, as usual.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { PopupState } from '../../shared/types.ts';

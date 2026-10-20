@@ -6,6 +6,7 @@
 // documents animate their own half with the same timing; geometry is exchanged
 // with postMessage in the iframe's coordinates (it sits at 0,0 of the popup).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export const MORPH_PAIRS = ['protect', 'blocked', 'data', 'time', 'mode', 'toggle', 'cta'] as const;

@@ -3,6 +3,7 @@
 // deterministic for a given dist/ so failures are reproducible, and every
 // pick carries the original filter text for the failure message.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';

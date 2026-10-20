@@ -11,6 +11,7 @@
 //   node tools/vendor.ts --check    # read-only: compare vendor/ with upstream
 //   node tools/vendor.ts --update   # move pins to each repo's HEAD, then write
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { readFile } from 'node:fs/promises';

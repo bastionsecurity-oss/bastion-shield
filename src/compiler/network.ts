@@ -4,6 +4,7 @@
 // as their maintainers test them in uBO Lite; the priorities follow our own
 // bands (§4.2) because we add Brave's Standard/Aggressive first-party logic.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { PRIORITY } from '../shared/constants.ts';

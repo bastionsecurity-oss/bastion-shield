@@ -2,6 +2,7 @@
 // resource map and scriptlet map, and a validator that checks emitted rules
 // against the constraints Chromium enforces when it loads a static ruleset.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { CompileOptions, DnrRule, ScriptletInfo } from '../../src/compiler/types.ts';

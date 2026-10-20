@@ -4,6 +4,7 @@
 // to the line; lists assembled from many files (EasyList) get a code search
 // in the source repository.
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export interface BlameLink {

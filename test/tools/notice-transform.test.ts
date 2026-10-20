@@ -5,6 +5,7 @@
 // vendored scriptlet no longer matches the transform anchors (a vendor update
 // must not silently bring the beige bar back).
 //
+// SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { before, test } from 'node:test';
