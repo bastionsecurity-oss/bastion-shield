@@ -32,15 +32,19 @@ export interface BisectDeps {
   blockedOnTab(tabId: number): Promise<{ host: string; rule?: string; list?: string }[]>;
   /** Site key of the tab's top-level page. */
   siteOf(tabId: number): Promise<string | null>;
-  /** Filter texts for "rulesetId:ruleId" (transparency map), list ids. */
-  describeRules(rules: readonly string[]): Promise<{ filters: string[]; lists: string[] }>;
+  /**
+   * Filter texts for "rulesetId:ruleId" (transparency map), list ids, and
+   * whether any of the rules is an $important block (also for dynamic rules,
+   * which have no filter text here).
+   */
+  describeRules(rules: readonly string[]): Promise<{ filters: string[]; lists: string[]; important?: boolean }>;
   /** Append exception filters to the user's custom filters and apply them. Rejects with Error('locked') while policy makes them read-only. */
   addCustomFilters(lines: readonly string[]): Promise<void>;
   /** Tab badge: the step text while a test runs, null to hand the badge back to the normal counter. */
   badge?(tabId: number, text: string | null): void;
 }
 
-type Described = BisectCandidate & { filters: string[]; lists: string[] };
+type Described = BisectCandidate & { filters: string[]; lists: string[]; important?: boolean };
 
 interface TabBisect {
   v: 1;
@@ -219,8 +223,10 @@ export class Bisector {
   }
 
   private async describeOne(c: BisectCandidate, lists: readonly string[]): Promise<Described> {
-    const d = await this.deps.describeRules(c.rules).catch(() => ({ filters: [] as string[], lists: [] as string[] }));
-    return { ...c, filters: d.filters, lists: Array.from(new Set([...d.lists, ...lists])) };
+    const d = await this.deps.describeRules(c.rules).catch(() => ({ filters: [] as string[], lists: [] as string[], important: false }));
+    const out: Described = { ...c, filters: d.filters, lists: Array.from(new Set([...d.lists, ...lists])) };
+    if (d.important === true) out.important = true;
+    return out;
   }
 
   private async describe(rec: TabBisect): Promise<Described[]> {

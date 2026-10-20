@@ -111,6 +111,21 @@ test('daily aggregation, merging with negative deltas, top-N trimming', () => {
   assert.equal(Object.keys(mergeDaily(emptyDaily('2026-01-01'), agg).byHost).length, 500);
 });
 
+test('daily aggregation: savedByType counts only requests that never loaded', () => {
+  const t = new Date(2026, 9, 18, 12).getTime();
+  const evs: ActivityEvent[] = [
+    makeEvent(details({ timeStamp: t }), 'blocked', 'nzz.ch')!,
+    makeEvent(details({ timeStamp: t + 1, type: 'sub_frame', url: 'https://shop.ch/f?gclid=1' }), 'stripped', 'nzz.ch')!,
+  ];
+  const [a] = aggregateEvents(evs, () => 'unknown');
+  assert.deepEqual(a.byType, { script: 1, sub_frame: 1 });
+  assert.deepEqual(a.savedByType, { script: 1 }, 'the stripped request still loaded');
+  // A day recorded before savedByType existed does not start a partial count.
+  const legacy: DailyAggregate = { ...a, savedByType: undefined };
+  assert.equal(mergeDaily(legacy, a).savedByType, undefined);
+  assert.deepEqual(mergeDaily(a, a).savedByType, { script: 2 });
+});
+
 test('totals count prevented requests and survive bad stored data', () => {
   const t: Totals = emptyTotals(1);
   for (const kind of ['blocked', 'redirected', 'strict', 'stripped', 'debounced'] as const) bumpTotals(t, { ...makeEvent(details(), kind, null)!, kind });

@@ -6,7 +6,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { formatLocale } from './i18n.ts';
+import type { DailyAggregate } from '../../shared/types.ts';
+import { formatLocale, t } from './i18n.ts';
 
 /** Typical transfer size in bytes per blocked request, by chrome.webRequest resource type. */
 const BYTES: Record<string, number> = {
@@ -72,6 +73,26 @@ export function estimateFromSample(types: readonly string[], total: number): Sav
   const sample = estimateSavings(byType);
   const f = total / types.length;
   return { bytes: sample.bytes * f, ms: sample.ms * f };
+}
+
+/**
+ * Requests per resource type that never loaded on one day of the history:
+ * savedByType, or for days recorded before it existed byType scaled by the
+ * share of events that saved a request (stripped and debounced ones did not).
+ */
+export function savedRequestsByType(d: Pick<DailyAggregate, 'total' | 'byKind' | 'byType' | 'savedByType'>): Record<string, number> {
+  if (d.savedByType) return d.savedByType;
+  const total = d.total ?? 0;
+  const notSaved = (d.byKind?.stripped ?? 0) + (d.byKind?.debounced ?? 0);
+  const share = total > 0 ? Math.max(0, total - notSaved) / total : 0;
+  const out: Record<string, number> = {};
+  for (const [type, n] of Object.entries(d.byType ?? {})) out[type] = n * share;
+  return out;
+}
+
+/** Unit labels for fmtDuration in the UI language. */
+export function savingsUnits(): { s: string; min: string; h: string } {
+  return { s: t('unitSeconds'), min: t('unitMinutes'), h: t('unitHours') };
 }
 
 const nf = (digits: number): Intl.NumberFormat => new Intl.NumberFormat(formatLocale, { maximumFractionDigits: digits, minimumFractionDigits: digits });

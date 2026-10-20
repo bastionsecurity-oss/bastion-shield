@@ -16,7 +16,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { LIMITS, LIVE_EVENTS_PER_TAB, RULE_ID } from '../shared/constants.ts';
+import { LIMITS, LIVE_EVENTS_PER_TAB, RULE_ID, savesRequest } from '../shared/constants.ts';
 import { registrableDomain } from '../shared/hash.ts';
 import type { ActivityEvent, ActivityKind, DailyAggregate, ListCategory, LivePortMessage, Settings, Totals } from '../shared/types.ts';
 import * as log from './log.ts';
@@ -135,7 +135,7 @@ export function historyRecord(ev: ActivityEvent): ActivityEvent {
 // ---------------------------------------------------------------------------
 
 export function emptyDaily(day: string): DailyAggregate {
-  return { day, total: 0, byKind: {}, byCategory: {}, byHost: {}, bySite: {}, byType: {} };
+  return { day, total: 0, byKind: {}, byCategory: {}, byHost: {}, bySite: {}, byType: {}, savedByType: {} };
 }
 
 function bump<K extends string>(rec: Partial<Record<K, number>>, key: K, n = 1): void {
@@ -161,6 +161,7 @@ export function addEventToDaily(agg: DailyAggregate, ev: ActivityEvent, category
   bump(agg.byHost, ev.host);
   if (ev.site) bump(agg.bySite, ev.site);
   bump(agg.byType, ev.type || 'other');
+  if (savesRequest(ev.kind)) bump((agg.savedByType ??= {}), ev.type || 'other');
 }
 
 /** Sum two aggregates of the same day (deltas may be negative); top-N trimmed. */
@@ -174,6 +175,13 @@ export function mergeDaily(a: DailyAggregate, b: DailyAggregate): DailyAggregate
     bySite: { ...a.bySite },
     byType: { ...a.byType },
   };
+  // A day recorded before savedByType existed keeps going without it (the
+  // overview then estimates from byType): a partial count would understate it.
+  const legacy = a.savedByType === undefined && a.total > 0;
+  if (!legacy) {
+    out.savedByType = { ...a.savedByType };
+    for (const [k, v] of Object.entries(b.savedByType ?? {})) bump(out.savedByType, k, v);
+  }
   for (const [k, v] of Object.entries(b.byKind)) bump(out.byKind, k as ActivityKind, v ?? 0);
   for (const [k, v] of Object.entries(b.byCategory)) bump(out.byCategory, k as ListCategory | 'unknown', v ?? 0);
   for (const [k, v] of Object.entries(b.byHost)) bump(out.byHost, k, v);

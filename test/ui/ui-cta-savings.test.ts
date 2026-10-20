@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 
 const ROOT = new URL('../../src', import.meta.url).href;
 const { incidentUrl } = await import(`${ROOT}/ui/shared/incident.ts`);
-const { estimateSavings, estimateFromSample, fmtBytes, fmtDuration } = await import(`${ROOT}/ui/shared/savings.ts`);
+const { estimateSavings, estimateFromSample, fmtBytes, fmtDuration, savedRequestsByType } = await import(`${ROOT}/ui/shared/savings.ts`);
+const { countEvent, eventKey, sampleType } = await import(`${ROOT}/ui/shared/page-activity.ts`);
+const { normalizeDomain } = await import(`${ROOT}/shared/domains.ts`);
 const { normalisePopupState } = await import(`${ROOT}/ui/popup/state.ts`);
 
 test('incident CTA links to the contact form in the UI language', () => {
@@ -32,6 +34,35 @@ test('savings: a typed sample scales up to the counted total', () => {
   assert.equal(four.ms, one.ms * 2);
   // No typed events yet: fall back to "other" for every counted block.
   assert.deepEqual(estimateFromSample([], 3), estimateSavings({ other: 3 }));
+});
+
+test('savings: stripped and debounced requests save nothing (history days)', () => {
+  const day = { total: 8, byKind: { blocked: 4, stripped: 3, debounced: 1 }, byType: { script: 6, main_frame: 2 } };
+  // Days recorded before savedByType: byType scaled by the share of requests that never loaded.
+  assert.deepEqual(savedRequestsByType(day), { script: 3, main_frame: 1 });
+  assert.deepEqual(savedRequestsByType({ ...day, savedByType: { script: 6 } }), { script: 6 });
+  assert.deepEqual(savedRequestsByType({ total: 0, byKind: {}, byType: {} }), {});
+});
+
+test('page counters: kinds, third-party hosts once, savings sample without stripped requests', () => {
+  const counts = { blocked: 0, redirected: 0, stripped: 0, debounced: 0, thirdPartyHosts: 0 };
+  const third = new Set<string>();
+  const types: string[] = [];
+  const ev = (kind: string, type: string, host: string) => ({ t: 1, kind, frameId: 0, url: `https://${host}/x`, host, type, thirdParty: true, tabId: 1 });
+  for (const e of [ev('blocked', 'script', 'a.net'), ev('strict', 'main_frame', 'a.net'), ev('stripped', 'sub_frame', 'b.net'), ev('redirected', 'image', 'c.net')]) {
+    countEvent(counts, e, third);
+    sampleType(types, e);
+  }
+  assert.deepEqual(counts, { blocked: 2, redirected: 1, stripped: 1, debounced: 0, thirdPartyHosts: 3 });
+  assert.deepEqual(types, ['script', 'main_frame', 'image']);
+  assert.equal(eventKey(ev('blocked', 'script', 'a.net')), '1|blocked|0|https://a.net/x');
+});
+
+test('protected domains: one normaliser for the dashboard and the service worker', () => {
+  assert.equal(normalizeDomain(' https://www.PostFinance.ch/de/login?x=1 '), 'postfinance.ch');
+  assert.equal(normalizeDomain('ubs.com.'), 'ubs.com');
+  assert.equal(normalizeDomain('zürich.ch'), 'xn--zrich-kva.ch');
+  for (const bad of ['', 'localhost', 'not a domain', '192.168.1.10', '999999', 'a..b']) assert.equal(normalizeDomain(bad), null, bad);
 });
 
 test('savings: formatting picks a readable unit', () => {

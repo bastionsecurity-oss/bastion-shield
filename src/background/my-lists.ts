@@ -1,9 +1,11 @@
 // Bastion Shield service worker — imported filter lists ("My lists"). Users
 // add a list from a .txt file or from an https address; it is stored in
 // chrome.storage.local and compiled at runtime like the user's own filters
-// (custom.ts): network filters become dynamic rules in the list's id slot,
-// cosmetic filters are served by cosmetic.ts, scriptlets are counted and
-// ignored. Web-address lists can refetch themselves about once a day
+// (custom.ts), except that `@@…$important` is refused: network filters become
+// dynamic rules in the list's id slot, cosmetic filters are served by
+// cosmetic.ts, scriptlets are counted and ignored. The compiled form is
+// stored too, so a restarted worker does not recompile megabytes of filters.
+// Web-address lists can refetch themselves about once a day
 // (conditional requests, so an unchanged list costs one small response).
 // Nothing is downloaded unless the user added a web address.
 //
@@ -12,6 +14,8 @@
 import { MY_LISTS, STORAGE } from '../shared/constants.ts';
 import { listTitle, parseListTitle } from '../shared/list-title.ts';
 import type { MyListMeta } from '../shared/types.ts';
+import type { CompiledCustom } from '../compiler/types.ts';
+import type { MyListInput } from './custom.ts';
 import * as log from './log.ts';
 import { canonicalJson, errMsg, isPlainObject } from './util.ts';
 
@@ -62,27 +66,24 @@ export function checkListText(text: string): MyListError | null {
   if (text.includes('\u0000')) return 'not-a-list';
   const head = text.slice(0, 2048).replace(/^﻿/, '').trimStart().toLowerCase();
   if (head.startsWith('<!doctype') || head.startsWith('<html') || head.startsWith('<?xml') || head.startsWith('{')) return 'not-a-list';
-  const hasRule = text.split(/\r?\n/).some((l) => {
-    const t = l.trim();
-    return t !== '' && !t.startsWith('!') && !t.startsWith('#') && !t.startsWith('[');
-  });
-  return hasRule ? null : 'empty';
+  return text.split(/\r?\n/).some(isFilterLine) ? null : 'empty';
 }
 
 /**
- * Filter lines in a list (what the user thinks of as "filters"): not blank,
- * not a `!` or `[` comment and not a `#` comment of hosts files. Cosmetic
- * filters (`##`, `#@#`, `#?#`, `#$#`, `#%#`) count. The DNR rule count is
- * much smaller: host filters merge into one rule.
+ * A filter line (what the user thinks of as "a filter"): not blank, not a `!`
+ * or `[` comment and not a `#` comment of hosts files. Cosmetic filters
+ * (`##`, `#@#`, `#?#`, `#$#`, `#%#`) are filters.
  */
+function isFilterLine(line: string): boolean {
+  const t = line.trim();
+  if (t === '' || t.startsWith('!') || t.startsWith('[')) return false;
+  return !t.startsWith('#') || /^#(@?#|[?$%]#|@[?$%]#)/.test(t);
+}
+
+/** Filter lines in a list (isFilterLine). The DNR rule count is much smaller: host filters merge into one rule. */
 export function countFilterLines(text: string): number {
   let n = 0;
-  for (const line of text.split(/\r?\n/)) {
-    const t = line.trim();
-    if (t === '' || t.startsWith('!') || t.startsWith('[')) continue;
-    if (t.startsWith('#') && !/^#(@?#|[?$%]#|@[?$%]#)/.test(t)) continue;
-    n++;
-  }
+  for (const line of text.split(/\r?\n/)) if (isFilterLine(line)) n++;
   return n;
 }
 
@@ -270,7 +271,11 @@ export class MyListsService {
     this.deps = deps;
   }
 
-  /** Changes are applied one at a time (a daily update must not race a user's upload). */
+  /**
+   * Changes are applied one at a time (a daily update must not race a user's
+   * upload). Downloads happen before, outside the queue: a slow server never
+   * holds up switching or removing lists.
+   */
   private serial<T>(fn: () => Promise<T>): Promise<T> {
     const p = this.queue.then(fn, fn);
     this.queue = p.catch(() => undefined);
@@ -315,11 +320,42 @@ export class MyListsService {
   }
 
   /** Lists whose filters apply (enabled), in slot order, with their text. */
-  enabled(): { id: string; slot: number; text: string }[] {
+  enabled(): MyListInput[] {
     return this.lists
       .filter((l) => l.enabled)
       .sort((a, b) => a.slot - b.slot)
-      .map((l) => ({ id: l.id, slot: l.slot, text: this.text(l.id) }));
+      .map((l) => ({ id: l.id, slot: l.slot, text: this.text(l.id), stamp: textStamp(l) }));
+  }
+
+  /**
+   * Compiled copies of the enabled lists saved by saveCompiled() that still
+   * match their text and `build` (extension version and build meta): a
+   * restarted worker reuses them instead of recompiling megabytes of filters.
+   */
+  async loadCompiled(build: string): Promise<{ input: MyListInput; compiled: CompiledCustom }[]> {
+    const inputs = this.enabled();
+    if (inputs.length === 0) return [];
+    const got = await log.attempt('mylists', () => this.deps.storage.get(inputs.map((l) => compiledKey(l.id))), {} as Record<string, unknown>);
+    const out: { input: MyListInput; compiled: CompiledCustom }[] = [];
+    for (const input of inputs) {
+      const rec = got[compiledKey(input.id)];
+      if (!isPlainObject(rec) || rec.s !== `${build}|${input.stamp}` || typeof rec.c !== 'string') continue;
+      try {
+        const c = JSON.parse(rec.c) as unknown;
+        if (isCompiledCustom(c)) out.push({ input, compiled: c });
+      } catch {
+        // a damaged copy is recompiled
+      }
+    }
+    return out;
+  }
+
+  /** Persist a list's compiled form (custom.ts calls this after every compile of an imported list). */
+  async saveCompiled(input: MyListInput, build: string, compiled: CompiledCustom): Promise<void> {
+    if (input.stamp === undefined || !this.get(input.id)) return;
+    // A JSON string: one value is much faster to read back than the object tree.
+    const rec = { s: `${build}|${input.stamp}`, c: JSON.stringify(compiled) };
+    await log.attempt('mylists', () => this.deps.storage.set({ [compiledKey(input.id)]: rec }));
   }
 
   /**
@@ -351,65 +387,80 @@ export class MyListsService {
     await this.deps.storage.set({ [STORAGE.MY_LISTS]: this.lists });
   }
 
-  add(input: AddInput, replaceId?: string): Promise<{ list: MyListMeta } | { error: MyListError; detail?: string }> {
-    return this.serial(async () => {
-      if (replaceId !== undefined) return this.replaceNow(replaceId, input);
-      if (this.lists.length >= MY_LISTS.MAX) return { error: 'too-many' as const };
-      const slot = freeSlot(this.lists);
-      if (slot < 0) return { error: 'too-many' as const };
-      const now = this.deps.now();
-      let id = newListId(this.deps.random);
-      while (this.get(id)) id = newListId(this.deps.random);
-      if (input.file) {
-        const bad = checkListText(input.file.text);
-        if (bad) return { error: bad };
-        const meta: MyListMeta = {
-          id,
-          slot,
-          title: listTitle(input.file.text, input.file.name),
-          source: 'file',
-          fileName: input.file.name.slice(0, 255),
-          enabled: true,
-          autoUpdate: false,
-          added: now,
-          updated: now,
-          checked: now,
-          bytes: input.file.text.length,
-        };
-        await this.deps.storage.set({ [textKey(id)]: input.file.text });
-        this.texts.set(id, input.file.text);
-        this.lists.push(meta);
-        await this.writeIndex();
-        return { list: { ...meta } };
-      }
+  /**
+   * Store `next` (and its new text, if any) in place of the list with its id,
+   * or as a new list. The text is written first and memory changes only once
+   * it is stored, so a failed write never leaves metadata (validators, source)
+   * describing contents that are not there.
+   */
+  private async commit(next: MyListMeta, text?: string): Promise<void> {
+    if (text !== undefined) await this.deps.storage.set({ [textKey(next.id)]: text });
+    const i = this.lists.findIndex((l) => l.id === next.id);
+    if (i === -1) this.lists.push(next);
+    else this.lists[i] = next;
+    if (text !== undefined) this.texts.set(next.id, text);
+    await this.writeIndex();
+  }
+
+  /** Why `url` cannot become (or replace) a list right now, if it cannot. */
+  private urlProblem(url: string, replaceId: string | undefined): MyListError | null {
+    if (replaceId !== undefined && !this.get(replaceId)) return 'not-found';
+    if (this.lists.some((l) => l.id !== replaceId && l.url === url)) return 'duplicate-url';
+    if (replaceId === undefined && freeSlot(this.lists) < 0) return 'too-many';
+    return null;
+  }
+
+  /**
+   * Add a list from a file or a web address, or replace the contents of
+   * `replaceId`. Downloads run outside the change queue (they can take a
+   * minute), so switching or removing lists never waits for one; the checks
+   * are repeated when the result is stored.
+   */
+  async add(input: AddInput, replaceId?: string): Promise<{ list: MyListMeta } | { error: MyListError; detail?: string }> {
+    let contents: Contents;
+    if (input.file) {
+      const bad = checkListText(input.file.text);
+      if (bad) return { error: bad };
+      contents = { source: 'file', text: input.file.text, fileName: input.file.name.slice(0, 255) };
+    } else {
       const url = normalizeListUrl(input.url);
-      if (!url) return { error: 'invalid-url' as const };
-      if (this.lists.some((l) => l.url === url)) return { error: 'duplicate-url' as const };
+      if (!url) return { error: 'invalid-url' };
+      const early = this.urlProblem(url, replaceId);
+      if (early) return { error: early };
       const got = await fetchList(this.deps.fetch, url);
-      if (got.status !== 'ok') return got.status === 'error' ? { error: got.code, detail: got.detail } : { error: 'fetch-failed' as const };
+      if (got.status !== 'ok') return got.status === 'error' ? { error: got.code, detail: got.detail } : { error: 'fetch-failed' };
       const bad = checkListText(got.text);
       if (bad) return { error: bad };
-      const meta: MyListMeta = {
-        id,
-        slot,
-        title: listTitle(got.text, urlLabel(url)),
-        source: 'url',
-        url,
-        enabled: true,
-        autoUpdate: true,
-        added: now,
-        updated: now,
-        checked: now,
-        bytes: got.text.length,
-      };
-      if (got.etag) meta.etag = got.etag;
-      if (got.lastModified) meta.lastModified = got.lastModified;
-      await this.deps.storage.set({ [textKey(id)]: got.text });
-      this.texts.set(id, got.text);
-      this.lists.push(meta);
-      await this.writeIndex();
-      return { list: { ...meta } };
-    });
+      contents = { source: 'url', text: got.text, url, etag: got.etag, lastModified: got.lastModified };
+    }
+    return this.serial(() => (replaceId !== undefined ? this.replaceNow(replaceId, contents) : this.addNow(contents)));
+  }
+
+  private async addNow(c: Contents): Promise<{ list: MyListMeta } | { error: MyListError }> {
+    if (c.source === 'url') {
+      const problem = this.urlProblem(c.url, undefined);
+      if (problem) return { error: problem };
+    }
+    const slot = freeSlot(this.lists);
+    if (this.lists.length >= MY_LISTS.MAX || slot < 0) return { error: 'too-many' };
+    const now = this.deps.now();
+    let id = newListId(this.deps.random);
+    while (this.get(id)) id = newListId(this.deps.random);
+    const meta: MyListMeta = {
+      id,
+      slot,
+      title: listTitle(c.text, c.source === 'file' ? c.fileName : urlLabel(c.url)),
+      source: c.source,
+      enabled: true,
+      autoUpdate: c.source === 'url',
+      added: now,
+      updated: now,
+      checked: now,
+      bytes: c.text.length,
+      ...sourceFields(c),
+    };
+    await this.commit(meta, c.text);
+    return { list: { ...meta } };
   }
 
   /**
@@ -417,57 +468,34 @@ export class MyListsService {
    * A file replaces a web-address list's contents and turns it into a file
    * list (it no longer updates itself); a web address re-points the list.
    */
-  private async replaceNow(id: string, input: AddInput): Promise<{ list: MyListMeta } | { error: MyListError; detail?: string }> {
+  private async replaceNow(id: string, c: Contents): Promise<{ list: MyListMeta } | { error: MyListError }> {
     const l = this.get(id);
     if (!l) return { error: 'not-found' };
-    const now = this.deps.now();
-    let text: string;
-    if (input.file) {
-      text = input.file.text;
-      const bad = checkListText(text);
-      if (bad) return { error: bad };
-      l.source = 'file';
-      l.fileName = input.file.name.slice(0, 255);
-      delete l.url;
-      delete l.etag;
-      delete l.lastModified;
-      l.autoUpdate = false;
-    } else {
-      const url = normalizeListUrl(input.url);
-      if (!url) return { error: 'invalid-url' };
-      if (this.lists.some((o) => o.id !== id && o.url === url)) return { error: 'duplicate-url' };
-      const got = await fetchList(this.deps.fetch, url);
-      if (got.status !== 'ok') return got.status === 'error' ? { error: got.code, detail: got.detail } : { error: 'fetch-failed' };
-      text = got.text;
-      const bad = checkListText(text);
-      if (bad) return { error: bad };
-      l.source = 'url';
-      l.url = url;
-      delete l.fileName;
-      delete l.etag;
-      delete l.lastModified;
-      if (got.etag) l.etag = got.etag;
-      if (got.lastModified) l.lastModified = got.lastModified;
-      l.autoUpdate = true;
+    if (c.source === 'url') {
+      const problem = this.urlProblem(c.url, id);
+      if (problem) return { error: problem };
     }
-    l.updated = now;
-    l.checked = now;
-    l.bytes = text.length;
-    delete l.error;
-    await this.deps.storage.set({ [textKey(id)]: text });
-    this.texts.set(id, text);
-    await this.writeIndex();
-    return { list: { ...l } };
+    const now = this.deps.now();
+    const next: MyListMeta = { ...l, source: c.source, autoUpdate: c.source === 'url', updated: now, checked: now, bytes: c.text.length };
+    delete next.url;
+    delete next.fileName;
+    delete next.etag;
+    delete next.lastModified;
+    delete next.error;
+    Object.assign(next, sourceFields(c));
+    await this.commit(next, c.text);
+    return { list: { ...next } };
   }
 
   set(id: string, patch: { enabled?: boolean; autoUpdate?: boolean }): Promise<{ list: MyListMeta } | { error: MyListError }> {
     return this.serial(async () => {
       const l = this.get(id);
       if (!l) return { error: 'not-found' as const };
-      if (typeof patch.enabled === 'boolean') l.enabled = patch.enabled;
-      if (typeof patch.autoUpdate === 'boolean' && l.source === 'url') l.autoUpdate = patch.autoUpdate;
-      await this.writeIndex();
-      return { list: { ...l } };
+      const next: MyListMeta = { ...l };
+      if (typeof patch.enabled === 'boolean') next.enabled = patch.enabled;
+      if (typeof patch.autoUpdate === 'boolean' && l.source === 'url') next.autoUpdate = patch.autoUpdate;
+      await this.commit(next);
+      return { list: { ...next } };
     });
   }
 
@@ -478,61 +506,120 @@ export class MyListsService {
       this.lists.splice(i, 1);
       this.texts.delete(id);
       await this.writeIndex();
-      await log.attempt('mylists', () => this.deps.storage.remove([textKey(id)]));
+      await log.attempt('mylists', () => this.deps.storage.remove([textKey(id), compiledKey(id)]));
       return { ok: true as const };
     });
   }
 
   /** Download one web-address list now. `changed` is true when its contents changed. */
-  update(id: string): Promise<{ list: MyListMeta; changed: boolean } | { error: MyListError; detail?: string }> {
-    return this.serial(() => this.updateNow(id));
-  }
-
-  private async updateNow(id: string): Promise<{ list: MyListMeta; changed: boolean } | { error: MyListError; detail?: string }> {
+  async update(id: string): Promise<{ list: MyListMeta; changed: boolean } | { error: MyListError; detail?: string }> {
     const l = this.get(id);
     if (!l) return { error: 'not-found' };
     if (l.source !== 'url' || !l.url) return { error: 'invalid-url' };
+    const url = l.url;
+    const got = await fetchList(this.deps.fetch, url, { etag: l.etag, lastModified: l.lastModified });
+    return this.serial(() => this.applyDownload(id, url, got));
+  }
+
+  /** Store the result of a download of `url` for list `id` (inside the change queue). */
+  private async applyDownload(id: string, url: string, got: FetchResult): Promise<{ list: MyListMeta; changed: boolean } | { error: MyListError; detail?: string }> {
+    const l = this.get(id);
+    if (!l) return { error: 'not-found' };
+    // Re-pointed or turned into a file list while it downloaded: the result is stale.
+    if (l.source !== 'url' || l.url !== url) return { list: { ...l }, changed: false };
     const now = this.deps.now();
-    const got = await fetchList(this.deps.fetch, l.url, { etag: l.etag, lastModified: l.lastModified });
-    l.checked = now;
-    let changed = false;
+    const next: MyListMeta = { ...l, checked: now };
+    let text: string | undefined;
     if (got.status === 'error') {
-      l.error = `${got.code}: ${got.detail}`.slice(0, 300);
+      next.error = `${got.code}: ${got.detail}`.slice(0, 300);
     } else if (got.status === 'unchanged') {
-      delete l.error;
+      delete next.error;
     } else {
       const bad = checkListText(got.text);
       if (bad) {
-        l.error = bad;
+        next.error = bad;
       } else {
-        delete l.error;
-        if (got.etag) l.etag = got.etag;
-        else delete l.etag;
-        if (got.lastModified) l.lastModified = got.lastModified;
-        else delete l.lastModified;
+        delete next.error;
+        delete next.etag;
+        delete next.lastModified;
+        if (got.etag) next.etag = got.etag;
+        if (got.lastModified) next.lastModified = got.lastModified;
         if (got.text !== this.text(id)) {
-          changed = true;
-          l.updated = now;
-          l.bytes = got.text.length;
-          await this.deps.storage.set({ [textKey(id)]: got.text });
-          this.texts.set(id, got.text);
+          text = got.text;
+          next.updated = now;
+          next.bytes = got.text.length;
         }
       }
     }
-    await this.writeIndex();
-    return got.status === 'error' ? { error: got.code, detail: got.detail } : { list: { ...l }, changed };
+    await this.commit(next, text);
+    return got.status === 'error' ? { error: got.code, detail: got.detail } : { list: { ...next }, changed: text !== undefined };
   }
 
-  /** Daily alarm: refetch every list that is due. True when any list's contents changed. */
+  private dueRun: Promise<boolean> | null = null;
+
+  /**
+   * Hourly alarm: refetch every list that is due, one download at a time and
+   * outside the change queue. True when any list's contents changed. A call
+   * while a run is in progress joins it.
+   */
   updateDue(): Promise<boolean> {
-    return this.serial(async () => {
-      const now = this.deps.now();
-      let changed = false;
-      for (const l of this.lists.filter((x) => isUpdateDue(x, now))) {
-        const r = await this.updateNow(l.id);
-        if ('changed' in r && r.changed) changed = true;
-      }
-      return changed;
+    // Cleared in a later microtask, after the assignment (a run with nothing due finishes synchronously).
+    this.dueRun ??= this.runDue().finally(() => {
+      this.dueRun = null;
     });
+    return this.dueRun;
   }
+
+  private async runDue(): Promise<boolean> {
+    let changed = false;
+    for (const { id } of this.lists.filter((x) => isUpdateDue(x, this.deps.now()))) {
+      // Look again: the user may have updated, re-pointed or removed it meanwhile.
+      const l = this.get(id);
+      if (!l || !l.url || !isUpdateDue(l, this.deps.now())) continue;
+      const url = l.url;
+      const got = await fetchList(this.deps.fetch, url, { etag: l.etag, lastModified: l.lastModified });
+      try {
+        const r = await this.serial(() => this.applyDownload(id, url, got));
+        if ('changed' in r && r.changed) changed = true;
+      } catch (e) {
+        // Not stored (storage error): the list stays as it was and is due again next hour.
+        log.warn('mylists', 'update', id, e);
+      }
+    }
+    return changed;
+  }
+}
+
+/** New contents for a list: a file, or a downloaded web address. */
+type Contents =
+  | { source: 'file'; text: string; fileName: string }
+  | { source: 'url'; text: string; url: string; etag?: string; lastModified?: string };
+
+/** The source fields of a list's metadata for `c` (fileName, or url and its validators). */
+function sourceFields(c: Contents): Partial<MyListMeta> {
+  if (c.source === 'file') return { fileName: c.fileName };
+  const out: Partial<MyListMeta> = { url: c.url };
+  if (c.etag) out.etag = c.etag;
+  if (c.lastModified) out.lastModified = c.lastModified;
+  return out;
+}
+
+/** Changes whenever a list's text does (every text change sets `updated`; `bytes` guards same-millisecond edits). */
+function textStamp(l: MyListMeta): string {
+  return `${l.updated}:${l.bytes}`;
+}
+
+export function compiledKey(id: string): string {
+  return `${STORAGE.MY_LIST_COMPILED_PREFIX}${id}`;
+}
+
+function isCompiledCustom(v: unknown): v is CompiledCustom {
+  return (
+    isPlainObject(v) &&
+    Array.isArray(v.rules) &&
+    Array.isArray(v.specific) &&
+    Array.isArray(v.generic) &&
+    typeof v.scriptletsIgnored === 'number' &&
+    Array.isArray(v.errors)
+  );
 }

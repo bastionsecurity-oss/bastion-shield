@@ -565,6 +565,20 @@ test('Bisector: keep writes an important exception for an $important culprit', a
   assert.equal(d.added[0]![1], '@@||cdn.shop.example^$domain=shop.example,important');
 });
 
+test('Bisector: a dynamic $important block (no filter text) still gets an important exception', async () => {
+  installChrome();
+  const d = deps({
+    blockedOnTab: async () => [{ host: 'cdn.shop.example', rule: `_dynamic:${RULE_ID.MY_LISTS_START + 5}` }],
+    describeRules: async () => ({ filters: [], lists: [], important: true }),
+  });
+  const b = new Bisector(d);
+  await b.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 });
+  assert.equal(bisectOf(await b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: true })).phase, 'found');
+  await b.handle({ type: 'nerd:bisect', action: 'keep', tabId: 7 });
+  assert.equal(d.added[0]![1], '@@||cdn.shop.example^$domain=shop.example,important');
+  assert.deepEqual(keepFilterLines([{ host: 'a.example', important: true }], 'shop.example', '2026-10-18', 'allow')[1], '@@||a.example^$domain=shop.example,important');
+});
+
 test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log on', async () => {
   const sent: string[] = [];
   let shown: string | null = null;

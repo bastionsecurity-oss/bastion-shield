@@ -16,6 +16,7 @@ import {
   parseListTitle,
   sameTitle,
   sanitizeMyLists,
+  compiledKey,
   textKey,
 } from '../../src/background/my-lists.ts';
 import type { FetchFn } from '../../src/background/my-lists.ts';
@@ -109,7 +110,13 @@ test('list text: HTML pages, binary data and comment-only files are refused', ()
   assert.equal(checkListText('{"rules":[]}'), 'not-a-list');
   assert.equal(checkListText('a\u0000b'), 'not-a-list');
   assert.equal(checkListText('! Title: nothing\n! only comments\n\n'), 'empty');
+  assert.equal(checkListText('# hosts header\n# only comments\n'), 'empty');
   assert.equal(checkListText('x'.repeat(MY_LISTS.MAX_BYTES + 1)), 'too-large');
+});
+
+test('list text: a list of generic cosmetic filters only is a list', () => {
+  assert.equal(checkListText('! Title: Annoyances\n##.cookie-banner\n##.newsletter-popup\n'), null);
+  assert.equal(checkListText('#@#.ok\n#?#div:has-text(Ad)\n'), null);
 });
 
 test('filter count: filter lines, not comments, headers or merged DNR rules', () => {
@@ -167,7 +174,7 @@ test('a file becomes a list: stored, enabled, titled from its header, survives a
   assert.equal(storage.data.get(textKey(r.list.id)), LIST);
   const again = new MyListsService({ storage, fetch: async () => new Response(''), now: () => 0 });
   await again.load();
-  assert.deepEqual(again.enabled(), [{ id: r.list.id, slot: 0, text: LIST }]);
+  assert.deepEqual(again.enabled(), [{ id: r.list.id, slot: 0, text: LIST, stamp: `${r.list.updated}:${LIST.length}` }]);
 });
 
 test('bad files and the list limit are reported, nothing is stored', async () => {
@@ -303,6 +310,88 @@ test('regression: echoes of our own writes (text key, late index echoes) never d
     svc.enabled().map((l) => l.text),
     ['||a.ch^', '||b.ch^'],
   );
+});
+
+test('downloads run outside the change queue: switching a list never waits for a slow server', async () => {
+  const url = 'https://slow.example.org/list.txt';
+  let release: () => void = () => undefined;
+  let slow = false;
+  const storage = memoryStorage();
+  let now = 1_000_000;
+  const svc = new MyListsService({
+    storage,
+    fetch: async () => {
+      if (slow) await new Promise<void>((r) => (release = r));
+      return new Response(LIST, { status: 200 });
+    },
+    now: () => now,
+  });
+  const added = await svc.add({ url });
+  const other = await svc.add({ file: { name: 'b.txt', text: '||b.ch^' } });
+  assert.ok('list' in added && 'list' in other);
+  now += DAY;
+  slow = true;
+  const due = svc.updateDue();
+  assert.equal(svc.updateDue(), due, 'a second alarm joins the running update');
+  // The update is waiting for the server; a switch goes through at once.
+  const switched = await svc.set(other.list.id, { enabled: false });
+  assert.ok('list' in switched && switched.list.enabled === false);
+  release();
+  assert.equal(await due, false, 'same text: nothing changed');
+  assert.equal(svc.get(added.list.id)?.checked, now);
+  assert.equal(svc.get(other.list.id)?.enabled, false, 'the update did not undo the switch');
+});
+
+test('a failed text write leaves the list as it was (no validators for contents that were not stored)', async () => {
+  const url = 'https://lists.example.org/extras.txt';
+  let body = LIST;
+  const { svc, storage, advance } = service({ [url]: () => ({ body, headers: { etag: body === LIST ? '"v1"' : '"v2"' } }) });
+  const r = await svc.add({ url });
+  assert.ok('list' in r);
+  const before = structuredClone(svc.get(r.list.id));
+  const set = storage.set;
+  storage.set = async (items) => {
+    if (Object.keys(items).some((k) => k.startsWith(STORAGE.MY_LIST_PREFIX))) throw new Error('disk full');
+    return set.call(storage, items);
+  };
+  advance(DAY);
+  body = `${LIST}||new.example^\n`;
+  assert.equal(await svc.updateDue(), false, 'the failed list is skipped, the run goes on');
+  assert.deepEqual(svc.get(r.list.id), before, 'etag, size and dates unchanged');
+  assert.equal(svc.text(r.list.id), LIST);
+  storage.set = set;
+  // The old validator was kept, so the next update downloads the new text again.
+  assert.equal(await svc.updateDue(), true);
+  assert.equal(svc.text(r.list.id), body);
+  assert.equal(svc.get(r.list.id)?.etag, '"v2"');
+});
+
+test('compiled copies are reused only for the same text and build', async () => {
+  const { svc, storage } = service();
+  const r = await svc.add({ file: { name: 'a.txt', text: LIST } });
+  assert.ok('list' in r);
+  const [input] = svc.enabled();
+  const compiled = compileAllCustom('', [], META, [input]).my[0].compiled;
+  await svc.saveCompiled(input, 'v1|t1', compiled);
+  assert.ok(storage.data.has(compiledKey(r.list.id)));
+  const back = await svc.loadCompiled('v1|t1');
+  assert.equal(back.length, 1);
+  assert.deepEqual(back[0].compiled, JSON.parse(JSON.stringify(compiled)));
+  assert.deepEqual(await svc.loadCompiled('v2|t1'), [], 'another extension build recompiles');
+  await svc.add({ file: { name: 'a.txt', text: '||changed.ch^' } }, r.list.id);
+  assert.deepEqual(await svc.loadCompiled('v1|t1'), [], 'a new text recompiles');
+  await svc.remove(r.list.id);
+  assert.equal(storage.data.has(compiledKey(r.list.id)), false, 'removed with the list');
+});
+
+test('imported lists may not carry @@…$important (it would outrank every $important block)', () => {
+  const lists = [{ id: 'cccccccccc', slot: 1, text: '@@||tracker.example^$important\n@@||phish.example^$document,important\n||ok.example^\n' }];
+  const c = compileAllCustom('@@||mine.example^$important', [], META, lists);
+  const my = c.my[0].compiled;
+  assert.equal(my.errors.length, 2);
+  assert.ok(my.errors.every((e) => e.reason === 'invalid-option'));
+  assert.ok(my.rules.every((r) => r.action.type === 'block'), 'only the plain block is left');
+  assert.ok(c.user.rules.some((r) => r.action.type === 'allow' && r.priority === 50), "the user's own important exception still works");
 });
 
 // --- compile, attribution, policy ----------------------------------------------

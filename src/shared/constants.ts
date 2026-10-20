@@ -50,7 +50,7 @@ export const PRIORITY = {
   IMPORTANT_REDIRECT: 41,
   /**
    * `@@…$important` exceptions, user and admin custom filters only
-   * (AdGuard-style; the list compiler rejects them). Above IMPORTANT (40) and
+   * (AdGuard-style; the list compiler and imported lists reject them). Above IMPORTANT (40) and
    * the whole IMPORTANT_REDIRECT band (41–49), so the user's important
    * exception beats any list block or redirect; below the per-site user
    * blocks and everything from PROCEED_ANYWAY up. `@@…$document,important`
@@ -155,6 +155,15 @@ export const SEED_SETS = 16;
 export const SEED_FILES_PER_SET = 16;
 
 /**
+ * Whether an activity event (ActivityKind) stands for a request that never
+ * loaded. Stripped parameters and debounced redirects change a request that
+ * still goes out, so they save no data or time.
+ */
+export function savesRequest(kind: string): boolean {
+  return kind !== 'stripped' && kind !== 'debounced';
+}
+
+/**
  * True for Bastion's own dynamic/session "system" rules (protection off,
  * Standard first-party allow, GPC header, proceed-anyway, bisect tests).
  * They are not filter-list matches and must not count as "blocked" or
@@ -181,6 +190,8 @@ export const STORAGE = {
   /** Index of imported lists (MyListMeta[]); each text is stored under MY_LIST_PREFIX + id. */
   MY_LISTS: 'myLists',
   MY_LIST_PREFIX: 'myList:',
+  /** Compiled copy of an imported list ({ s: stamp, c: JSON }), so a worker restart need not recompile it. */
+  MY_LIST_COMPILED_PREFIX: 'myListCompiled:',
 } as const;
 
 /** Imported lists ("My lists"). */

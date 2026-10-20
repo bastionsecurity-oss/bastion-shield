@@ -57,6 +57,16 @@ export function openTabButton(hash: string, label: string): HTMLElement {
   return h('button', { class: 'btn btn--secondary btn--sm', attrs: { type: 'button', 'data-open-tab': hash }, on: { click: () => void openInTab(hash) } }, icon('openTab', 14), label);
 }
 
+/** A figure tile («Diese Website», «Übersicht»): value, optional unit, label; `dark` for the headline figure. */
+export function statTile(value: string, unit: string, label: string, dark = false, id?: string): HTMLElement {
+  return h(
+    'div',
+    { class: `site-tile${dark ? ' site-tile--dark' : ''}`, attrs: { id } },
+    h('div', { class: 'site-tile__value' }, h('span', { class: 'num', text: value }), unit ? h('span', { class: 'site-tile__unit', text: ` ${unit}` }) : null),
+    h('div', { class: 'site-tile__label', text: label }),
+  );
+}
+
 /** Append children, skipping null/false (Element.append would render "null"). */
 export function mount(root: Element, ...children: Child[]): void {
   append(root, children);

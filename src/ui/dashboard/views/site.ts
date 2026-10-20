@@ -6,25 +6,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BlockingMode, FingerprintLevel, PopupState, SiteSettings } from '../../../shared/types.ts';
-import { h, replace, toast } from '../../shared/dom.ts';
+import { h, replace } from '../../shared/dom.ts';
 import { fmtNumber, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { call, connectLive, type LiveConnection } from '../../shared/messaging.ts';
 import { lockIcon, notice, segmented, switchControl } from '../../shared/controls.ts';
-import { estimateFromSample, fmtBytes, fmtDuration } from '../../shared/savings.ts';
+import { estimateFromSample, fmtBytes, fmtDuration, savingsUnits } from '../../shared/savings.ts';
+import { countEvent, eventKey, sampleType } from '../../shared/page-activity.ts';
 import { createMatchedPanel } from '../../popup/matched.ts';
 import { startReport } from '../../popup/report.ts';
+import { setSiteSettings } from '../../popup/site-set.ts';
 import { normalisePopupState } from '../../popup/state.ts';
-import { errorState, nextId, popupTabId, type View, mount } from '../common.ts';
+import { errorState, nextId, popupTabId, statTile, type View, mount } from '../common.ts';
 import { readHandoff } from '../../shared/handoff.ts';
 import { dir, getConfig, getMeta, onStoreChange } from '../store.ts';
 import { ListDirectory } from '../../shared/labels.ts';
-
-interface SiteSetReply {
-  ok?: boolean;
-  ignored?: string[];
-  siteSettings?: SiteSettings;
-}
 
 async function resolveTabId(): Promise<number | null> {
   const fromQuery = popupTabId();
@@ -35,15 +31,6 @@ async function resolveTabId(): Promise<number | null> {
   } catch {
     return null;
   }
-}
-
-function tile(value: string, unit: string, label: string, dark = false, id?: string): HTMLElement {
-  return h(
-    'div',
-    { class: `site-tile${dark ? ' site-tile--dark' : ''}`, attrs: { id } },
-    h('div', { class: 'site-tile__value' }, h('span', { class: 'num', text: value }), unit ? h('span', { class: 'site-tile__unit', text: ` ${unit}` }) : null),
-    h('div', { class: 'site-tile__label', text: label }),
-  );
 }
 
 function row(label: string, labelId: string, control: HTMLElement, locked = false): HTMLElement {
@@ -117,29 +104,9 @@ export function siteView(): View {
       );
 
       const setSite = async (patch: SiteSettings): Promise<boolean> => {
-        const r = await call<SiteSetReply>({ type: 'site:set', site, patch });
-        if (!r.ok) {
-          toast(t('errorSaveFailed'), icon('alert', 15));
-          return false;
-        }
-        const ignored = Array.isArray(r.data?.ignored) ? r.data.ignored : [];
-        if (ignored.length && Object.keys(patch).every((k) => ignored.includes(k))) {
-          toast(t('lockedByPolicy'), icon('lock', 15));
-          return false;
-        }
-        const resolved = r.data?.siteSettings;
-        if (resolved && typeof resolved === 'object') {
-          const next = normalisePopupState({ siteSettings: resolved }, tabId).siteSettings;
-          s.siteSettings = next;
-          if ((Object.keys(patch) as (keyof SiteSettings)[]).some((k) => patch[k] !== undefined && next[k] !== patch[k])) {
-            toast(t('lockedByPolicy'), icon('lock', 15));
-            return false;
-          }
-        } else {
-          Object.assign(s.siteSettings, patch);
-        }
-        reloadBar.hidden = false;
-        return true;
+        const ok = await setSiteSettings(s, tabId, patch);
+        if (ok) reloadBar.hidden = false;
+        return ok;
       };
 
       // ---- Header with the protection switch --------------------------------
@@ -171,34 +138,32 @@ export function siteView(): View {
 
       // ---- Tiles --------------------------------------------------------------
       const counts = { ...s.counts };
-      const types = s.recent.filter((e) => e.kind !== 'stripped' && e.kind !== 'debounced').map((e) => e.type);
+      const types: string[] = [];
+      for (const e of s.recent) sampleType(types, e);
       const tiles = h('div', { class: 'site-tiles' });
       const paintTiles = (): void => {
         const blocked = counts.blocked + counts.redirected + counts.stripped + counts.debounced;
         const est = estimateFromSample(types, counts.blocked + counts.redirected);
         const data = fmtBytes(est.bytes);
-        const time = fmtDuration(est.ms, { s: t('unitSeconds'), min: t('unitMinutes'), h: t('unitHours') });
+        const time = fmtDuration(est.ms, savingsUnits());
         replace(
           tiles,
-          tile(fmtNumber(blocked), '', t('popupBlockedShort'), true),
-          tile(data.value, data.unit, t('popupDataSaved')),
-          tile(time.value, time.unit, t('popupTimeSaved')),
+          statTile(fmtNumber(blocked), '', t('popupBlockedShort'), true),
+          statTile(data.value, data.unit, t('popupDataSaved')),
+          statTile(time.value, time.unit, t('popupTimeSaved')),
         );
         tiles.title = t('savingsEstimateNote');
       };
       paintTiles();
       if (s.counting) {
-        const seen = new Set(s.recent.map((e) => `${e.t}|${e.kind}|${e.frameId}|${e.url}`));
+        const seen = new Set(s.recent.map(eventKey));
         live = connectLive(tabId, {
           event: (e) => {
-            const key = `${e.t}|${e.kind}|${e.frameId}|${e.url}`;
+            const key = eventKey(e);
             if (e.tabId !== tabId || seen.has(key)) return;
             seen.add(key);
-            if (e.kind === 'blocked' || e.kind === 'strict') counts.blocked++;
-            else if (e.kind === 'redirected') counts.redirected++;
-            else if (e.kind === 'stripped') counts.stripped++;
-            else if (e.kind === 'debounced') counts.debounced++;
-            if (e.kind !== 'stripped' && e.kind !== 'debounced' && types.length < 400) types.push(e.type);
+            countEvent(counts, e);
+            sampleType(types, e);
             paintTiles();
           },
           reset: (id) => {
@@ -294,7 +259,7 @@ export function siteView(): View {
           const f = normalisePopupState(fresh.data, tabId);
           Object.assign(counts, f.counts);
           types.length = 0;
-          for (const e of f.recent) if (e.kind !== 'stripped' && e.kind !== 'debounced') types.push(e.type);
+          for (const e of f.recent) sampleType(types, e);
           paintTiles();
         });
       }

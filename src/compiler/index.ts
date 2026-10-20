@@ -93,6 +93,8 @@ interface RunOptions {
   strictBlock: boolean;
   modifiers1p: boolean;
   custom: boolean;
+  /** `@@…$important` allowed (NetCompileContext.importantExceptions). */
+  importantExceptions: boolean;
   /** CompileOptions.trustSecret; '' = no `!#trusted` toggles. */
   trustSecret: string;
   env: ReadonlySet<string>;
@@ -172,6 +174,7 @@ function run(text: string, o: RunOptions): RunResult {
     strictBlock: o.strictBlock,
     modifiers1p: o.modifiers1p,
     custom: o.custom,
+    importantExceptions: o.importantExceptions,
     redirectResources: o.redirectResources,
     blockedPagePath: o.blockedPagePath,
     emit: (rule: DnrRule, source: string) => {
@@ -375,6 +378,7 @@ export function compileList(text: string, opts: CompileOptions): CompiledList {
     strictBlock: opts.strictBlock,
     modifiers1p: opts.modifiers1p === true,
     custom: false,
+    importantExceptions: false,
     trustSecret: opts.trustSecret ?? '',
     env,
     redirectResources: opts.redirectResources,
@@ -399,7 +403,14 @@ export function compileList(text: string, opts: CompileOptions): CompiledList {
   };
 }
 
-export type CustomCompileOptions = Omit<CompileOptions, 'listId' | 'trusted' | 'firstPartyProtected' | 'strictBlock'>;
+export type CustomCompileOptions = Omit<CompileOptions, 'listId' | 'trusted' | 'firstPartyProtected' | 'strictBlock'> & {
+  /**
+   * Accept `@@…$important` exceptions (default true: the user's and the
+   * admin's own filters). False for imported filter lists ("My lists"):
+   * third-party text must not override $important blocks.
+   */
+  importantExceptions?: boolean;
+};
 
 /**
  * Compile user or admin custom filters (runtime, dynamic rules): always-apply
@@ -422,6 +433,7 @@ export function compileCustom(text: string, opts: CustomCompileOptions): Compile
     // Admin and user modifiers must also work on same-site subresources.
     modifiers1p: true,
     custom: true,
+    importantExceptions: opts.importantExceptions !== false,
     trustSecret: '',
     env,
     redirectResources: opts.redirectResources,

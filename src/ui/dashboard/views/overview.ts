@@ -7,13 +7,13 @@
 import type { DailyAggregate, HistoryResult } from '../../../shared/types.ts';
 import { h } from '../../shared/dom.ts';
 import { fmtDayAxis, fmtDayShort, fmtNumber, t } from '../../shared/i18n.ts';
-import { estimateSavings, fmtBytes, fmtDuration } from '../../shared/savings.ts';
+import { estimateSavings, fmtBytes, fmtDuration, savedRequestsByType, savingsUnits } from '../../shared/savings.ts';
 import { icon } from '../../shared/icons.ts';
 import { call } from '../../shared/messaging.ts';
 import { notice } from '../../shared/controls.ts';
 import { CATEGORY_ORDER, categoryLabel } from '../../shared/labels.ts';
 import { barList, columnChart, type ColumnDatum } from '../chart.ts';
-import { dayKey, dayTime, emptyState, errorState, panel, type View, mount } from '../common.ts';
+import { dayKey, dayTime, emptyState, errorState, panel, statTile, type View, mount } from '../common.ts';
 import { getConfig } from '../store.ts';
 
 const DAYS = 30;
@@ -54,22 +54,21 @@ export function overviewView(): View {
       const byType: Record<string, number> = {};
       let period = 0;
       for (const d of days) {
-        sumInto(byType, d.byType);
+        // Stripped and debounced requests still loaded: they save nothing.
+        sumInto(byType, savedRequestsByType(d));
         period += d.total ?? 0;
       }
       const est = estimateSavings(byType);
       const data = fmtBytes(est.bytes);
-      const time = fmtDuration(est.ms, { s: t('unitSeconds'), min: t('unitMinutes'), h: t('unitHours') });
-      const tileEl = (value: string, unit: string, label: string, dark = false): HTMLElement =>
-        h('div', { class: `site-tile${dark ? ' site-tile--dark' : ''}` }, h('div', { class: 'site-tile__value' }, h('span', { class: 'num', text: value }), unit ? h('span', { class: 'site-tile__unit', text: ` ${unit}` }) : null), h('div', { class: 'site-tile__label', text: label }));
+      const time = fmtDuration(est.ms, savingsUnits());
       const head = h('header', { class: 'db-head' }, h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: t('navOverview'), attrs: { tabindex: -1 } })));
       const offNotice = globalOff ? h('div', { class: 'db-gap' }, notice(t('popupGlobalOffTitle'), t('popupGlobalOffText'), 'info')) : null;
       const hero = h(
         'section',
         { class: 'site-tiles ov-tiles', attrs: { 'aria-label': t('ovPeriodLabel', fmtNumber(DAYS)), title: t('savingsEstimateNote') } },
-        tileEl(fmtNumber(period), '', t('ovTileBlocked', fmtNumber(DAYS)), true),
-        tileEl(data.value, data.unit, t('popupDataSaved')),
-        tileEl(time.value, time.unit, t('ovTileTime')),
+        statTile(fmtNumber(period), '', t('ovTileBlocked', fmtNumber(DAYS)), true),
+        statTile(data.value, data.unit, t('popupDataSaved')),
+        statTile(time.value, time.unit, t('ovTileTime')),
       );
 
       // ---- Chart ------------------------------------------------------------

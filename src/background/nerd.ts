@@ -65,7 +65,8 @@ export class NerdService {
       return { ok: true };
     }
     if (msg.kind === 'clip') {
-      if (!this.deps.settings().privacy.clipboardGuard) return { ok: true };
+      // Counted whoever blocked it: Bastion's guard, or uBlock filters'
+      // prevent-clipboard-write, which blocks with ClickFix protection off too.
       const t = this.tab(tabId);
       t.clipboardBlocked = Math.min(MAX_COUNT, t.clipboardBlocked + 1);
       return { ok: true };

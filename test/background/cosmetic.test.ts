@@ -119,6 +119,25 @@ test('custom filters match hosts and entities, honouring ~exclusions', () => {
   assert.deepEqual(customHighlyGeneric(custom, www, cands), ['aside[id^="ad-"]']);
 });
 
+test('custom filters of imported lists are looked up by host and token, in filter order, each once', () => {
+  // Thousands of entries (an imported EasyList): only the matching ones matter, in their own order.
+  const specific: CustomCosmetic['specific'] = [];
+  for (let i = 0; i < 5000; i++) specific.push({ kind: 0, hosts: [`site${i}.ch`], excludedHosts: [], payload: `.s${i}`, raw: '' });
+  specific.push({ kind: 0, hosts: ['example.com', 'www.example.com'], excludedHosts: [], payload: '.both', raw: '' });
+  specific.unshift({ kind: 0, hosts: ['example.com'], excludedHosts: [], payload: '.first', raw: '' });
+  const generic: CustomCosmetic['generic'] = [
+    { selector: '.b2', token: '.b', excludedHosts: [], raw: '' },
+    { selector: '.a1', token: '.a', excludedHosts: [], raw: '' },
+    { selector: '.b1', token: '.b', excludedHosts: ['www.example.com'], raw: '' },
+  ];
+  const custom: CustomCosmetic = { specific, generic };
+  const cands = hostKeyCandidates('www.example.com');
+  const host = resolveHostCosmetic([], A, cands, custom);
+  assert.deepEqual(host.hide, ['.first', '.both'], 'the entry listed under two candidate hosts comes once');
+  assert.deepEqual(genericSelectorsForTokens(null, ['.a', '.b'], A, host, cands, custom), ['.b2', '.a1']);
+  assert.deepEqual(resolveHostCosmetic([], A, hostKeyCandidates('site4321.ch'), custom).hide, ['.s4321']);
+});
+
 test('CSS is grouped in blocks of 1,000 selectors and closed with display:none', () => {
   const sels = Array.from({ length: 2500 }, (_, i) => `.s${i}`);
   const css = buildHideCss(sels);

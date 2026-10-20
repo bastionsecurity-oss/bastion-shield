@@ -9,7 +9,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { PORT_LIVE, STORAGE } from '../shared/constants.ts';
+import { PORT_LIVE, PRIORITY, STORAGE } from '../shared/constants.ts';
 import type { ListCategory, Settings } from '../shared/types.ts';
 import { ActivityService, classifyRedirect, persistenceFor } from './activity.ts';
 import type { ActivityConfig, LivePort, MatchInfo, RequestDetails } from './activity.ts';
@@ -17,7 +17,7 @@ import { badgeModeFor, browserResourceTypes, createApplier, SESSION_APPLIED_KEY 
 import { BlockedPages, isBlockedPageUrl } from './blocked.ts';
 import { CosmeticService } from './cosmetic.ts';
 import type { CosmeticConfig, CosmeticTarget } from './cosmetic.ts';
-import { compileAllCustom } from './custom.ts';
+import { compileAllCustom, seedMyListCache, setMyListCompiledHook } from './custom.ts';
 import type { CustomCompiled } from './custom.ts';
 import { loadBuildMeta, loadCosmeticMeta, loadGenericHigh, loadGenericIndex, loadShard } from './data.ts';
 import { HistoryDb } from './history-db.ts';
@@ -79,11 +79,20 @@ const myLists = new MyListsService({
 let customCache: CustomCompiled | null = null;
 
 function custom(): CustomCompiled {
-  // A policy that forbids imported lists also stops applying them.
-  const mine = myListsLocked(store.managed) ? [] : myLists.enabled();
-  if (!customCache) customCache = compileAllCustom(store.customText, store.managed.customFilters ?? [], store.meta, mine);
+  if (!customCache) {
+    // A policy that forbids imported lists also stops applying them.
+    const mine = myListsLocked(store.managed) ? [] : myLists.enabled();
+    customCache = compileAllCustom(store.customText, store.managed.customFilters ?? [], store.meta, mine);
+  }
   return customCache;
 }
+
+/** What a persisted compiled list is valid for besides its text: the compiler (extension build) and the build meta. */
+function compileBuild(): string {
+  return `${chrome.runtime.getManifest().version}|${store.meta?.builtAt ?? ''}`;
+}
+// Imported lists are persisted once compiled, so the next worker start reuses them.
+setMyListCompiledHook((l, compiled) => void myLists.saveCompiled(l, compileBuild(), compiled));
 
 function recompileCustom(): void {
   customCache = null;
@@ -218,17 +227,29 @@ const nerd = new NerdService({
   describeRules: async (rules) => {
     const filters = new Set<string>();
     const lists = new Set<string>();
+    let important = false;
+    let dynamic: Map<number, number> | null = null;
     for (const r of rules) {
       const i = r.lastIndexOf(':');
       if (i <= 0) continue;
       const rulesetId = r.slice(0, i);
       const ruleId = Number(r.slice(i + 1));
+      if (rulesetId === '_dynamic') {
+        // The user's own filters and imported lists have no transparency map:
+        // the rule's priority tells an $important block (or redirect) apart.
+        dynamic ??= new Map(
+          (await log.attempt('nerd', () => chrome.declarativeNetRequest.getDynamicRules(), [] as chrome.declarativeNetRequest.Rule[])).map((x) => [x.id, x.priority ?? 1]),
+        );
+        const p = dynamic.get(ruleId);
+        if (p !== undefined && p >= PRIORITY.IMPORTANT && p < PRIORITY.IMPORTANT_ALLOW) important = true;
+        continue;
+      }
       const list = store.meta?.rulesetToList[rulesetId];
       if (list) lists.add(list);
       const texts = (await ruleMap(rulesetId))[ruleId];
       for (const t of texts ?? []) filters.add(t);
     }
-    return { filters: Array.from(filters), lists: Array.from(lists) };
+    return { filters: Array.from(filters), lists: Array.from(lists), important };
   },
   addCustomFilters: async (lines) => {
     // Same rule as custom:set: policy may make the user's filters read-only.
@@ -566,6 +587,7 @@ async function init(): Promise<void> {
   if (!meta) log.error('init', 'rulesets/meta.json missing or invalid; list toggles unavailable');
   await store.load(meta);
   await myLists.load();
+  for (const { input, compiled } of await myLists.loadCompiled(compileBuild())) seedMyListCache(input, store.meta, compiled);
   await activity.init();
   await blocked.restore();
   await applier.restoreReport();

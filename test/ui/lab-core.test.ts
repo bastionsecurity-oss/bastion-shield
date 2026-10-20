@@ -179,6 +179,9 @@ test('provenance, rule references, transparency maps and blame', () => {
   const all = blameFor(meta, 'all', '||ads.example^');
   assert.deepEqual(all.map((g) => g.listId), ['ublock', 'easylist'], 'lists without GitHub sources are left out');
   assert.equal(all[1].links[0].kind, 'search');
+  // The transparency map's "+N more" marker is no filter: no history link for it.
+  assert.deepEqual(blameFor(meta, 'all', '+37 more'), []);
+  assert.equal(blameFor(meta, 'ublock', '||ads.example^ +2 more')[0].links[0].url, one[0].links[0].url);
 });
 
 test('parseLabHash: sections, url / site / type, filter, bounds', async () => {

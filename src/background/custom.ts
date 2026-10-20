@@ -22,11 +22,13 @@ export interface MyListCompiled {
   compiled: CompiledCustom;
 }
 
-/** An imported list to compile; `key` changes whenever its text does (cache key). */
+/** An imported list to compile. */
 export interface MyListInput {
   id: string;
   slot: number;
   text: string;
+  /** Changes whenever the text does: names the persisted compiled copy (my-lists.ts). */
+  stamp?: string;
 }
 
 export interface CustomCompiled {
@@ -51,13 +53,16 @@ function redirectMap(meta: BuildMeta | null): Map<string, { path: string; requir
   return m;
 }
 
-function compileOne(text: string, listId: string, meta: BuildMeta | null): CompiledCustom {
+function compileOne(text: string, listId: string, meta: BuildMeta | null, imported = false): CompiledCustom {
   if (text.trim() === '') return { ...EMPTY_COMPILED, errors: [] };
   // The compiler applies the custom-filter semantics itself: always-apply
-  // priority band (also first-party), untrusted, no strict block.
+  // priority band (also first-party), untrusted, no strict block. Imported
+  // lists are third-party text: no `@@…$important` (it would outrank every
+  // $important block of the built-in lists).
   const options: CustomCompileOptions = {
     redirectResources: redirectMap(meta),
     scriptlets: new Map<string, ScriptletInfo>(),
+    importantExceptions: !imported,
   };
   try {
     const out = compileCustom(text, options);
@@ -77,15 +82,33 @@ function compileOne(text: string, listId: string, meta: BuildMeta | null): Compi
 /**
  * Imported lists can be megabytes; recompiling all of them whenever the user
  * edits one filter would stall the worker. Results are kept per list id and
- * text (the text is compared, not hashed: it is in memory anyway).
+ * text (the text is compared, not hashed: it is in memory anyway). The worker
+ * also persists them (my-lists.ts) and seeds this cache on start, so a
+ * worker restart does not recompile every list either.
  */
 const myCache = new Map<string, { text: string; meta: BuildMeta | null; compiled: CompiledCustom }>();
+let onMyListCompiled: ((l: MyListInput, compiled: CompiledCustom) => void) | null = null;
+
+/** Called after an imported list was compiled (not for cache hits): persist it. */
+export function setMyListCompiledHook(fn: ((l: MyListInput, compiled: CompiledCustom) => void) | null): void {
+  onMyListCompiled = fn;
+}
+
+/** A compiled copy restored from storage, valid for exactly this text and build meta. */
+export function seedMyListCache(l: MyListInput, meta: BuildMeta | null, compiled: CompiledCustom): void {
+  myCache.set(l.id, { text: l.text, meta, compiled });
+}
 
 function compileMyList(l: MyListInput, meta: BuildMeta | null): CompiledCustom {
   const hit = myCache.get(l.id);
   if (hit && hit.text === l.text && hit.meta === meta) return hit.compiled;
-  const compiled = compileOne(l.text, `my:${l.id}`, meta);
+  const compiled = compileOne(l.text, `my:${l.id}`, meta, true);
   myCache.set(l.id, { text: l.text, meta, compiled });
+  try {
+    onMyListCompiled?.(l, compiled);
+  } catch (e) {
+    log.warn('custom', 'persist', l.id, e);
+  }
   return compiled;
 }
 

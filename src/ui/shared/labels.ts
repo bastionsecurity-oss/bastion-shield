@@ -115,6 +115,7 @@ export function dynamicRuleLabel(rulesetId: string, ruleId: number): string {
   }
   if (ruleId >= RULE_ID.CUSTOM_START && ruleId <= RULE_ID.CUSTOM_END) return t('listCustom');
   if (ruleId >= RULE_ID.ADMIN_START && ruleId <= RULE_ID.ADMIN_END) return t('listAdmin');
+  if (ruleId >= RULE_ID.MY_LISTS_START && ruleId <= RULE_ID.MY_LISTS_END) return t('myListsTitle');
   if (ruleId >= RULE_ID.DEBOUNCE_START && ruleId <= RULE_ID.DEBOUNCE_END) return t('ruleDebounce');
   if (ruleId >= RULE_ID.SITES_DISABLED && ruleId < RULE_ID.STANDARD_1P_ALLOW) return t('ruleSiteOff');
   if (ruleId >= RULE_ID.STANDARD_1P_ALLOW && ruleId < RULE_ID.GPC_HEADER) return t('ruleStandard1p');

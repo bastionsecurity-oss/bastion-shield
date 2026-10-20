@@ -17,6 +17,7 @@ import { persist } from './privacy.ts';
 import { revealNerd } from '../nerd-reveal.ts';
 import { shortcutLabel } from '../rail.ts';
 import { commandHelp } from '../../popup/commands.ts';
+import { normalizeDomain } from '../../../shared/domains.ts';
 
 const RETENTION = [1, 7, 30, 90, 180, 365];
 
@@ -74,11 +75,9 @@ export function validateBackup(data: unknown): BackupFile | null {
   return { format: 'bastion-shield-backup', version: 1, exportedAt: String(d.exportedAt ?? ''), settings: d.settings as Settings, sites: d.sites ?? {}, customFilters: d.customFilters ?? '' };
 }
 
-const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/;
-
 /**
- * Protected domains typed one per line (also accepts commas and URLs):
- * lower-cased, scheme, path and a leading "www." removed, IDNs punycoded,
+ * Protected domains typed one per line (also accepts commas and URLs),
+ * normalised like the service worker does (normalizeDomain) and
  * deduplicated. `invalid` holds the entries that are not domain names.
  */
 export function parseProtectedDomains(text: string): { domains: string[]; invalid: string[] } {
@@ -87,18 +86,9 @@ export function parseProtectedDomains(text: string): { domains: string[]; invali
   for (const raw of text.split(/[\n,;]+/)) {
     const s = raw.trim();
     if (s === '' || s.startsWith('#') || s.startsWith('!')) continue;
-    let d = s.toLowerCase().replace(/^[a-z][a-z0-9+.-]*:\/\//, '').replace(/[/:?#].*$/, '').replace(/\.$/, '');
-    try {
-      d = new URL(`https://${d}`).hostname;
-    } catch {
-      /* keep d; the check below rejects it */
-    }
-    d = d.replace(/^www\./, '');
-    if (DOMAIN_RE.test(d)) {
-      if (!domains.includes(d)) domains.push(d);
-    } else {
-      invalid.push(s);
-    }
+    const d = normalizeDomain(s);
+    if (d === null) invalid.push(s);
+    else if (!domains.includes(d)) domains.push(d);
   }
   return { domains, invalid };
 }
@@ -111,7 +101,7 @@ export function parseProtectedDomains(text: string): { domains: string[]; invali
  * lookalike warning) and the protected-domain list appear. Policy domains are shown read-only; the user's own
  * list is the effective list minus the policy's.
  */
-function nerdPanel(cfg: EffectiveConfig): HTMLElement {
+function nerdPanel(cfg: EffectiveConfig, signal: AbortSignal): HTMLElement {
   const n = cfg.settings.nerd ?? defaultSettings().nerd;
   const policyDomains = (cfg.managed.protectedDomains ?? []).map((d) => d.toLowerCase());
   const userDomains = n.protectedDomains.filter((d) => !policyDomains.includes(d));
@@ -144,8 +134,8 @@ function nerdPanel(cfg: EffectiveConfig): HTMLElement {
     }
   };
   void paintKeys();
-  // Back from the shortcuts page: show what was set there.
-  window.addEventListener('focus', () => void paintKeys());
+  // Back from the shortcuts page: show what was set there (until the view is left).
+  window.addEventListener('focus', () => void paintKeys(), { signal });
   const shortcutsUrl = /Edg\//.test(navigator.userAgent) ? 'edge://extensions/shortcuts' : 'chrome://extensions/shortcuts';
   const keysLabel = nextId('set');
   const shortcuts = h(
@@ -300,7 +290,12 @@ async function afterRestore(reply: unknown, doneKey: string, partlyKey: string):
 }
 
 export function settingsView(): View {
+  // Ends the window listeners of this visit when the view is left.
+  const alive = new AbortController();
   return {
+    dispose() {
+      alive.abort();
+    },
     async render(root) {
       const r = await getConfig();
       if (!r.ok) {
@@ -467,7 +462,7 @@ export function settingsView(): View {
           settingRow({ label: t('setRetention'), desc: t('setRetentionDesc'), control: ret, locked: retLocked, labelId: retLabel, descId: retDesc }),
           settingRow({ label: t('setClearHistory'), desc: t('setClearHistoryDesc'), control: clearBtn, labelId: nextId('set') }),
         ),
-        nerdPanel(cfg),
+        nerdPanel(cfg, alive.signal),
         // File dialogs close the popup: backups are made in the dashboard tab.
         popupMode
           ? panel({ title: t('setGroupBackup'), flush: true }, settingRow({ label: t('setBackupInTab'), control: openTabButton('settings', t('panelOpenInTab')), labelId: nextId('set') }))

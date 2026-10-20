@@ -31,9 +31,13 @@ const SEARCH_HOSTS: readonly [string, string][] = [
   ['https://easylist-downloads.adblockplus.org/easylistitaly', 'easylist/easylistitaly'],
 ];
 
-/** The part of a filter that is most likely to appear verbatim in the source (merged rules carry a "+N more" marker). */
+/**
+ * The part of a filter that is most likely to appear verbatim in the source.
+ * Merged rules carry a "+N more" marker, after a filter or as an entry of its
+ * own in the transparency map; a bare marker is no filter (empty needle).
+ */
 export function blameNeedle(filter: string): string {
-  return filter.trim().replace(/\s+\+\d+ more$/, '');
+  return filter.trim().replace(/(?:^|\s+)\+\d+ more$/, '');
 }
 
 /** Upstream history link for `filter` from the list source `sourceUrl`, or null when the source is not on GitHub. */

@@ -14,6 +14,7 @@ import type {
   Settings,
   WebRtcPolicy,
 } from '../shared/types.ts';
+import { normalizeDomain } from '../shared/domains.ts';
 import { normalizeSiteKey } from './sites.ts';
 import { isPlainObject } from './util.ts';
 
@@ -55,16 +56,14 @@ export function defaultSettings(): Settings {
 
 /** Most protected domains kept (user list; the policy list has its own cap). */
 export const MAX_PROTECTED_DOMAINS = 200;
-const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/;
-
-/** Lower-case, trimmed, no scheme/path/leading www., valid hostname syntax; deduplicated. */
+/** Normalised (normalizeDomain), invalid entries dropped, deduplicated, at most `max`. */
 export function domainList(v: unknown, max = MAX_PROTECTED_DOMAINS): string[] {
   if (!Array.isArray(v)) return [];
   const out = new Set<string>();
   for (const x of v) {
     if (typeof x !== 'string') continue;
-    const d = x.trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/[/:?#].*$/, '').replace(/^www\./, '').replace(/\.$/, '');
-    if (DOMAIN_RE.test(d)) out.add(d);
+    const d = normalizeDomain(x);
+    if (d !== null) out.add(d);
     if (out.size >= max) break;
   }
   return Array.from(out);

@@ -224,6 +224,23 @@ test.describe('nerd mode guards', () => {
     }, HIGH);
     expect(viaWrite, 'clipboard.write with text/plain').toBe(CLIP_REPLACEMENT);
 
+    // A subclass instance or an item from another realm is still a ClipboardItem to the native write.
+    const viaSubclass = await page.evaluate(async (t) => {
+      class Item extends ClipboardItem {}
+      await navigator.clipboard.write([new Item({ 'text/plain': new Blob([t], { type: 'text/plain' }) })]);
+      return navigator.clipboard.readText();
+    }, HIGH);
+    expect(viaSubclass, 'clipboard.write with a ClipboardItem subclass').toBe(CLIP_REPLACEMENT);
+    const viaFrame = await page.evaluate(async (t) => {
+      const f = document.createElement('iframe');
+      document.body.append(f);
+      const CI = (f.contentWindow as unknown as { ClipboardItem: typeof ClipboardItem }).ClipboardItem;
+      await navigator.clipboard.write([new CI({ 'text/plain': new Blob([t], { type: 'text/plain' }) })]);
+      f.remove();
+      return navigator.clipboard.readText();
+    }, HIGH);
+    expect(viaFrame, "clipboard.write with an iframe's ClipboardItem").toBe(CLIP_REPLACEMENT);
+
     // The guard's blocks show the Bastion notice (identical text within 2 s
     // once, at most three cards), none with a copy button.
     await expect.poll(async () => (await notices(page)).length).toBeGreaterThanOrEqual(2);

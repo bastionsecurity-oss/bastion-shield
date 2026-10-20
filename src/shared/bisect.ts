@@ -206,15 +206,22 @@ export function isImportantFilter(text: string): boolean {
 /**
  * Narrow exception lines for the user's custom filters ("keep", "allow").
  * A host blocked by an `$important` filter needs an important exception
- * (`@@…$important` ranks above important blocks in custom filters only).
+ * (`@@…$important` ranks above important blocks in custom filters only):
+ * known from the filter text, or from `important` when the block came from a
+ * rule without one (the user's own filters, an imported list).
  */
-export function keepFilterLines(culprits: readonly { host: string; filters?: readonly string[] }[], site: string, day: string, via: 'bisect' | 'allow' = 'bisect'): string[] {
+export function keepFilterLines(
+  culprits: readonly { host: string; filters?: readonly string[]; important?: boolean }[],
+  site: string,
+  day: string,
+  via: 'bisect' | 'allow' = 'bisect',
+): string[] {
   const seen = new Set<string>();
   const lines = [`! Bastion ${via} ${day}: ${site}`];
   for (const c of culprits) {
     if (seen.has(c.host)) continue;
     seen.add(c.host);
-    const important = (c.filters ?? []).some(isImportantFilter);
+    const important = c.important === true || (c.filters ?? []).some(isImportantFilter);
     lines.push(`@@||${c.host}^$domain=${site}${important ? ',important' : ''}`);
   }
   return lines;

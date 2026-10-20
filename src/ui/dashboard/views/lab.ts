@@ -18,6 +18,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BuildMeta, EffectiveConfig, RuleSourceMap } from '../../../shared/types.ts';
+import { MY_LISTS, RULE_ID } from '../../../shared/constants.ts';
 import type { IntegrityManifest } from '../../../../tools/integrity.ts';
 import { debounce, h, replace, toast, type Child } from '../../shared/dom.ts';
 import { fmtDateTime, fmtNumber, plural, t } from '../../shared/i18n.ts';
@@ -26,7 +27,7 @@ import { fetchPackaged } from '../../shared/messaging.ts';
 import { notice, segmented } from '../../shared/controls.ts';
 import { dynamicRuleLabel, typeLabel } from '../../shared/labels.ts';
 import { emptyState, nextId, pageHead, panel, type View, mount } from '../common.ts';
-import { dir, getConfig, getCustom, getMeta, historyEvents } from '../store.ts';
+import { dir, getConfig, getCustom, getMeta, historyEvents, myLists } from '../store.ts';
 import {
   blameFor,
   compilePlayground,
@@ -270,10 +271,17 @@ function filterResult(f: PlaygroundFilter, run: FilterDryRun | null): HTMLElemen
 
 // --- Explain: pasted URLs against what is installed --------------------------
 
-/** Display name of an explain source: list, «My filters», admin, or the system rule. */
+/** Titles of the imported lists by rule-id slot, refreshed before every explain run. */
+let myListTitles = new Map<number, string>();
+
+/** Display name of an explain source: list, «My filters», admin, an imported list, or the system rule. */
 function sourceName(hit: ExplainHit, meta: BuildMeta | null): string {
   if (hit.source === 'custom') return t('listCustom');
   if (hit.source === 'admin') return t('listAdmin');
+  if (hit.source === '_dynamic' && hit.ruleId >= RULE_ID.MY_LISTS_START && hit.ruleId <= RULE_ID.MY_LISTS_END) {
+    const title = myListTitles.get(Math.floor((hit.ruleId - RULE_ID.MY_LISTS_START) / MY_LISTS.SLOT_SIZE));
+    if (title) return `${t('myListsTitle')}: ${title}`;
+  }
   if (hit.source === '_dynamic' || hit.source === '_session') return dynamicRuleLabel(hit.source, hit.ruleId);
   return dir().name(meta?.rulesetToList?.[hit.source] ?? hit.source);
 }
@@ -538,6 +546,8 @@ function playgroundSection(meta: BuildMeta | null, cfg: EffectiveConfig): Tool {
   /** Pasted URLs against the enabled lists, custom and dynamic rules; progress goes to `status`. */
   const explain = async (requests: DryRequest[], token: number): Promise<HTMLElement | null> => {
     const dnr = chrome.declarativeNetRequest;
+    const mine = await myLists();
+    myListTitles = new Map(mine.ok ? mine.data.lists.map((l) => [l.slot, l.title]) : []);
     const out = await explainInstalled(requests, {
       meta,
       enabledRulesets: async () => (await dnr.getEnabledRulesets()) ?? [],

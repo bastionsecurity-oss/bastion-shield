@@ -420,6 +420,11 @@ export interface DailyAggregate {
   /** Site where blocking happened -> count (top 500 kept). */
   bySite: Record<string, number>;
   byType: Record<string, number>;
+  /**
+   * Resource type -> requests that never loaded (savesRequest: every kind but
+   * stripped and debounced). Missing for days recorded before it existed.
+   */
+  savedByType?: Record<string, number>;
 }
 
 export interface Totals {

@@ -166,7 +166,9 @@ the exception), `b` (filter history in the developer tools) / `Esc` once found
 the filter text from the transparency map and the list it came from. "Keep"
 appends a narrow exception (`@@||host^$domain=site`) to the user's own
 filters; when the blocking filter is `$important`, the exception is
-`@@||host^$domain=site,important`. Switching nerd mode off ends every bisect
+`@@||host^$domain=site,important` (for blocks by the user's own filters or
+an imported list, which have no filter text here, the dynamic rule's
+priority tells). Switching nerd mode off ends every bisect
 and removes its rules at once (the pages are not reloaded).
 
 If the page is still broken with every candidate allowed, the cause is not a
@@ -189,7 +191,8 @@ Not a nerd feature any more: on by default for everyone, switched in
 dashboard › Datenschutz › Zwischenablage (`privacy.clipboardGuard`, policy
 `clipboardGuard`; stored `nerd.clipboardGuard` values carry over). It is
 described here because it shares the relay with the fingerprinting meter. Only
-the popup's `clip` counter needs nerd mode.
+the popup's `clip` counter needs nerd mode; it also counts the writes uBlock
+filters stop, with ClickFix protection on or off.
 
 `main/clipguard.js` checks text that a page writes to the clipboard
 (`navigator.clipboard.writeText`/`write`, `setData` in copy events,

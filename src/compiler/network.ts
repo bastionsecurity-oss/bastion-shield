@@ -445,6 +445,11 @@ export interface NetCompileContext {
   modifiers1p: boolean;
   /** Custom filters: cosmetic flags go to `flagEntries` instead of the list-level host sets. */
   custom: boolean;
+  /**
+   * `@@…$important` is accepted (user and admin filters only; false for
+   * static lists and for lists the user imported, which are third-party text).
+   */
+  importantExceptions: boolean;
   redirectResources: ReadonlyMap<string, RedirectResource>;
   blockedPagePath: string;
   emit: (rule: DnrRule, source: string) => void;
@@ -641,9 +646,10 @@ export function compileResponseHeaderFilter(
 
 /** Compile one analyzed network filter into DNR rules (emitted through ctx). */
 export function compileNetFilter(f: ParsedNetFilter, a: NetAnalysis, ctx: NetCompileContext): NetCompileResult {
-  // `@@…$important` only in user and admin filters: a third-party list must
-  // not be able to override $important blocks (uBO rejects it everywhere).
-  if (a.exception && a.important && !ctx.custom) return { ok: false, reason: 'invalid-option' };
+  // `@@…$important` only in user and admin filters: a third-party list (static
+  // or imported by the user) must not be able to override $important blocks
+  // (uBO rejects it everywhere).
+  if (a.exception && a.important && !ctx.importantExceptions) return { ok: false, reason: 'invalid-option' };
   if (a.unsupported !== null) return { ok: false, reason: a.unsupported };
   const mod = a.modifier;
 

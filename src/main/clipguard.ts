@@ -37,7 +37,6 @@ import type { NerdMain } from './nerd-main.ts';
 
 const RApply = Reflect.apply;
 const ObjGetDesc = Object.getOwnPropertyDescriptor;
-const ObjGetProto = Object.getPrototypeOf;
 const ObjCreate = Object.create;
 const ObjDefine = Object.defineProperty;
 const ArrayIsArray = Array.isArray;
@@ -248,8 +247,17 @@ function install(nm: NerdMain): void {
 
   if (CIP !== undefined && CICtor !== undefined && typesGet !== undefined && getType !== undefined && blobText !== undefined && plainBlob !== undefined) {
     const guardItem = (item: unknown): unknown => {
-      if (item === null || typeof item !== 'object' || ObjGetProto(item) !== CIP) return item;
-      const types = RApply(typesGet, item, []) as readonly string[];
+      if (item === null || typeof item !== 'object') return item;
+      // Brand check, not a prototype check: a subclass instance or an item
+      // from another realm (a same-origin iframe's ClipboardItem) is still a
+      // ClipboardItem to the native write. The captured getter throws for
+      // anything that is not one, and the native call rejects those too.
+      let types: readonly string[];
+      try {
+        types = RApply(typesGet, item, []) as readonly string[];
+      } catch {
+        return item;
+      }
       if (!ArrayIsArray(types)) return item;
       let hasPlain = false;
       for (let i = 0; i < types.length; i++) if (types[i] === 'text/plain') hasPlain = true;

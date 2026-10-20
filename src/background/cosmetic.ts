@@ -37,13 +37,65 @@ export function hostKeyCandidates(hostname: string): string[] {
   return [...hostnameCandidates(h), ...entityCandidates(h)];
 }
 
-/** Custom (user/admin) cosmetic filters compiled at runtime. */
+/** Custom (user/admin) and imported-list cosmetic filters compiled at runtime. */
 export interface CustomCosmetic {
   specific: SpecificCosmetic[];
   generic: GenericCosmetic[];
 }
 
 export const EMPTY_CUSTOM: CustomCosmetic = { specific: [], generic: [] };
+
+/**
+ * Host and token indexes of a CustomCosmetic. Imported lists put tens of
+ * thousands of filters here, so frames and token batches look entries up
+ * instead of scanning them. Built once per compiled set (the arrays are never
+ * changed after compileAllCustom) and kept with it.
+ */
+interface CustomIndex {
+  /** Host or entity key -> indexes into `specific`, ascending. */
+  specificByHost: Map<string, number[]>;
+  /** Token -> indexes into `generic`, ascending. */
+  genericByToken: Map<string, number[]>;
+  /** Indexes of the highly generic entries (no token), ascending. */
+  untokened: number[];
+}
+
+const customIndexes = new WeakMap<CustomCosmetic, CustomIndex>();
+
+function customIndex(custom: CustomCosmetic): CustomIndex {
+  const hit = customIndexes.get(custom);
+  if (hit) return hit;
+  const ix: CustomIndex = { specificByHost: new Map(), genericByToken: new Map(), untokened: [] };
+  const add = (m: Map<string, number[]>, key: string, i: number): void => {
+    const list = m.get(key);
+    if (!list) m.set(key, [i]);
+    else if (list[list.length - 1] !== i) list.push(i);
+  };
+  custom.specific.forEach((s, i) => {
+    for (const h of s.hosts) add(ix.specificByHost, h, i);
+  });
+  custom.generic.forEach((g, i) => {
+    if (g.token === null) ix.untokened.push(i);
+    else add(ix.genericByToken, g.token, i);
+  });
+  customIndexes.set(custom, ix);
+  return ix;
+}
+
+/** Indexes listed under any of `keys`, ascending and once each (the filters' own order). */
+function indexHits(map: ReadonlyMap<string, readonly number[]>, keys: Iterable<string>): number[] {
+  const out = new Set<number>();
+  for (const k of keys) {
+    const list = map.get(k);
+    if (list) for (const i of list) out.add(i);
+  }
+  return Array.from(out).sort((a, b) => a - b);
+}
+
+/** Whether the custom filters have keyed generic selectors (the frame then reports its tokens). */
+export function customHasTokens(custom: CustomCosmetic): boolean {
+  return customIndex(custom).genericByToken.size > 0;
+}
 
 /** Everything we know about one hostname after merging all sources. */
 export interface HostCosmetic {
@@ -141,8 +193,8 @@ export function resolveHostCosmetic(
       addEntry(c, kind, payload);
     }
   }
-  for (const s of custom.specific) {
-    if (!anyIn(candidates, s.hosts)) continue;
+  for (const i of indexHits(customIndex(custom).specificByHost, candidates)) {
+    const s = custom.specific[i];
     if (s.excludedHosts.length > 0 && anyIn(candidates, s.excludedHosts)) continue;
     addEntry(c, s.kind, s.payload);
   }
@@ -289,8 +341,8 @@ export function genericSelectorsForTokens(
       }
     }
   }
-  for (const g of custom.generic) {
-    if (g.token === null || !wanted.has(g.token)) continue;
+  for (const i of indexHits(customIndex(custom).genericByToken, wanted)) {
+    const g = custom.generic[i];
     if (host.exceptions.has(g.selector)) continue;
     if (g.excludedHosts.length > 0 && anyIn(candidates, g.excludedHosts)) continue;
     out.add(g.selector);
@@ -301,8 +353,8 @@ export function genericSelectorsForTokens(
 /** Custom highly generic selectors (no token): injected with the frame CSS. */
 export function customHighlyGeneric(custom: CustomCosmetic, host: Pick<HostCosmetic, 'exceptions'>, candidates: readonly string[]): string[] {
   const out: string[] = [];
-  for (const g of custom.generic) {
-    if (g.token !== null) continue;
+  for (const i of customIndex(custom).untokened) {
+    const g = custom.generic[i];
     if (host.exceptions.has(g.selector)) continue;
     if (g.excludedHosts.length > 0 && anyIn(candidates, g.excludedHosts)) continue;
     out.push(g.selector);
@@ -500,7 +552,7 @@ export class CosmeticService {
         void this.deps.insertCss(this.target(sender), css).catch((e: unknown) => log.warn('cosmetic', 'insertCSS', e));
       }
       // generic.json is only loaded when the first tokens arrive, keeping this reply fast.
-      const generic = host.genericAllowed && (cfg.enabledMask !== 0 || cfg.custom.generic.some((g) => g.token !== null));
+      const generic = host.genericAllowed && (cfg.enabledMask !== 0 || customHasTokens(cfg.custom));
       return { off: false, css, procedural: host.procedural, generic, deAmp: cfg.deAmp };
     } catch (e) {
       log.warn('cosmetic', 'frame', hostname, e);

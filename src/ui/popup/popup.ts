@@ -9,18 +9,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, BlockingMode, PopupState, SiteSettings } from '../../shared/types.ts';
-import { $, reducedMotion, replace, toast } from '../shared/dom.ts';
+import { $, reducedMotion, replace } from '../shared/dom.ts';
 import { fmtNumber, initI18n, initI18nSync, plural, t, translate } from '../shared/i18n.ts';
 import { readHandoff, writeHandoff } from '../shared/handoff.ts';
-import { hydrateIcons, icon } from '../shared/icons.ts';
+import { hydrateIcons } from '../shared/icons.ts';
 import { call, connectLive, type LiveConnection } from '../shared/messaging.ts';
 import { lockIcon, segmented, type SegHandle } from '../shared/controls.ts';
 import { orgNameEl } from '../shared/org.ts';
 import { ctaOrBrand } from '../shared/incident.ts';
-import { estimateFromSample, fmtBytes, fmtDuration } from '../shared/savings.ts';
+import { estimateFromSample, fmtBytes, fmtDuration, savingsUnits } from '../shared/savings.ts';
+import { countEvent, eventKey, sampleType } from '../shared/page-activity.ts';
 import { createNerdStatusline, type NerdStatusline } from './nerd.ts';
 import { startReport } from './report.ts';
 import { setupExpand } from './expand.ts';
+import { setSiteSettings } from './site-set.ts';
 import { normalisePopupState, tabIdFromSearch } from './state.ts';
 
 let state: PopupState | null = null;
@@ -38,8 +40,6 @@ let paintQueued = false;
 let modeSeg: SegHandle<BlockingMode> | null = null;
 let nerd: NerdStatusline | null = null;
 
-const evKey = (e: ActivityEvent): string => `${e.t}|${e.kind}|${e.frameId}|${e.url}`;
-const SAMPLE_MAX = 400;
 
 // ------------------------------------------------------------------ helpers --
 
@@ -127,43 +127,10 @@ function renderSiteState(): void {
   renderCountMode();
 }
 
-interface SiteSetReply {
-  ok?: boolean;
-  ignored?: string[];
-  siteSettings?: SiteSettings;
-}
-
 async function setSite(patch: SiteSettings): Promise<boolean> {
-  const s = state!;
-  const site = s.site ?? s.host;
-  if (!site) return false;
-  const res = await call<SiteSetReply>({ type: 'site:set', site, patch });
-  if (!res.ok) {
-    toast(t('errorSaveFailed'), icon('alert', 15));
-    return false;
-  }
-  // The service worker drops fields that policy locks; revert the control and say why.
-  const ignored = Array.isArray(res.data?.ignored) ? res.data.ignored : [];
-  if (ignored.length && Object.keys(patch).every((k) => ignored.includes(k))) {
-    toast(t('lockedByPolicy'), icon('lock', 15));
-    return false;
-  }
-  // site:set answers { ok, ignored, siteSettings } with the settings the site now resolves to.
-  const resolved = res.data?.siteSettings;
-  if (resolved && typeof resolved === 'object') {
-    const next = normalisePopupState({ siteSettings: resolved }, tabId).siteSettings;
-    const keys = Object.keys(patch) as (keyof SiteSettings)[];
-    s.siteSettings = next;
-    if (keys.some((k) => patch[k] !== undefined && next[k] !== patch[k])) {
-      // A parent-domain policy decides this field: keep the control on the effective value.
-      toast(t('lockedByPolicy'), icon('lock', 15));
-      return false;
-    }
-  } else {
-    Object.assign(s.siteSettings, patch);
-  }
-  showReloadHint();
-  return true;
+  const ok = await setSiteSettings(state!, tabId, patch);
+  if (ok) showReloadHint();
+  return ok;
 }
 
 function setLock(id: string, el: HTMLElement | null): void {
@@ -231,10 +198,6 @@ function setBar(id: string, n: number): void {
   el.hidden = n <= 0;
 }
 
-export function savingsUnits(): { s: string; min: string; h: string } {
-  return { s: t('unitSeconds'), min: t('unitMinutes'), h: t('unitHours') };
-}
-
 function paintCounts(): void {
   const total = counts.blocked + counts.redirected + counts.stripped + counts.debounced;
   const el = $('#pp-count');
@@ -266,28 +229,12 @@ function paintCounts(): void {
   if (state?.counting !== false) $('#pp-count-section').setAttribute('aria-label', `${t('popupBlockedOnPage')}: ${fmtNumber(total)}`);
 }
 
-function countEvent(e: ActivityEvent): void {
-  if (e.kind === 'blocked' || e.kind === 'strict') counts.blocked++;
-  else if (e.kind === 'redirected') counts.redirected++;
-  else if (e.kind === 'debounced') counts.debounced++;
-  else if (e.kind === 'stripped') counts.stripped++;
-  if (e.thirdParty && e.host && !thirdHosts.has(e.host)) {
-    thirdHosts.add(e.host);
-    counts.thirdPartyHosts++;
-  }
-}
-
-function sampleType(e: ActivityEvent): void {
-  if (e.kind === 'stripped' || e.kind === 'debounced') return; // no request was saved
-  if (types.length < SAMPLE_MAX) types.push(e.type);
-}
-
 function addEvent(e: ActivityEvent, count: boolean): void {
-  const key = evKey(e);
+  const key = eventKey(e);
   if (seen.has(key)) return;
   seen.add(key);
-  if (count) countEvent(e);
-  sampleType(e);
+  if (count) countEvent(counts, e, thirdHosts);
+  sampleType(types, e);
 }
 
 function resetPage(): void {
@@ -435,8 +382,8 @@ function render(s: PopupState): void {
   counts.debounced = s.counts.debounced;
   counts.thirdPartyHosts = s.counts.thirdPartyHosts;
   for (const e of s.recent) {
-    seen.add(evKey(e));
-    sampleType(e);
+    seen.add(eventKey(e));
+    sampleType(types, e);
     if (e.thirdParty && e.host) thirdHosts.add(e.host);
   }
   paintCounts();
