@@ -39,6 +39,7 @@ export const UI_TYPES: ReadonlySet<string> = new Set([
   'mylists:add',
   'mylists:set',
   'mylists:remove',
+  'mylists:restore',
   'mylists:update',
   'history:query',
   'history:events',

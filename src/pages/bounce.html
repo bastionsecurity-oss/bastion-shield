@@ -1,7 +1,8 @@
 <!doctype html>
 <!--
-  Bastion Shield — bounce-tracking skip page. bounce.ts decodes the fragment
-  and replaces this page with the real destination immediately.
+  Bastion Shield — bounce-tracking skip page (artboards S08–S10). bounce.ts
+  decodes the fragment and replaces this page with the real destination
+  immediately; the same-site and invalid states stay and explain themselves.
   SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
@@ -10,35 +11,56 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#171C1E">
   <meta name="referrer" content="no-referrer">
-  <title data-i18n="bounceTitle">Tracking-Weiterleitung übersprungen</title>
+  <title data-i18n="bounceTitle">Tracker-Umweg übersprungen</title>
   <link rel="stylesheet" href="../ui/shared/tokens.css">
   <link rel="stylesheet" href="bounce.css">
   <script src="bounce.js"></script>
 </head>
 <body class="bn" data-state="pending">
   <main class="bn-main">
-    <div class="bn-ok">
-      <span data-mark data-mark-size="28"></span>
-      <h1 class="bn-title" data-i18n="bounceTitle">Tracking-Weiterleitung übersprungen</h1>
-      <p class="bn-text"><span data-i18n="bounceOpening">Weiter zu</span> <a class="bn-host mono" id="bn-link" href="#"><span id="bn-host"></span></a></p>
-    </div>
-    <div class="bn-same">
-      <span data-icon="info" data-icon-size="22" class="bn-icon"></span>
-      <h1 class="bn-title" data-i18n="bounceSameSiteTitle">Weiterleitung nicht übersprungen</h1>
-      <p class="bn-text" data-i18n="bounceSameSiteText">Ziel und Weiterleitung gehören zur selben Website. Das ist kein Bounce-Tracking, deshalb öffnet Bastion Shield das Ziel nicht automatisch.</p>
-      <p class="bn-text bn-dest"><span data-i18n="bounceSameSiteDest">Ziel:</span> <span class="bn-host mono" id="bn-same-host"></span></p>
-      <div class="bn-actions">
-        <button type="button" class="btn btn--primary" id="bn-same-back"><span data-icon="arrowLeft" data-icon-size="15"></span><span data-i18n="actionBack">Zurück</span></button>
-        <a class="btn btn--secondary" id="bn-same-link" href="#" rel="noreferrer"><span data-i18n="bounceSameSiteOpen">Ziel trotzdem öffnen</span></a>
+    <section class="bn-state bn-ok" aria-labelledby="bn-ok-title">
+      <div class="tile bn-tile" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="28" height="28" focusable="false"><path d="M4.5 6.5 10 12l-5.5 5.5M11.5 6.5 17 12l-5.5 5.5M19.5 6v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg>
       </div>
-    </div>
-    <div class="bn-invalid">
-      <span data-icon="alert" data-icon-size="22" class="bn-icon"></span>
-      <h1 class="bn-title" data-i18n="bounceInvalidTitle">Weiterleitung nicht möglich</h1>
-      <p class="bn-text" data-i18n="bounceInvalidText">Das Ziel dieser Weiterleitung ist ungültig oder keine normale Web-Adresse. Bastion Shield öffnet es deshalb nicht.</p>
-      <button type="button" class="btn btn--primary" id="bn-back"><span data-icon="arrowLeft" data-icon-size="15"></span><span data-i18n="actionBack">Zurück</span></button>
-    </div>
+      <div class="bn-body">
+        <h1 class="bn-title" id="bn-ok-title" data-i18n="bounceTitle">Tracker-Umweg übersprungen</h1>
+        <p class="bn-text"><span id="bn-ok-before">Weiter zu</span> <a class="bn-host bn-host--link mono" id="bn-link" href="#" rel="noreferrer" translate="no"></a><span id="bn-ok-after"></span></p>
+      </div>
+    </section>
+
+    <section class="bn-state bn-same" aria-labelledby="bn-same-title">
+      <div class="tile bn-tile bn-tile--quiet" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" focusable="false"><path d="M4 12h15M14 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg>
+      </div>
+      <div class="bn-body">
+        <div class="bn-copy">
+          <h1 class="bn-title" id="bn-same-title" data-i18n="bounceSameSiteTitle">Normale Weiterleitung</h1>
+          <p class="bn-text"><span id="bn-same-before">Kein Tracking. Ziel:</span> <span class="bn-host mono" id="bn-same-host" translate="no"></span><span id="bn-same-after"></span></p>
+        </div>
+        <div class="bn-actions">
+          <a class="btn btn--primary btn--h" id="bn-same-link" href="#" rel="noreferrer" data-i18n="bounceSameSiteOpen">Ziel öffnen</a>
+          <button type="button" class="btn btn--quiet btn--h" id="bn-same-back" data-i18n="actionBack">Zurück</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bn-state bn-invalid" aria-labelledby="bn-invalid-title">
+      <div class="tile bn-tile" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" focusable="false"><path d="M4 12h9M16 8l6 8M22 8l-6 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg>
+      </div>
+      <div class="bn-body">
+        <div class="bn-copy">
+          <h1 class="bn-title" id="bn-invalid-title" data-i18n="bounceInvalidTitle">Ungültiges Ziel</h1>
+          <p class="bn-text" id="bn-invalid-text" data-i18n="bounceInvalidText">Bastion Shield öffnet diese Adresse nicht.</p>
+        </div>
+        <div class="bn-actions">
+          <button type="button" class="btn btn--primary btn--h" id="bn-back"><span data-icon="arrowLeft" data-icon-size="15"></span><span data-i18n="actionBack">Zurück</span></button>
+        </div>
+      </div>
+    </section>
   </main>
 </body>
 </html>

@@ -27,7 +27,17 @@ import { icon } from '../../shared/icons.ts';
 import { fetchPackaged } from '../../shared/messaging.ts';
 import { notice, segmented } from '../../shared/controls.ts';
 import { dynamicRuleLabel, typeLabel } from '../../shared/labels.ts';
-import { emptyState, nextId, pageHead, panel, type View, mount } from '../common.ts';
+import { emptyState, errorState, nextId, pageHead, panel, type View, mount } from '../common.ts';
+import { retryConfig } from './privacy.ts';
+import { tileEmpty } from './tile-empty.ts';
+import { misspeltOption, reasonFor } from '../filters-core.ts';
+
+/** Plain-language reason of a compiler code (as in «Eigene Filter»). */
+function reasonText(code: string): string {
+  if (code.startsWith('compiler error')) return code;
+  const r = reasonFor(code);
+  return t(r.key, r.subs);
+}
 import { dir, getConfig, getCustom, getMeta, historyEvents, myLists } from '../store.ts';
 import {
   blameFor,
@@ -210,7 +220,7 @@ function filterResult(f: PlaygroundFilter, run: FilterDryRun | null): HTMLElemen
     kindBadge(f),
   );
   const body: Child[] = [];
-  if (f.errors.length) body.push(h('p', { class: 'lab-res__err' }, icon('alert', 13), h('span', { class: 'mono', text: f.errors.join(' · ') })));
+  if (f.errors.length) body.push(h('p', { class: 'lab-res__err' }, icon('alert', 13), h('span', { text: f.errors.map(reasonText).join(' - ') })));
   if (f.kind === 'cosmetic' || f.kind === 'scriptlet') body.push(h('p', { class: 'lab-res__note', text: f.kind === 'cosmetic' ? t('nerdLabCosmeticNote') : t('nerdLabScriptletNote') }));
   if (f.kind === 'inert' && !f.errors.length) body.push(h('p', { class: 'lab-res__note', text: t('nerdLabInertNote') }));
   if (f.kind === 'network') {
@@ -223,7 +233,7 @@ function filterResult(f: PlaygroundFilter, run: FilterDryRun | null): HTMLElemen
       ),
     );
     if (run?.uncertain.length) body.push(h('p', { class: 'lab-res__note', text: t('nerdLabUncertain', run.uncertain.join(', ')) }));
-    if (run?.ruleErrors.length) body.push(h('p', { class: 'lab-res__err' }, icon('alert', 13), h('span', { class: 'mono', text: run.ruleErrors.join(' · ') })));
+    if (run?.ruleErrors.length) body.push(h('p', { class: 'lab-res__err' }, icon('alert', 13), h('span', { class: 'mono', text: run.ruleErrors.join(' - ') })));
     if (run) {
       const n = run.matches;
       const stats = h(
@@ -600,6 +610,11 @@ function playgroundSection(meta: BuildMeta | null, cfg: EffectiveConfig): Tool {
       if (invalid.length) parts.push(h('p', { class: 'lab-res__note', text: t('nerdLabUrlsInvalid', invalid.slice(0, 10).join(', ')) }));
       if (text.trim() !== '') {
         const compiled = compilePlayground(text, meta);
+        // «$documnet» compiles as part of the address and never matches: report the typo instead.
+        for (const f of compiled.filters) {
+          const bad = f.kind === 'network' ? misspeltOption(f.text) : null;
+          if (bad) Object.assign(f, { kind: 'error', rules: [], errors: [`unknown-option:${bad}`] });
+        }
         const requests: DryRequest[] = [];
         let historyFailed = false;
         if (source !== 'urls') {
@@ -848,7 +863,7 @@ function integritySection(meta: BuildMeta | null): Tool {
       { title: t('nerdLabProvTitle'), aside: copyBtn },
       h('p', { class: 'db-muted lab-intro', text: meta ? t('nerdLabProvLead', [fmtDateTime(Date.parse(meta.builtAt) || 0), meta.extensionVersion]) : '' }),
       sources,
-      meta ? h('p', { class: 'lab-caption mono', text: `uBO ${meta.vendor.ublock.slice(0, 12)} · brave-resources ${meta.vendor.braveResources.slice(0, 12)} · brave-lists ${meta.vendor.braveLists.slice(0, 12)}` }) : null,
+      meta ? h('p', { class: 'lab-caption mono', text: `uBO ${meta.vendor.ublock.slice(0, 12)} - brave-resources ${meta.vendor.braveResources.slice(0, 12)} - brave-lists ${meta.vendor.braveLists.slice(0, 12)}` }) : null,
     ),
   );
   return { el, focus: () => verifyBtn.focus(), run: () => void verify() };
@@ -912,7 +927,7 @@ function blameSection(meta: BuildMeta | null): Tool {
 // ---------------------------------------------------------------------------
 
 /** Keyboard hint: platform modifier for "run". */
-const RUN_KEY = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ Enter' : 'Ctrl+Enter';
+const RUN_KEY = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘\u00a0Enter' : 'Ctrl\u00a0Enter';
 
 function isField(el: Element | null): el is HTMLElement {
   return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement || (el instanceof HTMLElement && el.isContentEditable);
@@ -924,8 +939,13 @@ export function labView(): View {
     async render(root) {
       const [cfgR, meta] = await Promise.all([getConfig(), getMeta()]);
       const cfg = cfgR.ok ? cfgR.data : null;
+      if (!cfgR.ok) {
+        mount(root, pageHead(t('nerdLabTitle')), errorState(retryConfig));
+        return;
+      }
       if (!cfg?.settings.nerd?.enabled) {
-        mount(root, pageHead(t('nerdLabTitle'), t('nerdLabLead')), emptyState(t('nerdLabOffTitle'), t('nerdLabOffText'), h('a', { class: 'btn btn--secondary', attrs: { href: '#settings' }, text: t('navSettings') })));
+        // Deep link with nerd mode off (DB32): say so and lead to the switch.
+        mount(root, pageHead(t('nerdLabTitle')), tileEmpty('lab', t('nerdLabOffTitle'), t('nerdLabOffText'), h('a', { class: 'btn btn--primary', attrs: { href: '#settings' }, text: t('nerdLabOpenSettings') })));
         return;
       }
       const sections: Record<Section, () => Tool> = {
@@ -971,10 +991,16 @@ export function labView(): View {
         if (link.url || link.filter !== undefined) tool.apply?.(link);
       };
 
-      const kbd = (k: string): HTMLElement => h('kbd', { class: 'lab-kbd', text: k });
-      const sep = (): HTMLElement => h('span', { class: 'lab-keys__sep', text: '·' });
-      const keys = h('p', { class: 'lab-keys', attrs: { 'aria-hidden': 'true' } }, kbd('/'), ` ${t('nerdLabKeyFocus')}`, sep(), kbd(RUN_KEY), ` ${t('nerdLabKeyRun')}`, sep(), kbd('Esc'), ` ${t('nerdLabKeyBlur')}`);
-      mount(root, pageHead(t('nerdLabTitle'), t('nerdLabLead'), seg.el), keys, slot);
+      const kbd = (k: string): HTMLElement => h('kbd', { class: 'lab-kbd', attrs: { translate: 'no' }, text: k });
+      const sep = (): HTMLElement => h('span', { class: 'lab-keys__sep', text: ' - ' });
+      // The keyboard hints are the visible lead (DB31); the sentence stays for screen readers.
+      const keys = h(
+        'div',
+        { class: 'db-head__lead lab-head-lead' },
+        h('p', { class: 'sr-only', text: t('nerdLabLead') }),
+        h('p', { class: 'lab-keys', attrs: { 'aria-hidden': 'true' } }, kbd('/'), ` ${t('nerdLabKeyFocus')}`, sep(), kbd(RUN_KEY), ` ${t('nerdLabKeyRun')}`, sep(), kbd('Esc'), ` ${t('nerdLabKeyBlur')}`),
+      );
+      mount(root, pageHead(t('nerdLabTitle'), keys, seg.el), slot);
       follow(location.hash);
 
       // "/" focuses the tool's main input, Ctrl/Cmd+Enter runs it, Esc leaves a field.

@@ -42,7 +42,7 @@ test.describe('nerd statusline', () => {
     const sl = popup.locator('#pp-nerd');
     await expect(sl).toBeVisible();
     await expect(sl).toContainText(/\d+ hosts?/i, { timeout: 5000 });
-    await expect(sl.locator('kbd').first()).toContainText(/k/);
+    await expect(sl.locator('kbd').first()).toContainText(/k/i);
 
     // Command line: Ctrl+K, fuzzy "bis", Enter starts the bisect.
     await popup.keyboard.press('Control+K');

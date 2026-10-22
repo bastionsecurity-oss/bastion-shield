@@ -1,6 +1,9 @@
-// Bastion Shield — dashboard «Über»: version and build date, privacy
-// statement, licence and source code, contact, and full attribution of every
-// filter list, vendored component and font shipped in the package.
+// Bastion Shield — dashboard «Über» (DB30, DB43): version and build date,
+// privacy statement, licence and source code, contact (with the support of
+// the user's organisation when the policy names one), and full attribution
+// of every filter list, vendored component and font shipped in the package.
+// Long list and licence names wrap inside their cells; names that are cut
+// keep the full text in a title.
 //
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,7 +13,8 @@ import { h } from '../../shared/dom.ts';
 import { fmtDate, fmtDateTime, localized, t } from '../../shared/i18n.ts';
 import { icon, mark } from '../../shared/icons.ts';
 import { extensionVersion } from '../../shared/messaging.ts';
-import { openTabButton, panel, popupMode, settingRow, nextId, type View, mount } from '../common.ts';
+import { truncateMiddle } from '../../shared/text.ts';
+import { openTabButton, popupMode, settingRow, nextId, type View, mount } from '../common.ts';
 import { getConfig, getMeta } from '../store.ts';
 
 function ext(href: string, text: string, mono = false): HTMLElement {
@@ -27,8 +31,10 @@ function safeUrl(u: string | undefined): string | null {
   }
 }
 
+const LICENCE = 'GPL-3.0-or-later';
+
 const VENDOR: { key: 'ublock' | 'braveResources' | 'braveLists'; name: string; repo: string; licence: string }[] = [
-  { key: 'ublock', name: 'uBlock Origin (scriptlets, redirect resources)', repo: 'https://github.com/gorhill/uBlock', licence: 'GPL-3.0-or-later' },
+  { key: 'ublock', name: 'uBlock Origin (scriptlets, redirect resources)', repo: 'https://github.com/gorhill/uBlock', licence: 'GPL-3.0' },
   { key: 'braveResources', name: 'Brave adblock-resources', repo: 'https://github.com/brave/adblock-resources', licence: 'MPL-2.0' },
   { key: 'braveLists', name: 'Brave adblock-lists (debounce, query filter)', repo: 'https://github.com/brave/adblock-lists', licence: 'MPL-2.0' },
 ];
@@ -47,46 +53,102 @@ export function aboutView(): View {
       const version = extensionVersion() || meta?.extensionVersion || '–';
       const built = meta?.builtAt ? Date.parse(meta.builtAt) : NaN;
 
-      const hero = h(
-        'section',
-        { class: 'about-hero' },
-        mark(56),
-        h(
-          'div',
-          null,
-          h('h1', { class: 'about-hero__name', text: t('extName'), attrs: { tabindex: -1 } }),
-          h(
-            'dl',
-            { class: 'about-hero__facts' },
-            h('div', null, h('dt', { text: t('aboutVersion') }), h('dd', { class: 'mono', text: version })),
-            h('div', null, h('dt', { text: t('aboutBuilt') }), h('dd', { text: Number.isFinite(built) ? fmtDateTime(built) : '–' })),
-            h('div', null, h('dt', { text: t('aboutLicence') }), h('dd', null, ext('https://www.gnu.org/licenses/gpl-3.0.html', 'GPL-3.0-or-later'))),
-            h('div', null, h('dt', { text: t('aboutSource') }), h('dd', null, ext(LINKS.REPO_URL, LINKS.REPO_URL.replace(/^https:\/\//, ''), true))),
-          ),
-        ),
-      );
+      const tile = h('span', { class: 'about-hero__tile', attrs: { 'aria-hidden': 'true' } }, mark(popupMode ? 26 : 44));
+      const name = h('h1', { class: 'about-hero__name', text: t('extName'), attrs: { tabindex: -1, translate: 'no' } });
+      const hero = popupMode
+        ? h('section', { class: 'about-hero about-hero--panel' }, tile, h('div', null, name, h('p', { class: 'about-hero__line mono', attrs: { translate: 'no' }, text: `${version} - ${LICENCE}` })))
+        : h(
+            'section',
+            { class: 'about-hero' },
+            tile,
+            h(
+              'div',
+              { class: 'about-hero__main' },
+              name,
+              h(
+                'dl',
+                { class: 'about-hero__facts' },
+                h('div', null, h('dt', { text: t('aboutVersion') }), h('dd', { class: 'mono', attrs: { translate: 'no' }, text: version })),
+                h('div', null, h('dt', { text: t('aboutBuilt') }), h('dd', { text: Number.isFinite(built) ? fmtDateTime(built) : '–' })),
+                h('div', null, h('dt', { text: t('aboutLicence') }), h('dd', null, ext('https://www.gnu.org/licenses/gpl-3.0.html', LICENCE))),
+                h('div', null, h('dt', { text: t('aboutSource') }), h('dd', null, ext(LINKS.REPO_URL, t('aboutRepoLink')))),
+              ),
+            ),
+          );
 
       const privacy = h(
         'section',
         { class: 'about-privacy', attrs: { 'aria-labelledby': 'about-privacy-title' } },
-        h('h2', { class: 'about-privacy__title', attrs: { id: 'about-privacy-title' }, text: t('aboutPrivacyStatement') }),
-        h('p', { class: 'about-privacy__text', text: t('aboutPrivacyText') }),
-        ext(LINKS.PRIVACY, t('aboutPrivacyLink')),
+        popupMode ? null : h('span', { class: 'about-privacy__tile', attrs: { 'aria-hidden': 'true' } }, icon('device', 22)),
+        h(
+          'div',
+          { class: 'about-privacy__main' },
+          h('h2', { class: 'about-privacy__title', attrs: { id: 'about-privacy-title' }, text: t('aboutPrivacyStatement') }),
+          h('p', { class: 'about-privacy__text', text: popupMode ? t('aboutPrivacyShort') : t('aboutPrivacyText') }),
+          popupMode ? null : ext(LINKS.PRIVACY, t('aboutPrivacyLink')),
+        ),
       );
 
-      const contactItems: HTMLElement[] = [
-        h('div', null, h('dt', { text: t('aboutCreator') }), h('dd', { text: 'Luca Seeberger' })),
-        h('div', null, h('dt', { text: t('aboutPublisher') }), h('dd', null, 'Bastion Security GmbH, Zürich', h('br'), ext(LINKS.HOMEPAGE, LINKS.HOMEPAGE.replace(/^https:\/\//, '')))),
-        h('div', null, h('dt', { text: t('aboutIssues') }), h('dd', null, ext(`${LINKS.REPO_URL}/issues`, t('aboutIssuesLink')))),
-      ];
-      if (managed.organizationName || managed.supportUrl || managed.supportEmail) {
-        const support: (HTMLElement | string)[] = [];
-        if (managed.organizationName) support.push(managed.organizationName);
-        const url = safeUrl(managed.supportUrl);
-        if (url) support.push(h('br'), ext(url, url.replace(/^https?:\/\//, '')));
-        if (managed.supportEmail) support.push(h('br'), h('a', { attrs: { href: `mailto:${encodeURIComponent(managed.supportEmail)}` }, text: managed.supportEmail }));
-        contactItems.unshift(h('div', null, h('dt', { text: t('aboutSupport') }), h('dd', null, ...support)));
+      const publisher = h('div', { class: 'about-kv__item' }, h('dt', { text: t('aboutPublisher') }), h('dd', { text: 'Bastion Security GmbH, Zürich' }));
+      if (popupMode) {
+        // The licence tables are long: in the popup they open in the dashboard tab.
+        mount(
+          root,
+          hero,
+          privacy,
+          h('dl', { class: 'about-kv' }, publisher),
+          settingRow({ label: t('aboutListsTitle'), control: openTabButton('about', t('panelOpenInTab')), labelId: nextId('about') }),
+        );
+        return;
       }
+
+      // Support of the organisation, when the policy names it.
+      let support: HTMLElement | null = null;
+      if (managed.organizationName || managed.supportUrl || managed.supportEmail) {
+        const url = safeUrl(managed.supportUrl);
+        support = h(
+          'div',
+          { class: 'about-support' },
+          h('p', { class: 'about-support__label', text: t('aboutSupport') }),
+          managed.organizationName ? h('p', { class: 'about-support__org', text: managed.organizationName }) : null,
+          url ? ext(url, truncateMiddle(url.replace(/^https?:\/\//, '').replace(/\/$/, ''), 40), true) : null,
+          managed.supportEmail
+            ? h('a', { class: 'about-support__mail mono', attrs: { href: `mailto:${encodeURIComponent(managed.supportEmail)}`, title: managed.supportEmail, translate: 'no' }, text: managed.supportEmail })
+            : null,
+        );
+      }
+      const contact = h(
+        'section',
+        { class: 'about-col', attrs: { 'aria-labelledby': 'about-contact' } },
+        h('h2', { class: 'about-h2', attrs: { id: 'about-contact' }, text: t('aboutContactTitle') }),
+        support,
+        h(
+          'dl',
+          { class: 'about-kv' },
+          h('div', { class: 'about-kv__item' }, h('dt', { text: t('aboutPublisher') }), h('dd', null, 'Bastion Security GmbH, Zürich', ' ', ext(LINKS.HOMEPAGE, LINKS.HOMEPAGE.replace(/^https:\/\//, '').replace(/\/$/, ''), true))),
+          h('div', { class: 'about-kv__item' }, h('dt', { text: t('aboutCreator') }), h('dd', { text: 'Luca Seeberger' })),
+        ),
+        ext(`${LINKS.REPO_URL}/issues`, t('aboutIssuesLink')),
+      );
+
+      const vendorRow = (nameText: string, licence: string, link: HTMLElement): HTMLElement =>
+        h('li', { class: 'about-vendor__row' }, h('span', { class: 'about-vendor__name', attrs: { title: nameText, translate: 'no' }, text: nameText }), h('span', { class: 'about-vendor__lic', attrs: { translate: 'no' }, text: licence }), link);
+      const vendor = h(
+        'ul',
+        { class: 'about-vendor' },
+        ...VENDOR.map((v) => {
+          const commit = meta?.vendor?.[v.key] ?? '';
+          const valid = /^[0-9a-f]{7,40}$/i.test(commit);
+          return vendorRow(v.name, v.licence, valid ? ext(`${v.repo}/commit/${commit}`, commit.slice(0, 10), true) : h('span', { class: 'mono db-muted', text: '–' }));
+        }),
+        ...FONTS.map(([fontName, url]) => vendorRow(fontName, 'OFL 1.1', ext(url, url.replace(/^https:\/\/github\.com\//, ''), true))),
+      );
+      const components = h(
+        'section',
+        { class: 'about-col', attrs: { 'aria-labelledby': 'about-components' } },
+        h('h2', { class: 'about-h2', attrs: { id: 'about-components' }, text: t('aboutComponentsTitle') }),
+        vendor,
+      );
 
       const listsTable = meta?.lists?.length
         ? h(
@@ -109,8 +171,8 @@ export function aboutView(): View {
                     'tr',
                     null,
                     h('th', { attrs: { scope: 'row' } }, home ? ext(home, localized(l.name)) : localized(l.name)),
-                    h('td', { class: 'mono' }, v ?? (lm ? fmtDate(lm) : '–')),
-                    h('td', null, lic ? ext(lic, l.license) : l.license),
+                    h('td', { class: 'mono', attrs: { translate: 'no' } }, v ?? (lm ? fmtDate(lm) : '–')),
+                    h('td', { attrs: { translate: 'no' } }, lic ? ext(lic, l.license) : l.license),
                     h('td', { class: 'about-attr', text: l.attribution }),
                   );
                 }),
@@ -119,38 +181,12 @@ export function aboutView(): View {
           )
         : h('p', { class: 'db-muted', text: t('aboutNoMeta') });
 
-      const vendor = h(
-        'ul',
-        { class: 'about-vendor' },
-        ...VENDOR.map((v) => {
-          const commit = meta?.vendor?.[v.key] ?? '';
-          const valid = /^[0-9a-f]{7,40}$/i.test(commit);
-          return h(
-            'li',
-            null,
-            h('span', { class: 'about-vendor__name', text: v.name }),
-            h('span', { class: 'about-vendor__lic', text: v.licence }),
-            valid ? ext(`${v.repo}/commit/${commit}`, commit.slice(0, 12), true) : h('span', { class: 'mono db-muted', text: '–' }),
-          );
-        }),
-        ...FONTS.map(([name, url]) => h('li', null, h('span', { class: 'about-vendor__name', text: name }), h('span', { class: 'about-vendor__lic', text: 'SIL OFL 1.1' }), ext(url, url.replace(/^https:\/\//, ''), true))),
-      );
-
-      if (popupMode) {
-        // The licence tables are long: in the popup they open in the dashboard tab.
-        mount(root,
-          hero,
-          privacy,
-          panel({ title: t('aboutContactTitle') }, h('dl', { class: 'kv about-kv' }, ...contactItems)),
-          panel({ flush: true }, settingRow({ label: t('aboutListsTitle'), control: openTabButton('about', t('panelOpenInTab')), labelId: nextId('about') })),
-        );
-        return;
-      }
-      mount(root, 
+      mount(
+        root,
         hero,
         privacy,
-        h('div', { class: 'about-grid' }, panel({ title: t('aboutContactTitle') }, h('dl', { class: 'kv about-kv' }, ...contactItems)), panel({ title: t('aboutComponentsTitle') }, vendor)),
-        panel({ title: t('aboutListsTitle'), flush: true }, listsTable),
+        h('div', { class: 'about-grid' }, contact, components),
+        h('section', { class: 'about-lists', attrs: { 'aria-labelledby': 'about-lists' } }, h('h2', { class: 'about-h2', attrs: { id: 'about-lists' }, text: t('aboutListsTitle') }), listsTable),
         h('p', { class: 'db-footnote', text: t('aboutFootnote') }),
       );
     },

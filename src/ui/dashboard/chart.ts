@@ -1,13 +1,14 @@
 // Bastion Shield — dependency-free charts for the dashboard: a single-series
 // column chart (blocked per day) and a ranked bar list (top hosts / sites /
-// categories). Inline SVG, hairline grid, one ink colour, keyboard and
-// pointer tooltips, and a screen-reader table so no value is hover-only.
+// categories). Inline SVG, one ink colour, a baseline instead of a grid,
+// keyboard and pointer tooltips, and a screen-reader table so no value is
+// hover-only. Paper DB01 (tab: y axis, 180px) and DB15 (panel: compact, 90px).
 //
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { debounce, h, replace, s } from '../shared/dom.ts';
-import { fmtCompact, fmtNumber } from '../shared/i18n.ts';
+import { fmtNumber, formatLocale } from '../shared/i18n.ts';
 
 export interface ColumnDatum {
   /** Short axis label, e.g. "18.10." */
@@ -20,24 +21,73 @@ export interface ColumnDatum {
 }
 
 /** Round up to a "nice" axis maximum (n × 10^k with an even n where possible). */
-function niceMax(v: number): number {
+export function niceMax(v: number): number {
   if (v <= 0) return 4;
   const exp = Math.floor(Math.log10(v));
   const base = 10 ** exp;
-  // Even steps keep the half-way gridline a round number too.
-  for (const m of [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10]) if (v <= m * base) return m * base;
+  // Even steps keep the half-way label a round number too.
+  for (const m of [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10]) if (v <= m * base + 1e-9) return m * base;
   return 10 * base;
 }
 
-/** Column path with 2px rounded top corners (brand radius) and a square baseline. */
-function columnPath(x: number, y: number, w: number, hgt: number): string {
-  const r = Math.min(2, w / 2, hgt);
-  return `M${x},${y + hgt}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt}Z`;
+/** Axis label: 0, 750, 1.5k, 3k, 1.2M (decimal separator of the UI locale, no grouping). */
+export function axisLabel(n: number, locale = formatLocale): string {
+  const fmt = (v: number): string => {
+    try {
+      return new Intl.NumberFormat(locale, { maximumFractionDigits: 1, useGrouping: false }).format(v);
+    } catch {
+      return String(Math.round(v * 10) / 10);
+    }
+  };
+  const abs = Math.abs(n);
+  if (abs >= 1e6) return `${fmt(n / 1e6)}M`;
+  if (abs >= 1e3) return `${fmt(n / 1e3)}k`;
+  return fmt(n);
 }
 
-export function columnChart(data: ColumnDatum[], opts: { ariaLabel: string; valueLabel: string; height?: number }): HTMLElement {
-  const height = opts.height ?? 240;
-  const wrap = h('div', { class: 'chart' });
+/**
+ * Day columns that get an axis label: every 7th day from the first (none
+ * closer than 4 days to the end) and the last one («Heute»). Compact: first and last.
+ */
+export function xLabelIndices(n: number, compact = false): number[] {
+  if (n <= 0) return [];
+  if (n === 1) return [0];
+  if (compact) return [0, n - 1];
+  const out: number[] = [];
+  for (let i = 0; i < n - 4; i += 7) out.push(i);
+  out.push(n - 1);
+  return out;
+}
+
+/** Highest day (the first one on a tie), or null when every day is 0. */
+export function peakOf<T extends { value: number }>(data: readonly T[]): T | null {
+  let best: T | null = null;
+  for (const d of data) if (d.value > 0 && (!best || d.value > best.value)) best = d;
+  return best;
+}
+
+/** Column path: rounded top corners (4px), slightly rounded baseline corners (2px). */
+function columnPath(x: number, y: number, w: number, hgt: number, rt: number, rb: number): string {
+  const t = Math.max(0, Math.min(rt, w / 2, hgt / 2));
+  const b = Math.max(0, Math.min(rb, w / 2, hgt / 2));
+  return `M${x},${y + hgt - b}V${y + t}Q${x},${y} ${x + t},${y}H${x + w - t}Q${x + w},${y} ${x + w},${y + t}V${y + hgt - b}Q${x + w},${y + hgt} ${x + w - b},${y + hgt}H${x + b}Q${x},${y + hgt} ${x},${y + hgt - b}Z`;
+}
+
+export interface ColumnOptions {
+  ariaLabel: string;
+  valueLabel: string;
+  /** Plot height in px (180 in the tab, 90 in the panel). */
+  height?: number;
+  /** Panel: no y axis, only the first day and «Heute» labelled, 3px gaps. */
+  compact?: boolean;
+}
+
+export function columnChart(data: ColumnDatum[], opts: ColumnOptions): HTMLElement {
+  const compact = opts.compact === true;
+  const plotH = opts.height ?? (compact ? 90 : 180);
+  const top = 6;
+  const height = top + plotH + 28;
+  const wrap = h('div', { class: `chart${compact ? ' chart--compact' : ''}` });
   const tip = h('div', { class: 'chart__tip', attrs: { role: 'status', 'aria-live': 'polite' }, hidden: true });
   // Tables ignore height/overflow, so the visually-hidden wrapper must be a div.
   const table = h(
@@ -52,10 +102,11 @@ export function columnChart(data: ColumnDatum[], opts: { ariaLabel: string; valu
     ),
   );
   const svgHost = h('div', { class: 'chart__svg' });
+  svgHost.style.minHeight = `${height}px`;
   wrap.append(svgHost, tip, table);
 
   let active = -1;
-  let layout: { x: (i: number) => number; band: number; top: number; plotH: number; max: number } | null = null;
+  let layout: { x: (i: number) => number; band: number; plotH: number; max: number } | null = null;
   let bars: SVGPathElement[] = [];
 
   const showTip = (i: number): void => {
@@ -69,7 +120,7 @@ export function columnChart(data: ColumnDatum[], opts: { ariaLabel: string; valu
     replace(tip, h('strong', { class: 'chart__tip-value', text: fmtNumber(d.value) }), h('span', { class: 'chart__tip-label', text: d.label }));
     tip.hidden = false;
     const cx = layout.x(i) + layout.band / 2;
-    const barTop = layout.top + layout.plotH - (d.value / layout.max) * layout.plotH;
+    const barTop = top + layout.plotH - (d.value / layout.max) * layout.plotH;
     const w = wrap.clientWidth;
     tip.style.left = `${Math.max(48, Math.min(w - 48, cx))}px`;
     tip.style.top = `${Math.max(0, barTop - 8)}px`;
@@ -81,39 +132,38 @@ export function columnChart(data: ColumnDatum[], opts: { ariaLabel: string; valu
   };
 
   const draw = (): void => {
-    const width = Math.max(280, svgHost.clientWidth || 720);
-    const padL = 44;
-    const padR = 6;
-    const top = 12;
-    const bottom = 26;
-    const plotW = width - padL - padR;
-    const plotH = height - top - bottom;
+    const width = Math.max(200, svgHost.clientWidth || 720);
+    // Y labels sit in a 36px column, 12px from the plot (DB01); the panel has none.
+    const padL = compact ? 0 : 48;
+    const plotW = width - padL;
     const n = Math.max(1, data.length);
+    const gap = compact ? 3 : 4;
     const band = plotW / n;
-    const barW = Math.max(2, Math.min(24, band - 2));
+    const barW = Math.max(2, band - gap);
     const max = niceMax(Math.max(0, ...data.map((d) => d.value)));
     const x = (i: number): number => padL + i * band;
-    layout = { x, band, top, plotH, max };
+    layout = { x, band, plotH, max };
 
     const svg = s('svg', { width, height, viewBox: `0 0 ${width} ${height}`, class: 'chart__canvas', role: 'img', 'aria-label': opts.ariaLabel, tabindex: 0 });
-    // Hairline grid + y labels at 0, 1/2, max.
-    for (const f of [0, 0.5, 1]) {
-      const y = top + plotH - f * plotH;
-      svg.append(s('line', { x1: padL, x2: width - padR, y1: y + 0.5, y2: y + 0.5, class: f === 0 ? 'chart__axis' : 'chart__grid' }));
-      svg.append(s('text', { x: padL - 8, y: y + 3.5, 'text-anchor': 'end', class: 'chart__ylabel' }, fmtCompact(max * f)));
+    if (!compact) {
+      for (const f of [0, 0.5, 1]) {
+        const y = top + plotH - f * plotH;
+        svg.append(s('text', { x: 36, y: f === 1 ? y + 9 : f === 0 ? y : y + 4, 'text-anchor': 'end', class: 'chart__ylabel' }, axisLabel(max * f)));
+      }
     }
+    svg.append(s('line', { x1: padL, x2: width, y1: top + plotH + 0.5, y2: top + plotH + 0.5, class: 'chart__axis' }));
     bars = data.map((d, i) => {
-      const bh = d.value > 0 ? Math.max(1, (d.value / max) * plotH) : 0;
-      const bx = x(i) + (band - barW) / 2;
-      const p = s('path', { d: columnPath(bx, top + plotH - bh, barW, bh), class: `chart__bar${d.quiet ? ' chart__bar--quiet' : ''}` });
+      const bh = d.value > 0 ? Math.max(2, (d.value / max) * plotH) : 0;
+      const p = s('path', { d: columnPath(x(i) + gap / 2, top + plotH - bh, barW, bh, compact ? 3 : 4, compact ? 3 : 2), class: `chart__bar${d.quiet ? ' chart__bar--quiet' : ''}` });
       svg.append(p);
       return p;
     });
-    // X labels: every 7th day counting back from the last, so "today" is always labelled.
-    data.forEach((d, i) => {
-      if ((data.length - 1 - i) % 7 !== 0) return;
-      svg.append(s('text', { x: x(i) + band / 2, y: height - 8, 'text-anchor': 'middle', class: 'chart__xlabel' }, d.axis));
-    });
+    for (const i of xLabelIndices(data.length, compact)) {
+      const first = i === 0;
+      const last = i === data.length - 1 && !first;
+      const lx = first ? x(i) + gap / 2 : last ? width : x(i) + band / 2;
+      svg.append(s('text', { x: lx, y: height - 8, 'text-anchor': first ? 'start' : last ? 'end' : 'middle', class: `chart__xlabel${last ? ' chart__xlabel--now' : ''}` }, data[i].axis));
+    }
     // Hit targets span the full band height: easier than aiming at a thin bar.
     data.forEach((_d, i) => {
       const hit = s('rect', { x: x(i), y: top, width: band, height: plotH, class: 'chart__hit' });
@@ -158,33 +208,38 @@ export function columnChart(data: ColumnDatum[], opts: { ariaLabel: string; valu
 }
 
 export interface BarRow {
+  /** Text shown (a host may be cut in the middle). */
   label: string;
   value: number;
-  mono?: boolean;
+  /** Full value for `title` when `label` is shortened. */
   title?: string;
+  /** Hosts and sites: mono, translate="no". */
+  mono?: boolean;
+  /** Quiet tone (unattributed requests). */
+  quiet?: boolean;
 }
 
-/** Ranked list with a proportional hairline bar under each label. */
-export function barList(rows: BarRow[], ariaLabel: string): HTMLElement {
+/** Ranked list: label and count, a 3px proportional bar below (DB01). `bars: false` for the panel rows. */
+export function barList(rows: BarRow[], ariaLabel: string, bars = true): HTMLElement {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return h(
     'ol',
-    { class: 'barlist', attrs: { 'aria-label': ariaLabel } },
+    { class: `barlist${bars ? '' : ' barlist--plain'}`, attrs: { 'aria-label': ariaLabel } },
     ...rows.map((r) => {
       const fill = h('span', { class: 'barlist__fill' });
       fill.style.width = `${Math.max(1, (r.value / max) * 100)}%`;
       return h(
         'li',
-        { class: 'barlist__row' },
-        h('span', { class: `barlist__label${r.mono ? ' mono' : ''}`, text: r.label, attrs: { title: r.title ?? r.label } }),
+        { class: `barlist__row${r.quiet ? ' barlist__row--quiet' : ''}` },
+        h('span', { class: `barlist__label${r.mono ? ' mono' : ''}`, text: r.label, attrs: { title: r.title && r.title !== r.label ? r.title : undefined, translate: r.mono ? 'no' : undefined } }),
         h('span', { class: 'barlist__value num', text: fmtNumber(r.value) }),
-        h('span', { class: 'barlist__track', attrs: { 'aria-hidden': 'true' } }, fill),
+        bars ? h('span', { class: 'barlist__track', attrs: { 'aria-hidden': 'true' } }, fill) : null,
       );
     }),
   );
 }
 
-/** Usage meter (budget): fill, track and a marker at the guaranteed limit. */
+/** Usage meter (budget): fill on a track. */
 export function meter(opts: { value: number; max: number; label: string; valueText: string }): HTMLElement {
   const pct = opts.max > 0 ? Math.min(100, (opts.value / opts.max) * 100) : 0;
   const fill = h('span', { class: 'meter__fill' });

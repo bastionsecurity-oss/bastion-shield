@@ -39,6 +39,7 @@ const ICONS = {
   arrowRight: `<svg viewBox="0 0 16 16"><path ${P} d="M3 8h9.5M8.75 4l4 4-4 4"/></svg>`,
   dashboard: `<svg viewBox="0 0 16 16"><path ${P} d="M2.75 2.75h10.5v10.5H2.75zM6.25 2.75v10.5"/></svg>`,
   pin: `<svg viewBox="0 0 16 16"><path ${P} d="M6 2.75h4l-.5 4 2.25 2.25H4.25L6.5 6.75zM8 9v4.25"/></svg>`,
+  puzzle: `<svg viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.2" d="M6 2.5h3v2a1.5 1.5 0 1 1 0 3v.5h3.5v3.5H11a1.5 1.5 0 1 0-3 0v1.5H2.5V10h1a1.5 1.5 0 1 0 0-3h-1V4.5H6z"/></svg>`,
   device: `<svg viewBox="0 0 16 16"><path ${P} d="M2.25 3.25h11.5v7.5H2.25zM5.5 13.25h5M8 10.75v2.5"/></svg>`,
   eye: `<svg viewBox="0 0 16 16"><path ${P} d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle ${P} cx="8" cy="8" r="2"/></svg>`,
   incident: `<svg viewBox="0 0 16 16"><path ${P} d="M8 1.75 13.25 3.75v3.75c0 3.25-2.25 5.5-5.25 6.75-3-1.25-5.25-3.5-5.25-6.75V3.75z"/><path ${P} d="M8 5v3.25M8 10.25v.5"/></svg>`,

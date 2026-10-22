@@ -21,7 +21,12 @@ import * as log from './log.ts';
 import { canonicalJson, errMsg, isPlainObject } from './util.ts';
 
 /** Error codes returned to the dashboard (it shows a localised text for each). */
-export type MyListError = 'locked' | 'not-found' | 'too-many' | 'too-large' | 'empty' | 'not-a-list' | 'invalid-url' | 'duplicate-url' | 'fetch-failed';
+export type MyListError = 'locked' | 'not-found' | 'too-many' | 'too-large' | 'empty' | 'not-a-list' | 'invalid-url' | 'duplicate-url' | 'fetch-failed' | 'invalid-title';
+
+/** A list name typed by the user: one line, trimmed, at most MAX_TITLE_LENGTH characters ('' when empty). */
+export function cleanTitle(raw: string): string {
+  return raw.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, MY_LISTS.MAX_TITLE_LENGTH).trim();
+}
 
 const ID_RE = /^[a-z0-9]{10}$/;
 
@@ -488,13 +493,18 @@ export class MyListsService {
     return { list: { ...next } };
   }
 
-  set(id: string, patch: { enabled?: boolean; autoUpdate?: boolean }): Promise<{ list: MyListMeta } | { error: MyListError }> {
+  set(id: string, patch: { enabled?: boolean; autoUpdate?: boolean; title?: string }): Promise<{ list: MyListMeta } | { error: MyListError }> {
     return this.serial(async () => {
       const l = this.get(id);
       if (!l) return { error: 'not-found' as const };
       const next: MyListMeta = { ...l };
       if (typeof patch.enabled === 'boolean') next.enabled = patch.enabled;
       if (typeof patch.autoUpdate === 'boolean' && l.source === 'url') next.autoUpdate = patch.autoUpdate;
+      if (typeof patch.title === 'string') {
+        const title = cleanTitle(patch.title);
+        if (!title) return { error: 'invalid-title' as const };
+        next.title = title;
+      }
       await this.commit(next);
       return { list: { ...next } };
     });
@@ -504,11 +514,41 @@ export class MyListsService {
     return this.serial(async () => {
       const i = this.lists.findIndex((l) => l.id === id);
       if (i < 0) return { error: 'not-found' as const };
-      this.lists.splice(i, 1);
+      const [gone] = this.lists.splice(i, 1);
+      // Kept in memory for «Rückgängig» (the undo toast): restore() puts it back.
+      this.removed.set(id, { meta: gone, text: this.texts.get(id) ?? '' });
+      while (this.removed.size > 5) this.removed.delete(this.removed.keys().next().value as string);
       this.texts.delete(id);
       await this.writeIndex();
       await log.attempt('mylists', () => this.deps.storage.remove([textKey(id), compiledKey(id)]));
       return { ok: true as const };
+    });
+  }
+
+  /** Lists removed by this worker instance, oldest first (undo). */
+  private removed = new Map<string, { meta: MyListMeta; text: string }>();
+
+  /**
+   * Undo a remove(): the list comes back with its id, title, source, on/off
+   * and auto-update state and its text; its old slot is reused when free.
+   * 'not-found' when the worker restarted since (the copy is kept in memory only).
+   */
+  restore(id: string): Promise<{ list: MyListMeta } | { error: MyListError }> {
+    return this.serial(async () => {
+      const r = this.removed.get(id);
+      if (!r) return { error: 'not-found' as const };
+      const here = this.get(id);
+      if (here) {
+        this.removed.delete(id);
+        return { list: { ...here } };
+      }
+      if (r.meta.url && this.lists.some((l) => l.url === r.meta.url)) return { error: 'duplicate-url' as const };
+      const slot = this.lists.some((l) => l.slot === r.meta.slot) ? freeSlot(this.lists) : r.meta.slot;
+      if (this.lists.length >= MY_LISTS.MAX || slot < 0) return { error: 'too-many' as const };
+      const meta: MyListMeta = { ...r.meta, slot };
+      await this.commit(meta, r.text);
+      this.removed.delete(id);
+      return { list: { ...meta } };
     });
   }
 

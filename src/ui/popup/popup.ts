@@ -1,8 +1,11 @@
-// Bastion Shield — toolbar popup (compact). Shows the current site with its
-// protection switch, live counters for the current page load, an estimate of
-// data and time saved, the blocking mode, and actions: report a broken site,
-// open the expanded view (panel.html, same popup) and the «Cyber-Vorfall?»
-// CTA. In nerd mode a statusline sits at the bottom (nerd.ts).
+// Bastion Shield — toolbar popup (compact), artboards P01–P15. Shows the
+// current site with its protection switch, live counters for the current page
+// load, an estimate of data and time saved, the blocking mode, and actions:
+// report a broken site (bottom sheet, report.ts), open the expanded view
+// (panel.html, same popup) and the «Cyber-Vorfall?» CTA. Calm states: «Hier
+// nicht aktiv» (browser pages), «Schutz pausiert» (IT kill switch), «Keine
+// Verbindung» with «Erneut versuchen». In nerd mode a statusline sits at the
+// bottom (nerd.ts).
 // Budget: well under 30 ms of script before first meaningful paint, so the
 // static skeleton is in popup.html and everything here is incremental.
 //
@@ -10,25 +13,29 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { ActivityEvent, BlockingMode, PopupState, SiteSettings } from '../../shared/types.ts';
-import { $, reducedMotion, replace } from '../shared/dom.ts';
-import { fmtNumber, initI18n, initI18nSync, plural, t, translate } from '../shared/i18n.ts';
+import { $, h, reducedMotion, replace, toast } from '../shared/dom.ts';
+import { initI18n, initI18nSync, t, translate, uiLang } from '../shared/i18n.ts';
 import { readHandoff, writeHandoff } from '../shared/handoff.ts';
-import { hydrateIcons } from '../shared/icons.ts';
-import { call, connectLive, type LiveConnection } from '../shared/messaging.ts';
+import { hydrateIcons, icon } from '../shared/icons.ts';
+import { call, connectLive, openDashboard, type LiveConnection } from '../shared/messaging.ts';
 import { lockIcon, segmented, type SegHandle } from '../shared/controls.ts';
-import { orgNameEl } from '../shared/org.ts';
+import { orgNameEl, safeSupportUrl } from '../shared/org.ts';
 import { ctaOrBrand } from '../shared/incident.ts';
 import { estimateFromSample, fmtBytes, fmtDuration, savingsUnits } from '../shared/savings.ts';
 import { countEvent, eventKey, sampleType } from '../shared/page-activity.ts';
+import { truncateMiddle, withUnit } from '../shared/text.ts';
 import { createNerdStatusline, type NerdStatusline } from './nerd.ts';
 import { startReport } from './report.ts';
 import { setupExpand } from './expand.ts';
 import { setSiteSettings } from './site-set.ts';
-import { normalisePopupState, tabIdFromSearch } from './state.ts';
+import { CONN_HINT_AFTER, CONN_INITIAL, connReduce, fitText, fmtCount, normalisePopupState, tabIdFromSearch, withBusy, type ConnEvent, type ConnState } from './state.ts';
 
 let state: PopupState | null = null;
 let tabId = -1;
 let live: LiveConnection | null = null;
+let conn: ConnState = CONN_INITIAL;
+/** Site settings when the popup opened: the reload bar hides again when they are back. */
+let initialSite: { enabled: boolean; mode: BlockingMode } | null = null;
 
 const counts = { blocked: 0, redirected: 0, stripped: 0, debounced: 0, thirdPartyHosts: 0 };
 const thirdHosts = new Set<string>();
@@ -41,6 +48,7 @@ let paintQueued = false;
 let modeSeg: SegHandle<BlockingMode> | null = null;
 let nerd: NerdStatusline | null = null;
 
+const num = (n: number): string => fmtCount(n, uiLang);
 
 // ------------------------------------------------------------------ helpers --
 
@@ -68,20 +76,54 @@ export function panelUrl(id: number, view = 'site'): string {
   return `panel.html?tabId=${id}#${view}`;
 }
 
+function dispatch(e: ConnEvent): void {
+  conn = connReduce(conn, e);
+  // After a few failures the restart hint is the way out: make it stand out.
+  $('#pp-retry-hint').classList.toggle('pp-calm__hint--strong', conn.failures >= CONN_HINT_AFTER);
+}
+
 // ------------------------------------------------------------------- render --
 
+const CALM = ['pp-unfilterable', 'pp-global-off', 'pp-error'];
+
+/** One of the calm tiles instead of counters and switches (or none: «ready»). */
+function showCalm(stateName: 'ready' | 'unfilterable' | 'global-off' | 'error', sectionId: string | null): void {
+  document.body.dataset.state = stateName;
+  for (const id of CALM) setHidden(id, id !== sectionId);
+  setHidden('pp-count-section', sectionId !== null);
+  if (sectionId !== null) setHidden('pp-site-off', true);
+}
+
 function showError(): void {
-  document.body.dataset.state = 'error';
-  replace($('#pp-cta-slot'), ctaOrBrand(true, '', closeSoon));
-  setHidden('pp-error', false);
-  setHidden('pp-count-section', true);
+  showCalm('error', 'pp-error');
+  if (!$('#pp-cta-slot').firstChild) replace($('#pp-cta-slot'), ctaOrBrand(true, '', closeSoon));
   $('#pp-report').hidden = true;
+}
+
+/** Host in the protection tile: cut in the middle so start and TLD stay, full host in title. */
+function paintHost(shown: string): void {
+  const wrap = $('#pp-host');
+  const vis = $('#pp-host-vis');
+  $('#pp-host-full').textContent = shown;
+  wrap.title = shown;
+  if (!shown) {
+    vis.textContent = ' ';
+    return;
+  }
+  vis.textContent = shown;
+  // Measured against the tile; before layout (hidden) the full host stays and CSS cuts it.
+  if (vis.clientWidth > 0) vis.textContent = fitText(shown, (c) => ((vis.textContent = c), vis.scrollWidth <= vis.clientWidth), truncateMiddle);
 }
 
 function renderHeader(s: PopupState): void {
   const org = $('#pp-org');
   if (s.managed.organizationName) {
-    replace(org, document.createTextNode(t('managedByLabel')), orgNameEl(s.managed.organizationName, s.managed.supportUrl, 'pp-org__name', closeSoon));
+    replace(
+      org,
+      icon('lock', 12),
+      h('span', { class: 'pp-org__label', text: t('managedByLabel') }),
+      orgNameEl(s.managed.organizationName, s.managed.supportUrl, 'pp-org__name', closeSoon),
+    );
     org.title = t('managedBy', s.managed.organizationName);
     org.hidden = false;
   } else {
@@ -97,22 +139,40 @@ function renderHeader(s: PopupState): void {
       /* keep host */
     }
   }
-  $('#pp-host').textContent = shown || ' ';
+  paintHost(shown);
 }
 
-/** Counter when the activity log or the per-tab counters are switched off. */
+/** «IT kontaktieren» under «Schutz pausiert», only when the policy names a support page or address. */
+function renderContact(s: PopupState): void {
+  const slot = $('#pp-contact-slot');
+  const email = s.managed.supportEmail;
+  const mail = email && /^[^\s@<>?#]+@[^\s@<>?#]+$/.test(email) ? `mailto:${email}` : null;
+  const href = safeSupportUrl(s.managed.supportUrl) ?? mail;
+  if (!href) {
+    slot.hidden = true;
+    replace(slot);
+    return;
+  }
+  const web = !href.startsWith('mailto:');
+  const a = h('a', { class: 'btn btn--quiet pp-calm__link', attrs: { href, target: web ? '_blank' : null, rel: 'noopener noreferrer', 'data-contact': 'it' }, text: t('popupContactIt') });
+  if (web) a.addEventListener('click', () => closeSoon());
+  replace(slot, a);
+  slot.hidden = false;
+}
+
+/** Counter tile, the «nothing blocked here» note (site off) or «counting off» (P12). */
 function renderCountMode(): void {
   const s = state;
-  if (!s) return;
-  const off = $('#pp-count-off');
+  if (!s || document.body.dataset.state !== 'ready') return;
+  const on = s.siteSettings.enabled;
+  // P02: protection off for this site says so instead of showing counters.
+  setHidden('pp-site-off', on);
+  setHidden('pp-count-section', !on);
   $('#pp-count-body').hidden = !s.counting;
+  $('#pp-count-off').hidden = s.counting;
   $('#pp-savings').hidden = !s.counting;
-  off.hidden = s.counting;
-  if (!s.counting) {
-    // Never show a misleading 0: say that counting is off (and whether protection still runs).
-    off.textContent = s.siteSettings.enabled ? t('popupCountOff') : t('popupCountOffSiteOff');
-    $('#pp-count-section').setAttribute('aria-label', `${t('popupBlockedOnPage')}: ${off.textContent}`);
-  }
+  document.body.classList.toggle('pp-no-savings', !s.counting);
+  if (!s.counting) $('#pp-count-section').setAttribute('aria-label', `${t('popupBlockedOnPage')}: ${t('popupCounterOff')}`);
 }
 
 function renderSiteState(): void {
@@ -126,11 +186,12 @@ function renderSiteState(): void {
   $('#pp-toggle-state').textContent = on ? t('popupProtectionOn') : t('popupProtectionOff');
   modeSeg?.setDisabled(!on || s.locks.settings || s.locks.mode);
   renderCountMode();
+  syncReloadBar();
 }
 
 async function setSite(patch: SiteSettings): Promise<boolean> {
   const ok = await setSiteSettings(state!, tabId, patch);
-  if (ok) showReloadHint();
+  syncReloadBar();
   return ok;
 }
 
@@ -162,24 +223,61 @@ function renderControls(): void {
   renderSiteState();
 }
 
+/** What the user asked for while a save is still running (a second press is never lost). */
+let protectWanted: boolean | null = null;
+
 async function toggleProtection(): Promise<void> {
   const s = state;
-  if (!s || protectBusy || s.locks.siteToggle) return;
-  protectBusy = true;
-  const next = !s.siteSettings.enabled;
+  if (!s || s.locks.siteToggle) return;
   // Optimistic: flip now, revert if the service worker refuses.
-  s.siteSettings.enabled = next;
+  protectWanted = !(protectWanted ?? s.siteSettings.enabled);
+  s.siteSettings.enabled = protectWanted;
   renderSiteState();
-  const ok = await setSite({ enabled: next });
-  if (!ok) s.siteSettings.enabled = !next;
+  if (protectBusy) return;
+  protectBusy = true;
+  while (protectWanted !== null) {
+    const want: boolean = protectWanted;
+    const ok = await setSite({ enabled: want });
+    if (protectWanted !== want) continue; // pressed again meanwhile: save the latest wish
+    if (!ok) s.siteSettings.enabled = !want;
+    protectWanted = null;
+  }
   renderSiteState();
   protectBusy = false;
 }
 
-function showReloadHint(): void {
+/**
+ * P04: the bar shows while the site settings differ from what the page was
+ * loaded with, and hides when they are back. The popup reserves room for it
+ * (body.pp-has-reload) so it never covers the CTA.
+ */
+function syncReloadBar(): void {
+  const s = state;
+  const changed = !!s && !!initialSite && (s.siteSettings.enabled !== initialSite.enabled || s.siteSettings.mode !== initialSite.mode);
   const bar = $('#pp-reload');
-  if (!bar.hidden) return;
-  bar.hidden = false;
+  if (bar.hidden === !changed) return;
+  bar.hidden = !changed;
+  document.body.classList.toggle('pp-has-reload', changed);
+}
+
+/** P12 «Einschalten»: turn the activity log (and with it the counters) back on. */
+async function counterOn(): Promise<void> {
+  const btn = $<HTMLButtonElement>('#pp-count-on');
+  const res = await withBusy(
+    () => call<{ ignored?: unknown }>({ type: 'settings:set', patch: { ui: { activityLog: true } } }),
+    (b) => btn.setAttribute('aria-busy', String(b)),
+  );
+  btn.removeAttribute('aria-busy');
+  if (!res.ok) {
+    toast(t('errorSaveFailed'), icon('alert', 15));
+    return;
+  }
+  if (Array.isArray(res.data?.ignored) && res.data.ignored.includes('ui.activityLog')) {
+    toast(t('lockedByPolicy'), icon('lock', 15));
+    return;
+  }
+  await refreshState();
+  if (state?.counting) $<HTMLElement>('#pp-protect').focus({ preventScroll: true });
 }
 
 // --------------------------------------------------------------- counting --
@@ -201,23 +299,28 @@ function setBar(id: string, n: number): void {
 
 function paintCounts(): void {
   const total = counts.blocked + counts.redirected + counts.stripped + counts.debounced;
+  const replaced = counts.redirected + counts.stripped + counts.debounced;
   const el = $('#pp-count');
-  el.textContent = fmtNumber(total);
+  el.textContent = num(total);
   if (shownTotal >= 0 && total > shownTotal && !reducedMotion() && typeof el.animate === 'function') {
     el.animate([{ transform: 'translateY(3px)', opacity: 0.55 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
   }
   shownTotal = total;
-  $('#pp-c-blocked').textContent = fmtNumber(counts.blocked);
-  $('#pp-c-redirected').textContent = fmtNumber(counts.redirected);
-  $('#pp-c-stripped').textContent = fmtNumber(counts.stripped);
-  $('#pp-c-debounced').textContent = fmtNumber(counts.debounced);
-  // Bar: blocked (dark), replaced by surrogates (mid), the rest of the requests is unknown,
-  // so the light track only shows when nothing was blocked yet.
+  $('#pp-c-blocked').textContent = num(counts.blocked);
+  $('#pp-c-redirected').textContent = num(counts.redirected);
+  $('#pp-c-stripped').textContent = num(counts.stripped);
+  $('#pp-c-debounced').textContent = num(counts.debounced);
+  // Bar: blocked (ink), replaced by surrogates or cleaned (grey); the light track only
+  // shows while nothing was blocked yet. The legend names both with their counts.
   setBar('pp-bar-blocked', counts.blocked);
-  setBar('pp-bar-replaced', counts.redirected + counts.stripped + counts.debounced);
+  setBar('pp-bar-replaced', replaced);
   setBar('pp-bar-rest', total === 0 ? 1 : 0);
+  $('#pp-legend-blocked-text').textContent = t('popupLegendBlocked', num(counts.blocked));
+  $('#pp-legend-replaced-text').textContent = t('popupLegendReplaced', num(replaced));
+  $('#pp-legend-replaced').hidden = replaced === 0;
   // Distinct third-party hosts are context for the total, not another blocked count.
-  $('#pp-c-third').textContent = counts.thirdPartyHosts > 0 ? plural(counts.thirdPartyHosts, 'popupHostsOne', 'popupHosts') : '';
+  const hosts = counts.thirdPartyHosts;
+  $('#pp-c-third').textContent = hosts > 0 ? t(hosts === 1 ? 'popupHostsOne' : 'popupHosts', num(hosts)) : '';
 
   const est = estimateFromSample(types, counts.blocked + counts.redirected);
   const data = fmtBytes(est.bytes);
@@ -226,8 +329,10 @@ function paintCounts(): void {
   $('#pp-data-unit').textContent = data.unit;
   $('#pp-time').textContent = time.value;
   $('#pp-time-unit').textContent = time.unit;
+  $('#pp-stat-data').setAttribute('aria-label', `${withUnit(data.value, data.unit)} ${t('popupDataSaved')}`);
+  $('#pp-stat-time').setAttribute('aria-label', `${withUnit(time.value, time.unit)} ${t('popupTimeSaved')}`);
   $('#pp-savings').title = t('savingsEstimateNote');
-  if (state?.counting !== false) $('#pp-count-section').setAttribute('aria-label', `${t('popupBlockedOnPage')}: ${fmtNumber(total)}`);
+  if (state?.counting !== false) $('#pp-count-section').setAttribute('aria-label', `${t('popupBlockedOnPage')}: ${num(total)}`);
 }
 
 function addEvent(e: ActivityEvent, count: boolean): void {
@@ -247,6 +352,7 @@ function resetPage(): void {
 }
 
 function startLive(s: PopupState): void {
+  live?.close();
   // Events newer than the state snapshot were not counted yet; older unseen ones were.
   const snapshotT = s.recent.length ? Math.max(...s.recent.map((e) => e.t)) : 0;
   live = connectLive(tabId, {
@@ -262,11 +368,12 @@ function startLive(s: PopupState): void {
     reset: (id) => {
       if (id !== tabId) return;
       resetPage();
+      // A navigation reloads the page: what it was loaded with is the new baseline.
+      initialSite = null;
       // A navigation may have changed the site: refresh host and site settings.
       void refreshState();
     },
   });
-  window.addEventListener('pagehide', () => live?.close(), { once: true });
 }
 
 async function refreshState(poll = false): Promise<void> {
@@ -280,9 +387,13 @@ async function refreshState(poll = false): Promise<void> {
     return;
   }
   state = next;
+  initialSite ??= { enabled: next.siteSettings.enabled, mode: next.siteSettings.mode };
   renderHeader(next);
   if (!prev || next.site !== prev.site) renderControls();
-  else renderCountMode();
+  else {
+    renderCountMode();
+    syncReloadBar();
+  }
   renderNerd(next, !poll);
 }
 
@@ -336,7 +447,14 @@ function bindStatic(): void {
       renderSiteState();
     },
   });
-  $('#pp-expand').addEventListener('click', () => morph.expand());
+  $('#pp-expand').addEventListener('click', () => {
+    // Without a tab (no connection) there is no «Diese Website»: open the settings instead.
+    if (tabId < 0) {
+      void openDashboard('settings').then(closeSoon);
+      return;
+    }
+    morph.expand();
+  });
   $('#pp-reload-btn').addEventListener('click', async () => {
     try {
       await chrome.tabs.reload(tabId);
@@ -345,37 +463,33 @@ function bindStatic(): void {
     }
     closeSoon();
   });
-  $('#pp-reload-close').addEventListener('click', () => {
-    $('#pp-reload').hidden = true;
-  });
   $('#pp-report').addEventListener('click', async () => {
     if (!state) return;
     const opened = await startReport(state);
     if (opened) closeSoon();
   });
-}
-
-/** Calm full-panel state: no counters, no per-site switch. */
-function renderCalm(stateName: string, sectionId: string): void {
-  document.body.dataset.state = stateName;
-  setHidden(sectionId, false);
-  setHidden('pp-count-section', true);
+  $('#pp-count-on').addEventListener('click', () => void counterOn());
+  $('#pp-retry').addEventListener('click', () => void retry());
 }
 
 function render(s: PopupState): void {
-  document.body.dataset.state = 'ready';
   renderHeader(s);
   replace($('#pp-cta-slot'), ctaOrBrand(s.incidentCta, '', closeSoon));
 
   if (s.globallyDisabled) {
-    // Managed kill switch: protection is off everywhere, so there is nothing to toggle.
-    renderCalm('global-off', 'pp-global-off');
+    // P06: managed kill switch. Protection is off everywhere, so there is nothing to toggle.
+    showCalm('global-off', 'pp-global-off');
+    renderContact(s);
+    $('#pp-report').hidden = true;
     return;
   }
   if (!s.filterable) {
-    renderCalm('unfilterable', 'pp-unfilterable');
+    // P05: browser pages and stores. Nothing to report either.
+    showCalm('unfilterable', 'pp-unfilterable');
+    $('#pp-report').hidden = true;
     return;
   }
+  showCalm('ready', null);
 
   counts.blocked = s.counts.blocked;
   counts.redirected = s.counts.redirected;
@@ -389,10 +503,50 @@ function render(s: PopupState): void {
   }
   paintCounts();
   renderControls();
+  // The host is measured once the tile is laid out.
+  renderHeader(s);
 
   const channel = s.managed.reportBrokenSite;
   $('#pp-report').hidden = channel === 'none' || (channel === 'email' && !s.managed.supportEmail);
   renderNerd(s, true);
+}
+
+/** Ask the service worker for this tab's state and draw it. False when it did not answer. */
+async function load(handoff: boolean): Promise<boolean> {
+  dispatch('request');
+  if (tabId < 0) {
+    const tab = await activeTab();
+    if (!tab || tab.id === undefined) {
+      dispatch('fail');
+      return false;
+    }
+    tabId = tab.id;
+  }
+  const res = await call<PopupState>({ type: 'popup:state', tabId });
+  if (!res.ok || !res.data || typeof res.data !== 'object') {
+    dispatch('fail');
+    return false;
+  }
+  dispatch('ok');
+  state = normalisePopupState(res.data, tabId);
+  initialSite = { enabled: state.siteSettings.enabled, mode: state.siteSettings.mode };
+  if (handoff) resetPage();
+  render(state);
+  if (state.filterable && !state.globallyDisabled) startLive(state);
+  return true;
+}
+
+/** P07 «Erneut versuchen»: the button keeps its label, spinner after ~150 ms for at least ~300 ms. */
+async function retry(): Promise<void> {
+  const btn = $<HTMLButtonElement>('#pp-retry');
+  if (conn.retrying) return;
+  const ok = await withBusy(
+    () => load(false),
+    (b) => btn.setAttribute('aria-busy', String(b)),
+  );
+  btn.removeAttribute('aria-busy');
+  if (ok) $<HTMLElement>(state && state.filterable && !state.globallyDisabled ? '#pp-protect' : '#pp-expand').focus({ preventScroll: true });
+  else showError();
 }
 
 async function main(): Promise<void> {
@@ -400,6 +554,7 @@ async function main(): Promise<void> {
   translate();
   hydrateIcons();
   bindStatic();
+  window.addEventListener('pagehide', () => live?.close(), { once: true });
 
   // Back from the expanded view (same popup window): draw the hand-off now, refresh below.
   const handoff = readHandoff(tabIdFromSearch(location.search));
@@ -411,21 +566,10 @@ async function main(): Promise<void> {
 
   // popup.html?tabId=<n> (popup opened as a tab, e.g. in tests, or back from the panel).
   const fromQuery = tabIdFromSearch(location.search);
-  if (fromQuery !== null) {
-    tabId = fromQuery;
-  } else {
-    const tab = await activeTab();
-    if (!tab || tab.id === undefined) return showError();
-    tabId = tab.id;
-  }
+  if (fromQuery !== null) tabId = fromQuery;
 
-  const res = await call<PopupState>({ type: 'popup:state', tabId });
-  if (!res.ok || !res.data || typeof res.data !== 'object') return handoff ? undefined : showError();
-  state = normalisePopupState(res.data, tabId);
-  if (handoff) resetPage();
-  render(state);
-  if (!state.filterable || state.globallyDisabled) return;
-  startLive(state);
+  const ok = await load(!!handoff);
+  if (!ok && !handoff) showError();
 }
 
 void main().catch((err) => {

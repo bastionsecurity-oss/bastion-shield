@@ -707,8 +707,11 @@ export interface MyListsState {
 export interface MsgMyListsGet { type: 'mylists:get' }
 /** Add from a file (`file`) or a web address (`url`); `replaceId` replaces that list's contents instead. */
 export interface MsgMyListsAdd { type: 'mylists:add'; file?: { name: string; text: string }; url?: string; replaceId?: string }
-export interface MsgMyListsSet { type: 'mylists:set'; id: string; enabled?: boolean; autoUpdate?: boolean }
+/** `title` renames the list (trimmed, 1 to MY_LISTS.MAX_TITLE_LENGTH characters). */
+export interface MsgMyListsSet { type: 'mylists:set'; id: string; enabled?: boolean; autoUpdate?: boolean; title?: string }
 export interface MsgMyListsRemove { type: 'mylists:remove'; id: string }
+/** Undo a remove (same worker instance): the list returns with its text and on/off state. */
+export interface MsgMyListsRestore { type: 'mylists:restore'; id: string }
 /** Download a web-address list now. */
 export interface MsgMyListsUpdate { type: 'mylists:update'; id: string }
 export interface MsgHistoryQuery { type: 'history:query'; fromDay: string; toDay: string }
@@ -775,6 +778,7 @@ export type Message =
   | MsgMyListsAdd
   | MsgMyListsSet
   | MsgMyListsRemove
+  | MsgMyListsRestore
   | MsgMyListsUpdate
   | MsgHistoryQuery
   | MsgHistoryEvents

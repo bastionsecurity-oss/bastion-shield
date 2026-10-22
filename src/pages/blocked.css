@@ -1,84 +1,188 @@
 /*
- * Bastion Shield — strict-block interstitial. Calm and unambiguous: a heavy
- * ink rule, a large statement, the blocked host in mono, one primary way
- * back. No red (Bundesrot is reserved for incident CTAs); seriousness comes
- * from typography and contrast.
+ * Bastion Shield — strict-block interstitial (artboards S01–S07). One column
+ * of 560px: tile 80, title, the host in a mono chip with one sentence, «Zurück»
+ * as the only primary action, «Trotzdem öffnen…» behind a confirm bar, and
+ * the facts behind «Details». Bundesrot appears only in the footer mark.
  *
  * SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 body.bl {
-  min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-12) var(--space-12) var(--space-8);
   background: var(--bg);
-  border-top: 4px solid var(--text-strong);
+  overflow-wrap: anywhere;
 }
+
 .bl-main {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 1200px;
-  min-height: calc(100vh - 4px);
-  margin: 0 auto;
-  padding: 24px 20px 28px;
-}
-@media (min-width: 768px) { .bl-main { padding: 32px 48px 36px; } }
-@media (min-width: 1024px) { .bl-main { padding: 40px 120px 44px; } }
-
-.bl-brand { display: flex; align-items: center; gap: 8px; color: var(--text-strong); }
-.bl-brand__word { font-family: var(--font-brand); font-size: 18px; font-weight: 600; letter-spacing: -0.012em; }
-
-.bl-body {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 18px;
-  max-width: 680px;
-  margin: auto 0;
-  padding: 56px 0 48px;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  padding-bottom: var(--space-8);
 }
+
+/* ------------------------------------------------------------------ Tile -- */
+.bl-tile { --tile-bg: var(--accent); background: var(--tile-bg); }
+.bl-tile .bl-tile__icon { width: 40px; height: 40px; display: none; }
+body[data-kind="security"] .bl-tile__icon--security,
+body[data-kind="tracking"] .bl-tile__icon--tracking,
+body[data-kind="other"] .bl-tile__icon--other { display: block; }
+body[data-kind="tracking"] .bl-tile,
+body[data-kind="other"] .bl-tile { --tile-bg: var(--bg-cool); color: var(--text-strong); }
+.bl-tile__gap { stroke: var(--tile-bg); }
+
+/* ------------------------------------------------------- Title and host -- */
+.bl-head { display: flex; flex-direction: column; gap: var(--space-4); align-self: stretch; }
 .bl-title {
-  font-size: clamp(34px, 5.2vw, 60px);
-  line-height: 1.06;
+  font-size: 48px;
+  line-height: 52px;
   letter-spacing: var(--tracking-display);
+  overflow-wrap: break-word;
+}
+.bl-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 24px;
 }
 .bl-host {
   max-width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--bg-quiet);
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-field);
+  background: var(--surface);
   color: var(--text-strong);
   font-size: 16px;
   font-weight: 500;
-  line-height: 22px;
+  line-height: 24px;
+  /* Breaks after dots and hyphens (<wbr> from fitHost()); a part longer than a line breaks anywhere. */
   overflow-wrap: anywhere;
 }
-.bl-reason { color: var(--text-2); font-size: 17px; line-height: 27px; max-width: 60ch; }
 
-.bl-facts { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 6px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); width: 100%; }
-.bl-facts__item dt { color: var(--text-2); font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.09em; text-transform: uppercase; }
-.bl-facts__item dd { margin: 3px 0 0; color: var(--text-strong); font-size: var(--text-md); font-weight: 600; }
+/* --------------------------------------------------------------- Actions -- */
+.bl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.bl-btn { min-height: 48px; padding-inline: 22px; font-size: 15px; }
+.bl-btn svg { width: 16px; height: 16px; }
+.bl-proceed { padding-inline: var(--space-3); }
+.bl-proceed[aria-expanded="true"] { background: var(--surface); text-decoration-line: none; }
+.bl-proceed[aria-expanded="true"]:hover { background: var(--bg-cool); }
 
-.bl-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.bl-btn { min-height: 44px; padding: 10px 20px; font-size: var(--text-md); }
-
+/* ----------------------------------------------------------- Confirm bar --
+ * Inverted card (S02): Gletscher-Nacht in light mode, a raised surface in
+ * dark mode. Inside it the dark-mode tokens apply in both schemes. */
 .bl-confirm {
-  width: 100%;
-  margin-top: 4px;
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  border-left: 2px solid var(--text-strong);
-  border-radius: var(--radius);
-  background: var(--bg-quiet);
+  --text-strong: var(--color-weiss);
+  --text-2: var(--color-nebel);
+  --line-strong: color-mix(in srgb, var(--color-nebel) 62%, var(--color-gletscher-nacht));
+  --surface: color-mix(in srgb, var(--color-weiss) 10%, var(--color-gletscher-nacht));
+  --focus: var(--color-gletscher-hell);
+  --danger: #FF9C92;
+  --danger-pressed: #FFB8B0;
+  --danger-soft: #3B201E;
+  --danger-soft-hover: #4A2724;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-self: stretch;
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-gletscher-nacht);
+  color: var(--color-weiss);
+  transform-origin: top left;
+  animation: bl-open var(--dur) var(--ease) both;
 }
-.bl-confirm__title { font-size: 18px; line-height: 24px; }
-.bl-confirm__text { margin-top: 6px; color: var(--text-2); font-size: var(--text-md); line-height: 22px; }
-.bl-confirm__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.bl-confirm__error { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; color: var(--text-strong); font-size: var(--text-sm); }
+.bl-confirm__copy { display: flex; flex-direction: column; gap: 2px; }
+.bl-confirm__title { color: var(--color-weiss); font-family: var(--font-sans); font-size: 16px; line-height: 22px; letter-spacing: 0; }
+.bl-confirm__text { color: var(--color-nebel); font-size: var(--text-md); line-height: 20px; }
+.bl-confirm__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* The focus ring sits on the card colour, not on the page background. */
+.bl-confirm :focus-visible { outline-color: var(--color-gletscher-hell); }
+@keyframes bl-open { from { opacity: 0; transform: translateY(-4px); } }
 
-.bl-foot { color: var(--text-2); font-size: var(--text-xs); line-height: 18px; max-width: 70ch; }
+/* ------------------------------------------------------------- Error row -- */
+.bl-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  align-self: stretch;
+  padding: 14px var(--space-4);
+  border-radius: var(--radius-field);
+  background: var(--danger-soft);
+  animation: bl-open var(--dur) var(--ease) both;
+}
+.bl-error__icon { width: 18px; height: 18px; margin-top: 1px; color: var(--danger); }
+.bl-error__copy { display: flex; flex: 1 1 0; flex-direction: column; gap: 2px; min-width: 0; }
+.bl-error__title { color: var(--text-strong); font-size: var(--text-md); font-weight: 600; line-height: 20px; }
+.bl-error__text { color: var(--text-2); font-size: var(--text-md); line-height: 20px; }
+.bl-error__retry { align-self: center; flex-shrink: 0; background: var(--bg); }
+.bl-error__retry:hover:not(:disabled) { background: var(--bg); box-shadow: inset 0 0 0 1px var(--text-2); }
 
-body[data-state="loading"] .bl-body { opacity: 0.001; }
-body[data-state="ready"] .bl-body { opacity: 1; transition: opacity var(--dur) var(--ease); }
+/* --------------------------------------------------------------- Details -- */
+.bl-details { display: flex; flex-direction: column; gap: var(--space-2); align-self: stretch; }
+.bl-details__toggle {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 var(--space-2) 0 0;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: none;
+  color: var(--text-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 18px;
+}
+.bl-details__toggle:hover { color: var(--text-strong); }
+.bl-details__chev { width: 12px; height: 12px; transition: transform var(--dur-fast) var(--ease); }
+.bl-details__toggle[aria-expanded="true"] .bl-details__chev { transform: rotate(90deg); }
+
+.bl-facts { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding-left: 18px; }
+.bl-facts__row { display: flex; gap: var(--space-3); font-size: var(--text-md); line-height: 20px; }
+.bl-facts__row dt { flex-shrink: 0; width: 96px; color: var(--text-3); }
+.bl-facts__row dd { flex: 1 1 0; min-width: 0; margin: 0; color: var(--text-strong); overflow-wrap: anywhere; }
+.bl-facts__url { font-size: 13px; word-break: break-all; }
+
+/* ---------------------------------------------------------------- Footer -- */
+.bl-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+
+/* ------------------------------------------------------------ Load state -- */
+body[data-state="loading"] .bl-main { opacity: 0; }
+body[data-state="ready"] .bl-main { opacity: 1; transition: opacity var(--dur) var(--ease); }
+
+/* -------------------------------------------------------------- Dark mode -- */
+@media (prefers-color-scheme: dark) {
+  .bl-confirm { background: color-mix(in srgb, var(--color-weiss) 6%, var(--color-gletscher-nacht)); }
+}
+
+/* ------------------------------------------------- Narrow (S06, 390px) -- */
+@media (max-width: 599.98px) {
+  body.bl { padding: 64px var(--space-6) var(--space-6); }
+  .bl-main { margin: 0 auto auto; }
+  .bl-title { font-size: 34px; line-height: 38px; }
+  .bl-actions { flex-direction: column; align-items: stretch; align-self: stretch; }
+  .bl-btn { width: 100%; }
+  .bl-error { flex-wrap: wrap; }
+  .bl-error__retry { align-self: flex-start; margin-left: 30px; }
+}

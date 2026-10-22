@@ -4,7 +4,7 @@
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-export type PaletteGroup = 'views' | 'settings' | 'lists' | 'actions';
+export type PaletteGroup = 'views' | 'settings' | 'lists' | 'mylists' | 'sites' | 'actions';
 
 export interface PaletteEntry {
   id: string;
@@ -69,7 +69,7 @@ export function matchText(query: string, text: string): { score: number; ranges:
   return { score: 300 - gaps * 4 - ranges.length * 10, ranges };
 }
 
-const GROUP_ORDER: Record<PaletteGroup, number> = { views: 0, actions: 1, settings: 2, lists: 3 };
+const GROUP_ORDER: Record<PaletteGroup, number> = { views: 0, actions: 1, settings: 2, sites: 3, lists: 4, mylists: 5 };
 
 /**
  * Rank entries for a query. An empty query lists the visible entries in
@@ -102,4 +102,32 @@ export function rankEntries(entries: readonly PaletteEntry[], query: string, lim
   }
   hits.sort((a, b) => b.score - a.score || GROUP_ORDER[a.entry.group] - GROUP_ORDER[b.entry.group]);
   return hits.slice(0, limit);
+}
+
+/**
+ * Hits grouped for display (K01): every group's hits stay together, in rank
+ * order; groups follow the rank of their best hit.
+ */
+export function groupHits(hits: readonly PaletteHit[]): PaletteHit[] {
+  const order: PaletteGroup[] = [];
+  const by = new Map<PaletteGroup, PaletteHit[]>();
+  for (const hit of hits) {
+    const g = hit.entry.group;
+    if (!by.has(g)) {
+      by.set(g, []);
+      order.push(g);
+    }
+    by.get(g)!.push(hit);
+  }
+  return order.flatMap((g) => by.get(g)!);
+}
+
+/** Two-letter tile for a list without an icon: «EasyList» -> «EL», «AdGuard Base» -> «AB». */
+export function initials(name: string): string {
+  const words = name.replace(/[^\p{L}\p{N}\s-]/gu, ' ').split(/[\s-]+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  const w = words[0] ?? '';
+  const caps = w.match(/\p{Lu}/gu) ?? [];
+  if (caps.length >= 2) return (caps[0] + caps[1]).toUpperCase();
+  return w.slice(0, 2).toUpperCase();
 }

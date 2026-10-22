@@ -12,6 +12,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#171C1E" media="(prefers-color-scheme: dark)">
   <title data-i18n="dashTitle">Bastion Shield</title>
   <link rel="icon" href="../icons/icon-on-32.png" sizes="32x32">
   <link rel="preload" href="shared/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
@@ -26,27 +28,40 @@
     <nav class="db-nav" data-i18n-aria-label="dashNavLabel" aria-label="Bereiche">
       <div class="db-nav__top">
         <a class="db-nav__brand" href="#overview">
-          <span data-mark data-mark-size="26" id="db-mark"></span>
-          <span class="db-nav__word" data-i18n="extName">Bastion Shield</span>
+          <span data-mark data-mark-size="22" id="db-mark"></span>
+          <span class="db-nav__word" data-i18n="extName" translate="no">Bastion Shield</span>
         </a>
         <div class="db-nav__tools">
-          <button type="button" class="db-nav__icon-btn" id="db-search" data-cmdk data-i18n-aria-label="cmdkOpen" aria-label="Suchen" aria-keyshortcuts="Control+K"><span data-icon="search" data-icon-size="16"></span></button>
           <button type="button" class="db-nav__icon-btn db-nav__rail" id="db-rail-toggle" aria-keyshortcuts="Control+." aria-controls="db-nav-list"><span data-icon="rail" data-icon-size="16"></span></button>
         </div>
       </div>
+      <button type="button" class="db-nav__search" id="db-search" data-cmdk data-i18n-aria-label="cmdkOpen" aria-label="Suchen" aria-keyshortcuts="Control+K"><span data-icon="search" data-icon-size="16"></span><span class="db-nav__search-label" data-i18n="navSearch">Suchen…</span><kbd class="db-nav__kbd" id="db-search-kbd" translate="no">Ctrl K</kbd></button>
       <ul class="db-nav__list" id="db-nav-list">
-        <li><a class="db-nav__link" href="#overview" data-view="overview"><span class="db-nav__tile db-nav__tile--2"><span data-icon="overview"></span></span><span class="db-nav__label" data-i18n="navOverview">Übersicht</span></a></li>
-        <li class="db-nav__group-end"><a class="db-nav__link" href="#activity" data-view="activity"><span class="db-nav__tile db-nav__tile--2"><span data-icon="activity"></span></span><span class="db-nav__label" data-i18n="navActivity">Aktivität</span></a></li>
-        <li><a class="db-nav__link" href="#lists" data-view="lists"><span class="db-nav__tile db-nav__tile--3"><span data-icon="lists"></span></span><span class="db-nav__label" data-i18n="navLists">Filterlisten</span></a></li>
-        <li><a class="db-nav__link" href="#filters" data-view="filters"><span class="db-nav__tile db-nav__tile--3"><span data-icon="filters"></span></span><span class="db-nav__label" data-i18n="navFilters">Eigene Filter</span></a></li>
-        <li class="db-nav__group-end"><a class="db-nav__link" href="#sites" data-view="sites"><span class="db-nav__tile db-nav__tile--3"><span data-icon="privacy"></span></span><span class="db-nav__label" data-i18n="navSites">Website-Ausnahmen</span></a></li>
-        <li><a class="db-nav__link" href="#privacy" data-view="privacy"><span class="db-nav__tile db-nav__tile--4"><span data-icon="lock"></span></span><span class="db-nav__label" data-i18n="navPrivacy">Datenschutz</span></a></li>
-        <li><a class="db-nav__link" href="#settings" data-view="settings"><span class="db-nav__tile db-nav__tile--4"><span data-icon="settings"></span></span><span class="db-nav__label" data-i18n="navSettings">Einstellungen</span></a></li>
-        <li><a class="db-nav__link" href="#about" data-view="about"><span class="db-nav__tile db-nav__tile--4"><span data-icon="about"></span></span><span class="db-nav__label" data-i18n="navAbout">Über</span></a></li>
-        <li id="db-nav-lab" class="db-nav__lab" hidden><a class="db-nav__link" href="#lab" data-view="lab"><span class="db-nav__tile db-nav__tile--4"><span data-icon="lab"></span></span><span class="db-nav__label" data-i18n="nerdLabNav">Entwicklertools</span></a></li>
+        <li class="db-nav__group"><span class="db-nav__heading" id="db-nav-g1" data-i18n="navGroupOverview">Überblick</span>
+          <ul aria-labelledby="db-nav-g1">
+          <li><a class="db-nav__link" href="#overview" data-view="overview"><span class="db-nav__tile" aria-hidden="true"><span data-icon="overview"></span></span><span class="db-nav__label" data-i18n="navOverview">Übersicht</span></a></li>
+          <li><a class="db-nav__link" href="#activity" data-view="activity"><span class="db-nav__tile" aria-hidden="true"><span data-icon="activity"></span></span><span class="db-nav__label" data-i18n="navActivity">Aktivität</span></a></li>
+          </ul>
+        </li>
+        <li class="db-nav__group"><span class="db-nav__heading" id="db-nav-g2" data-i18n="navGroupRules">Regeln</span>
+          <ul aria-labelledby="db-nav-g2">
+          <li><a class="db-nav__link" href="#lists" data-view="lists"><span class="db-nav__tile" aria-hidden="true"><span data-icon="lists"></span></span><span class="db-nav__label" data-i18n="navLists">Filterlisten</span></a></li>
+          <li><a class="db-nav__link" href="#filters" data-view="filters"><span class="db-nav__tile" aria-hidden="true"><span data-icon="filters"></span></span><span class="db-nav__label" data-i18n="navFilters">Eigene Filter</span></a></li>
+          <li><a class="db-nav__link" href="#sites" data-view="sites"><span class="db-nav__tile" aria-hidden="true"><span data-icon="sites"></span></span><span class="db-nav__label" data-i18n="navSites">Website-Ausnahmen</span></a></li>
+          </ul>
+        </li>
+        <li class="db-nav__group"><span class="db-nav__heading" id="db-nav-g3" data-i18n="navGroupSystem">System</span>
+          <ul aria-labelledby="db-nav-g3">
+          <li><a class="db-nav__link" href="#privacy" data-view="privacy"><span class="db-nav__tile" aria-hidden="true"><span data-icon="lock"></span></span><span class="db-nav__label" data-i18n="navPrivacy">Datenschutz</span></a></li>
+          <li><a class="db-nav__link" href="#settings" data-view="settings"><span class="db-nav__tile" aria-hidden="true"><span data-icon="settings"></span></span><span class="db-nav__label" data-i18n="navSettings">Einstellungen</span></a></li>
+          <li><a class="db-nav__link" href="#about" data-view="about"><span class="db-nav__tile" aria-hidden="true"><span data-icon="info"></span></span><span class="db-nav__label" data-i18n="navAbout">Über</span></a></li>
+          <li id="db-nav-lab" class="db-nav__lab" hidden><a class="db-nav__link" href="#lab" data-view="lab"><span class="db-nav__tile" aria-hidden="true"><span data-icon="lab"></span></span><span class="db-nav__label" data-i18n="nerdLabNav">Entwicklertools</span></a></li>
+          </ul>
+        </li>
       </ul>
       <div class="db-nav__foot" id="db-nav-foot"></div>
     </nav>
+
     <main class="db-main" id="db-main" tabindex="-1">
       <div class="db-view" id="db-view" aria-busy="true"></div>
     </main>

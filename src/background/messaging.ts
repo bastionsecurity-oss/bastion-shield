@@ -466,8 +466,12 @@ export async function handleMessage(ctx: MessageContext, msg: Message, sender: S
         ctx.myLists.set(msg.id, {
           enabled: typeof msg.enabled === 'boolean' ? msg.enabled : undefined,
           autoUpdate: typeof msg.autoUpdate === 'boolean' ? msg.autoUpdate : undefined,
+          title: typeof msg.title === 'string' ? msg.title : undefined,
         }),
       );
+    case 'mylists:restore':
+      if (typeof msg.id !== 'string') return { error: 'not-found' };
+      return myListsChange(ctx, () => ctx.myLists.restore(msg.id));
     case 'mylists:remove':
       if (typeof msg.id !== 'string') return { error: 'not-found' };
       return myListsChange(ctx, () => ctx.myLists.remove(msg.id));
