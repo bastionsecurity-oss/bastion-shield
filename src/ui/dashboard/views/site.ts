@@ -1,7 +1,9 @@
-// Bastion Shield — «Diese Website» (expanded popup only): protection switch
-// for the current site, blocked count with the data and time estimate, the
-// per-site blocking mode, fingerprinting level and script blocking, the DNR
-// rules that matched on the page, and «Seite funktioniert nicht richtig?».
+// Bastion Shield — «Diese Website» (expanded popup only; Paper DB05–DB07):
+// protection switch for the current site, blocked count with the data and
+// time estimate, the per-site blocking mode, fingerprinting level and script
+// blocking, the DNR rules that matched on the page, «Seite defekt? Melden…»
+// and the reload bar after a change. Long hosts wrap (cut in the middle past
+// 64 characters, full host in `title`); rows locked by the organisation say so.
 //
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -11,17 +13,21 @@ import { h, replace } from '../../shared/dom.ts';
 import { fmtNumber, t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
 import { call, connectLive, type LiveConnection } from '../../shared/messaging.ts';
-import { lockIcon, notice, segmented, switchControl } from '../../shared/controls.ts';
+import { notice, segmented, switchControl } from '../../shared/controls.ts';
 import { estimateFromSample, fmtBytes, fmtDuration, savingsUnits } from '../../shared/savings.ts';
 import { countEvent, eventKey, sampleType } from '../../shared/page-activity.ts';
+import { truncateMiddle, withUnit } from '../../shared/text.ts';
 import { createMatchedPanel } from '../../popup/matched.ts';
 import { startReport } from '../../popup/report.ts';
 import { setSiteSettings } from '../../popup/site-set.ts';
 import { normalisePopupState } from '../../popup/state.ts';
-import { errorState, nextId, popupTabId, statTile, type View, mount } from '../common.ts';
+import { errorState, nextId, popupTabId, retryView, statTile, withBusy, type View, mount } from '../common.ts';
 import { readHandoff } from '../../shared/handoff.ts';
 import { dir, getConfig, getMeta, onStoreChange } from '../store.ts';
 import { ListDirectory } from '../../shared/labels.ts';
+
+/** Hosts longer than this are cut in the middle (the title wraps over at most two lines). */
+export const SITE_HOST_MAX = 64;
 
 async function resolveTabId(): Promise<number | null> {
   const fromQuery = popupTabId();
@@ -34,8 +40,13 @@ async function resolveTabId(): Promise<number | null> {
   }
 }
 
-function row(label: string, labelId: string, control: HTMLElement, locked = false): HTMLElement {
-  return h('div', { class: 'db-row' }, h('div', { class: 'db-row__text' }, h('div', { class: 'db-row__label', text: label, attrs: { id: labelId } })), h('div', { class: 'db-row__ctl' }, locked ? lockIcon() : null, control));
+function row(label: string, labelId: string, control: HTMLElement, hint?: string): HTMLElement {
+  return h(
+    'div',
+    { class: 'db-row' },
+    h('div', { class: 'db-row__text' }, h('div', { class: 'db-row__label', text: label, attrs: { id: labelId } }), hint ? h('p', { class: 'db-row__desc', text: hint }) : null),
+    h('div', { class: 'db-row__ctl' }, control),
+  );
 }
 
 /** Latest state of «Diese Website» for the collapse hand-off (null until the view was shown). */
@@ -59,7 +70,7 @@ export function siteView(): View {
         const id = await resolveTabId();
         const res = id === null ? null : await call<PopupState>({ type: 'popup:state', tabId: id });
         if (id === null || !res || !res.ok || !res.data || typeof res.data !== 'object') {
-          mount(root, errorState(() => location.reload()));
+          mount(root, h('header', { class: 'db-head' }, h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: t('navSite'), attrs: { tabindex: -1 } }))), errorState(retryView));
           return;
         }
         tabId = id;
@@ -67,74 +78,77 @@ export function siteView(): View {
       }
       const s = normalisePopupState(raw, tabId);
       const site = s.site ?? s.host;
-      const title = h('h1', { class: 'db-head__title', text: s.host ?? s.site ?? t('navSite'), attrs: { tabindex: -1 } });
+      const fullHost = s.host ?? s.site ?? '';
+      const title = h('h1', {
+        class: 'db-head__title site-host',
+        text: fullHost ? truncateMiddle(fullHost, SITE_HOST_MAX) : t('navSite'),
+        attrs: { tabindex: -1, translate: fullHost ? 'no' : undefined, title: fullHost.length > SITE_HOST_MAX ? fullHost : undefined },
+      });
+      const eyebrow = h('p', { class: 'site-eyebrow', text: t('navSite') });
 
       if (s.globallyDisabled || !s.filterable || !site) {
         mount(
           root,
-          h('header', { class: 'db-head' }, h('div', { class: 'db-head__text' }, title)),
-          s.globallyDisabled ? notice(t('popupGlobalOffTitle'), t('popupGlobalOffText')) : notice(t('popupUnfilterableTitle'), t('popupUnfilterableText')),
+          h('header', { class: 'db-head site-head' }, h('div', { class: 'db-head__text' }, fullHost ? eyebrow : null, title)),
+          s.globallyDisabled ? notice(t('dashPausedTitle'), t('dashPausedText')) : notice(t('popupUnfilterableTitle'), t('popupUnfilterableText')),
         );
         return;
       }
 
-      // ---- Reload bar (after a per-site change) -----------------------------
+      // ---- Reload bar (after a per-site change; DB06) ------------------------
+      const reloadBtn = h('button', { class: 'btn site-reload__btn', attrs: { type: 'button' } }, t('siteReloadAction'));
       const reloadBar = h(
         'div',
         { class: 'site-reload', attrs: { role: 'status', hidden: true } },
-        icon('reload', 15),
-        h('span', { class: 'site-reload__text', text: t('popupReloadHint') }),
-        h(
-          'button',
-          {
-            class: 'btn btn--sm site-reload__btn',
-            attrs: { type: 'button' },
-            on: {
-              click: async () => {
-                try {
-                  await chrome.tabs.reload(tabId);
-                } catch {
-                  /* tab may be gone */
-                }
-                reloadBar.hidden = true;
-              },
-            },
-          },
-          t('actionReload'),
-        ),
+        h('span', { class: 'site-reload__tile', attrs: { 'aria-hidden': 'true' } }, icon('reload', 15)),
+        h('span', { class: 'site-reload__text', text: t('popupReloadBar') }),
+        reloadBtn,
+      );
+      reloadBtn.addEventListener('click', () =>
+        void withBusy(reloadBtn, async () => {
+          try {
+            await chrome.tabs.reload(tabId);
+          } catch {
+            /* tab may be gone */
+          }
+          reloadBar.hidden = true;
+          document.body.classList.remove('has-reload-bar');
+        }),
       );
 
       const setSite = async (patch: SiteSettings): Promise<boolean> => {
         const ok = await setSiteSettings(s, tabId, patch);
-        if (ok) reloadBar.hidden = false;
+        if (ok) {
+          reloadBar.hidden = false;
+          // The bar must not cover the last rows: the content gets room below it.
+          document.body.classList.add('has-reload-bar');
+        }
         return ok;
       };
 
       // ---- Header with the protection switch --------------------------------
       const ss = s.siteSettings;
       const toggleLabel = nextId('site');
+      const toggleState = h('span', { class: 'site-toggle__state', attrs: { id: toggleLabel, 'aria-hidden': 'true' } });
       const controls: { setDisabled(d: boolean): void }[] = [];
-      const paintEnabled = (): void => {
-        const off = !s.siteSettings.enabled || s.locks.settings;
-        for (const c of controls) c.setDisabled(off);
-        document.body.dataset.site = s.siteSettings.enabled ? 'on' : 'off';
-      };
+      const offSlot = h('div', { class: 'site-off-slot' });
       const protect = switchControl({
         checked: ss.enabled,
-        labelledBy: toggleLabel,
+        label: t('popupSiteToggle'),
         large: true,
         disabled: s.locks.siteToggle,
         onChange: async (v) => {
           const ok = await setSite({ enabled: v });
+          if (ok) s.siteSettings.enabled = v;
           paintEnabled();
           return ok;
         },
       });
       const head = h(
         'header',
-        { class: 'db-head' },
-        h('div', { class: 'db-head__text' }, title, h('span', { class: 'sr-only', text: t('popupSiteToggle'), attrs: { id: toggleLabel } })),
-        h('div', { class: 'db-head__aside' }, s.locks.siteToggle ? lockIcon() : null, protect.el),
+        { class: 'db-head site-head' },
+        h('div', { class: 'db-head__text' }, eyebrow, title),
+        h('div', { class: 'db-head__aside site-toggle' }, toggleState, protect.el),
       );
 
       // ---- Tiles --------------------------------------------------------------
@@ -150,10 +164,9 @@ export function siteView(): View {
         replace(
           tiles,
           statTile(fmtNumber(blocked), '', t('popupBlockedShort'), true),
-          statTile(data.value, data.unit, t('popupDataSaved')),
-          statTile(time.value, time.unit, t('popupTimeSaved')),
+          statTile(withUnit(data.value, data.unit), '', t('popupDataSaved')),
+          statTile(withUnit(time.value, time.unit), '', t('popupTimeSaved')),
         );
-        tiles.title = t('savingsEstimateNote');
       };
       paintTiles();
       if (s.counting) {
@@ -197,14 +210,22 @@ export function siteView(): View {
       });
       const scriptsLabel = nextId('site');
       const scripts = switchControl({ checked: ss.blockScripts, labelledBy: scriptsLabel, onChange: (v) => setSite({ blockScripts: v }) });
-      controls.push(scripts, fp, { setDisabled: (d) => mode.setDisabled(d || s.locks.mode) });
+      controls.push(
+        { setDisabled: (d) => scripts.setDisabled(d || s.locks.settings) },
+        { setDisabled: (d) => fp.setDisabled(d || s.locks.settings) },
+        { setDisabled: (d) => mode.setDisabled(d || s.locks.mode || s.locks.settings) },
+      );
+      const lockedAny = s.locks.mode || s.locks.settings;
+      const lockNote = lockedAny
+        ? h('p', { class: 'db-locked site-locked' }, icon('lock', 12), h('span', { text: t(s.locks.settings ? 'siteLockedAll' : 'siteLockedMode') }))
+        : null;
 
       const settings = h(
         'section',
-        { class: 'db-group' },
-        row(t('popupMode'), modeLabel, mode.el, s.locks.mode || s.locks.settings),
-        row(t('popupFingerprinting'), fpLabel, fp.el, s.locks.settings),
-        row(t('popupScripts'), scriptsLabel, scripts.el, s.locks.settings),
+        { class: 'db-group site-settings', attrs: { 'aria-label': t('navSite') } },
+        row(t('popupMode'), modeLabel, mode.el),
+        row(t('popupFingerprinting'), fpLabel, fp.el),
+        row(t('popupScripts'), scriptsLabel, scripts.el, t('siteScriptsHint')),
       );
 
       // ---- Matched rules and report -----------------------------------------
@@ -224,7 +245,7 @@ export function siteView(): View {
       const rules = h(
         'details',
         { class: 'site-rules' },
-        h('summary', { class: 'db-row site-rules__summary' }, h('span', { class: 'db-row__label', text: t('siteRulesTitle') }), h('span', { class: 'db-row__ctl' }, rulesCount, icon('chevronRight', 14, 'site-rules__chev'))),
+        h('summary', { class: 'db-row site-rules__summary' }, icon('chevronRight', 12, 'site-rules__chev'), h('span', { class: 'db-row__label site-rules__label', text: t('siteRulesTitle') }), rulesCount),
         rulesBody,
       );
       // getMatchedRules is quota-exempt in a user gesture: fetch when the user opens the list.
@@ -237,19 +258,43 @@ export function siteView(): View {
       const canReport = !(channel === 'none' || (channel === 'email' && !s.managed.supportEmail));
       const more = h(
         'section',
-        { class: 'db-group' },
+        { class: 'db-group site-more' },
         rules,
         canReport
           ? h(
               'button',
-              { class: 'db-row db-row--action', attrs: { type: 'button' }, on: { click: () => void startReport(s) } },
+              { class: 'db-row db-row--action site-report', attrs: { type: 'button' }, on: { click: () => void startReport(s) } },
+              icon('flag', 14),
               h('span', { class: 'db-row__label', text: t('siteReport') }),
-              h('span', { class: 'db-row__ctl' }, icon('chevronRight', 14)),
+              icon('chevronRight', 12, 'site-report__chev'),
             )
           : null,
       );
 
-      mount(root, head, tiles, settings, more, reloadBar);
+      const paintEnabled = (): void => {
+        const on = s.siteSettings.enabled;
+        for (const c of controls) c.setDisabled(!on);
+        toggleState.textContent = t(on ? 'popupProtectionOn' : 'popupProtectionOff');
+        document.body.dataset.site = on ? 'on' : 'off';
+        settings.classList.toggle('site-settings--off', !on || lockedAny);
+        // DB07: protection off replaces the figures with one quiet notice.
+        tiles.hidden = !on || !s.counting;
+        replace(
+          offSlot,
+          !on
+            ? h(
+                'div',
+                { class: 'site-off', attrs: { role: 'status' } },
+                h('span', { class: 'site-off__tile', attrs: { 'aria-hidden': 'true' } }, icon('privacy', 16)),
+                h('div', null, h('p', { class: 'site-off__title', text: t('siteOffTitle') }), h('p', { class: 'site-off__text', text: t('siteOffText') })),
+              )
+            : !s.counting
+              ? notice(t('popupCountOff'))
+              : null,
+        );
+      };
+
+      mount(root, head, tiles, offSlot, lockNote, settings, more, reloadBar);
       paintEnabled();
       // Keep the snapshot current for «Verkleinern» (the compact popup draws from it).
       collapseState = () => ({ ...s, counts: { ...counts } });
@@ -264,7 +309,6 @@ export function siteView(): View {
           paintTiles();
         });
       }
-      if (!s.counting) tiles.replaceWith(notice(t('popupCountOff')));
     },
     dispose() {
       // collapseState stays: «Verkleinern» from another section still hands over the last numbers.
@@ -273,6 +317,7 @@ export function siteView(): View {
       unsubscribe?.();
       unsubscribe = null;
       delete document.body.dataset.site;
+      document.body.classList.remove('has-reload-bar');
     },
   };
 }

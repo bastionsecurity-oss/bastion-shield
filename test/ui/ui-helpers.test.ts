@@ -53,8 +53,9 @@ test('normaliseHost', () => {
 
 test('parseSitesImport', () => {
   const ours = JSON.stringify({ format: 'bastion-shield-sites', version: 1, sites: { 'www.a.ch': { enabled: false, mode: 'aggressive', bogus: 1 }, 'b.ch': { fingerprinting: 'nope' }, 'not a host': {} } });
-  assert.deepEqual(parseSitesImport(ours), { 'a.ch': { enabled: false, mode: 'aggressive' }, 'b.ch': {} });
-  assert.deepEqual(parseSitesImport('# comment\nwww.x.ch\nhttps://y.ch/path\n\n!z\n'), { 'x.ch': { enabled: false }, 'y.ch': { enabled: false } });
+  // { sites, invalid }: the import dialog (D04) says how many lines it skips.
+  assert.deepEqual(parseSitesImport(ours), { sites: { 'a.ch': { enabled: false, mode: 'aggressive' }, 'b.ch': {} }, invalid: 1 });
+  assert.deepEqual(parseSitesImport('# comment\nwww.x.ch\nhttps://y.ch/path\n\n!z\n'), { sites: { 'x.ch': { enabled: false }, 'y.ch': { enabled: false } }, invalid: 0 });
   assert.equal(parseSitesImport('[1,2,3]'), null);
   assert.equal(parseSitesImport(''), null);
 });

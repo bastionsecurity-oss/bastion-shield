@@ -1,5 +1,7 @@
-// Bastion Shield — collapsible navigation rail for the dashboard tab (wide
-// layout, ≥ 1024px) and the expanded popup. Collapsed, the sidebar shows only
+// Bastion Shield — navigation rail (Paper DB01 / DB15): brand, search
+// (opens the command palette, [data-cmdk]), groups Überblick / Regeln /
+// System and the CTA at the bottom; 240px in the tab, 200px in the expanded
+// popup. In the wide tab layout (≥ 1024px) it can collapse: the sidebar shows only
 // the icon tiles and the content gets the room; labels stay in the
 // accessibility tree and appear as a tooltip on hover or keyboard focus.
 // Toggle: the button in the navigation header or Ctrl+. (also in the
@@ -35,9 +37,9 @@ function writeStored(collapsed: boolean): void {
   }
 }
 
-/** The rail exists in the expanded popup and in the wide dashboard layout (below 1024px the nav is a top bar). */
+/** The collapsible rail exists in the wide dashboard tab (below 1024px the nav is a top bar; the 200px popup rail stays open). */
 export function railAvailable(): boolean {
-  if (popupMode) return true;
+  if (popupMode) return false;
   try {
     return window.matchMedia(WIDE).matches;
   } catch {
@@ -59,10 +61,10 @@ function syncButton(): void {
   btn.title = `${label} (${shortcutLabel('.')})`;
 }
 
-/** "Ctrl+." / "⌘." for the current platform. */
+/** "Ctrl K" / "⌘ K" for the current platform, with a non-breaking space inside the combo. */
 export function shortcutLabel(key: string): string {
   const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
-  return mac ? `⌘${key.toUpperCase()}` : `Ctrl+${key.toUpperCase()}`;
+  return `${mac ? '⌘' : 'Ctrl'} ${key.toUpperCase()}`;
 }
 
 /** What the user chose; shown only where a rail exists (a narrow tab has a top bar instead). */
@@ -109,7 +111,23 @@ function hideTip(): void {
   tipFor = null;
 }
 
-const TIP_TARGETS = '.db-nav__link, .db-nav__icon-btn, .db-nav__collapse, .db-nav__cta, .db-nav__brand';
+const TIP_TARGETS = '.db-nav__link, .db-nav__icon-btn, .db-nav__search, .db-nav__cta, .db-nav__brand';
+
+/**
+ * Arrow keys move between the navigation links (Home / End jump to the
+ * first / last); Tab still walks every control in order.
+ */
+function bindArrowKeys(nav: HTMLElement): void {
+  nav.addEventListener('keydown', (ev: KeyboardEvent) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(ev.key) || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+    const links = Array.from(nav.querySelectorAll<HTMLElement>('.db-nav__link')).filter((a) => a.offsetParent !== null);
+    const i = links.indexOf(document.activeElement as HTMLElement);
+    if (i < 0) return;
+    ev.preventDefault();
+    const next = ev.key === 'Home' ? 0 : ev.key === 'End' ? links.length - 1 : (i + (ev.key === 'ArrowDown' ? 1 : -1) + links.length) % links.length;
+    links[next].focus();
+  });
+}
 
 function bindTips(nav: HTMLElement): void {
   nav.addEventListener('pointerover', (ev) => {
@@ -145,8 +163,11 @@ export function initRail(): void {
     }
   }
 
+  const kbd = document.getElementById('db-search-kbd');
+  if (kbd) kbd.textContent = shortcutLabel('K');
   const nav = document.querySelector<HTMLElement>('.db-nav');
   if (!nav) return;
+  bindArrowKeys(nav);
   // Stagger index for the label fade (CSS --i).
   nav.querySelectorAll<HTMLElement>('.db-nav__link').forEach((a, i) => a.style.setProperty('--i', String(i)));
   document.getElementById('db-rail-toggle')?.addEventListener('click', () => setRail());

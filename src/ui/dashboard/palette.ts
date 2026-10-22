@@ -12,12 +12,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { $$, h, replace } from '../shared/dom.ts';
-import { localized, t } from '../shared/i18n.ts';
+import { fmtNumber, localized, plural, t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
+import { categoryLabel } from '../shared/labels.ts';
+import { truncateMiddle } from '../shared/text.ts';
 import { openInTab, popupMode } from './common.ts';
-import { rankEntries, type PaletteEntry, type PaletteGroup, type PaletteHit } from './palette-core.ts';
+import { groupHits, initials, rankEntries, type PaletteEntry, type PaletteGroup, type PaletteHit } from './palette-core.ts';
 import { railAvailable, railCollapsed, setRail, shortcutLabel } from './rail.ts';
-import { getConfig, getLists, isLocked } from './store.ts';
+import { getConfig, getCustom, getLists, getSites, isLocked, myLists } from './store.ts';
 import { persist } from './views/privacy.ts';
 import { revealNerd } from './nerd-reveal.ts';
 
@@ -25,7 +27,12 @@ interface Item extends PaletteEntry {
   run(): void | Promise<void>;
   /** Leading visual: a nav tile clone or an icon name. */
   lead?: Node;
+  /** The label is a host: mono, cut in the middle, never translated. */
+  host?: boolean;
 }
+
+/** Characters of a host label before it is cut in the middle. */
+const HOST_MAX = 44;
 
 /** Setting rows by section: [label key, group title key, description key?]. */
 const SETTINGS: Record<string, [string, string, string?][]> = {
@@ -35,23 +42,23 @@ const SETTINGS: Record<string, [string, string, string?][]> = {
     ['privDebounce', 'privGroupSignals', 'privDebounceDesc'],
     ['privAmp', 'privGroupSignals', 'privAmpDesc'],
     ['privClipboard', 'privGroupClipboard', 'privClipboardDesc'],
-    ['privFingerprint', 'privGroupFingerprint', 'privFingerprintDesc'],
+    ['privFingerprint', 'privGroupClipboard', 'privFingerprintDesc'],
     ['privPing', 'privGroupBrowser', 'privPingDesc'],
     ['privSandbox', 'privGroupBrowser', 'privSandboxDesc'],
     ['privWebrtc', 'privGroupBrowser', 'privWebrtcDesc'],
     ['privCookies', 'privGroupBrowser', 'privCookiesDesc'],
   ],
   settings: [
-    ['setMode', 'setGroupBlocking', 'setModeDesc'],
-    ['setLanguage', 'setGroupLanguage'],
-    ['setBadge', 'setGroupDisplay', 'setBadgeDesc'],
-    ['setIncidentCta', 'setGroupDisplay', 'setIncidentCtaDesc'],
+    ['setMode', 'setGroupGeneral', 'setModeDesc'],
+    ['setLanguage', 'setGroupGeneral'],
+    ['setBadge', 'setGroupGeneral', 'setBadgeDesc'],
+    ['setIncidentCta', 'setGroupGeneral', 'setIncidentCtaDesc'],
     ['setActivityLog', 'setGroupActivity', 'setActivityLogDesc'],
     ['setHistory', 'setGroupActivity', 'setHistoryDesc'],
     ['setRetention', 'setGroupActivity', 'setRetentionDesc'],
     ['setClearHistory', 'setGroupActivity', 'setClearHistoryDesc'],
-    ['setGroupBackup', 'setGroupBackup'],
-    ['setGroupReset', 'setGroupReset'],
+    ['setBackupRow', 'setGroupBackup'],
+    ['setResetRow', 'setGroupReset'],
     ['nerdSettingsEnabled', 'nerdSettingsTitle', 'nerdSettingsEnabledDesc'],
   ],
 };
@@ -67,7 +74,16 @@ const GROUP_TITLE: Record<PaletteGroup, string> = {
   actions: 'cmdkGroupActions',
   settings: 'cmdkGroupSettings',
   lists: 'cmdkGroupLists',
+  sites: 'navSites',
+  mylists: 'cmdkGroupMyLists',
 };
+
+/** Sections the empty state suggests (K02). */
+const SUGGEST: [view: string, labelKey: string][] = [
+  ['lists', 'navLists'],
+  ['sites', 'navSites'],
+  ['settings', 'navSettings'],
+];
 
 let dialog: HTMLDialogElement | null = null;
 
@@ -97,8 +113,23 @@ async function reveal(view: string, text: string, selector: string): Promise<voi
   if (!(await routedTo(view))) return;
   const page = document.querySelector(`.db-page--${view}`);
   const label = Array.from(page?.querySelectorAll<HTMLElement>(selector) ?? []).find((el) => el.textContent?.trim() === text);
-  if (!label) return;
-  const target = label.closest<HTMLElement>('.db-row, .lists-row, .nerd-domains__block, .db-panel') ?? label;
+  if (label) flash(label);
+}
+
+/** Go to a section and bring the first element matching `selector` (e.g. a row's data-host) into view. */
+async function revealSelector(view: string, selector: string): Promise<void> {
+  if (!(await routedTo(view))) return;
+  // Rows may arrive a moment after the route (lists load asynchronously).
+  for (let i = 0; i < 20; i++) {
+    const el = document.querySelector<HTMLElement>(`.db-page--${view} ${selector}`);
+    if (el) return flash(el);
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
+/** Scroll the row around `label` into view, pulse it once and focus its control. */
+function flash(label: HTMLElement): void {
+  const target = label.closest<HTMLElement>('.db-row, .lists-row, .nerd-domains__block, .db-panel, [data-host], [data-list-id]') ?? label;
   target.scrollIntoView({ block: 'center', behavior: 'smooth' });
   target.classList.remove('db-flash');
   void target.offsetWidth; // restart the animation
@@ -110,9 +141,20 @@ async function reveal(view: string, text: string, selector: string): Promise<voi
 
 async function buildItems(): Promise<Item[]> {
   const items: Item[] = [];
-  const cfgR = await getConfig();
+  const [cfgR, lists, sites, custom, mine] = await Promise.all([getConfig(), getLists(), getSites(), getCustom(), myLists()]);
   const cfg = cfgR.ok ? cfgR.data : null;
   const nerd = cfg?.settings.nerd?.enabled === true;
+  // Right-hand context of the sections that have a count (K01).
+  const viewHint: Record<string, string> = {};
+  if (lists.ok) viewHint.lists = t('cmdkListsActive', fmtNumber(Object.values(lists.data.enabled).filter(Boolean).length));
+  if (custom.ok) {
+    const lines = custom.data.text.split('\n').filter((l) => l.trim() !== '').length;
+    if (lines) viewHint.filters = t('cmdkFilterLines', fmtNumber(lines));
+  }
+  if (sites.ok) {
+    const n = Object.keys(sites.data).length;
+    if (n) viewHint.sites = t('cmdkSitesCount', fmtNumber(n));
+  }
 
   // Sections: straight from the navigation, so the palette never offers what the nav hides.
   for (const a of $$<HTMLAnchorElement>('.db-nav__list .db-nav__link[data-view]')) {
@@ -125,7 +167,7 @@ async function buildItems(): Promise<Item[]> {
       group: 'views',
       label,
       lead: tile ?? undefined,
-      hint: a.dataset.openTab ? t('cmdkOpensTab') : undefined,
+      hint: a.dataset.openTab ? t('cmdkOpensTab') : viewHint[view],
       run: () => {
         if (a.dataset.openTab) void openInTab(a.dataset.openTab);
         else location.hash = `#${view}`;
@@ -151,8 +193,7 @@ async function buildItems(): Promise<Item[]> {
   addSettings('settings', SETTINGS.settings);
   if (nerd) addSettings('settings', NERD_SETTINGS);
 
-  // Filter lists by name (and description).
-  const lists = await getLists();
+  // Filter lists by name (and description): category when on, «Aus» when off.
   if (lists.ok) {
     for (const l of lists.data.meta.lists ?? []) {
       const name = localized(l.name);
@@ -161,9 +202,41 @@ async function buildItems(): Promise<Item[]> {
         id: `list:${l.id}`,
         group: 'lists',
         label: name,
-        hint: lists.data.enabled[l.id] ? t('cmdkListOn') : t('cmdkListOff'),
+        hint: lists.data.enabled[l.id] ? categoryLabel(l.category) : t('cmdkListOff'),
         keywords: localized(l.description),
+        lead: h('span', { class: 'cmdk__initials', text: initials(name), attrs: { translate: 'no' } }),
         run: () => reveal('lists', name, '.lists-row__name'),
+      });
+    }
+  }
+
+  // Website exceptions by host (K03): mono, cut in the middle, mode on the right.
+  if (sites.ok) {
+    for (const [host, s] of Object.entries(sites.data)) {
+      const hint = s.enabled === false ? t('cmdkSiteOff') : s.mode === 'aggressive' ? t('modeAggressive') : s.mode === 'standard' ? t('modeStandard') : undefined;
+      items.push({
+        id: `site:${host}`,
+        group: 'sites',
+        label: host,
+        hint,
+        host: true,
+        lead: icon('sites', 14),
+        run: () => revealSelector('sites', `[data-host="${CSS.escape(host)}"]`),
+      });
+    }
+  }
+
+  // The user's own lists (Meine Listen) by title.
+  if (mine.ok) {
+    for (const l of mine.data.lists) {
+      items.push({
+        id: `mylist:${l.id}`,
+        group: 'mylists',
+        label: l.title,
+        hint: plural(l.filters, 'cmdkMyListFiltersOne', 'cmdkMyListFilters'),
+        keywords: l.url ?? l.fileName,
+        lead: icon('lists', 14),
+        run: () => revealSelector('lists', `[data-list-id="${CSS.escape(l.id)}"]`),
       });
     }
   }
@@ -253,11 +326,36 @@ async function open(): Promise<void> {
       placeholder: t('cmdkPlaceholder'),
       autocomplete: 'off',
       spellcheck: 'false',
+      maxlength: 200,
     },
   });
   const list = h('ul', { class: 'cmdk__list', attrs: { id: listId, role: 'listbox', 'aria-label': t('cmdkLabel') } });
-  const empty = h('p', { class: 'cmdk__empty', attrs: { role: 'status' } });
-  const kbd = (k: string) => h('kbd', { class: 'cmdk__kbd', text: k });
+  // Empty state (K02): what was not found, what to search for, three sections to jump to.
+  const emptyTitle = h('p', { class: 'cmdk__empty-title' });
+  const empty = h(
+    'div',
+    { class: 'cmdk__empty', attrs: { role: 'status' }, hidden: true },
+    emptyTitle,
+    h('p', { class: 'cmdk__empty-text', text: t('cmdkEmptyHint') }),
+    h(
+      'div',
+      { class: 'cmdk__suggest' },
+      ...SUGGEST.map(([view, key]) =>
+        h('button', {
+          class: 'btn btn--outline btn--sm',
+          text: t(key),
+          attrs: { type: 'button' },
+          on: {
+            click: () => {
+              d.close();
+              location.hash = `#${view}`;
+            },
+          },
+        }),
+      ),
+    ),
+  );
+  const kbd = (k: string) => h('kbd', { class: 'cmdk__kbd', text: k, attrs: { translate: 'no' } });
   const d = h(
     'dialog',
     { class: `cmdk${popupMode ? ' cmdk--popup' : ''}`, attrs: { 'aria-label': t('cmdkLabel') } },
@@ -291,7 +389,7 @@ async function open(): Promise<void> {
   };
 
   const draw = () => {
-    hits = rankEntries(items, input.value);
+    hits = groupHits(rankEntries(items, input.value));
     active = 0;
     const rows: Node[] = [];
     let group: PaletteGroup | null = null;
@@ -312,16 +410,20 @@ async function open(): Promise<void> {
               click: () => void run(i),
             },
           },
-          h('span', { class: 'cmdk__lead' }, leadFor(item)),
-          h('span', { class: 'cmdk__text' }, h('span', { class: 'cmdk__label' }, ...highlight(item.label, hit.ranges)), item.hint ? h('span', { class: 'cmdk__hint', text: item.hint }) : null),
+          h('span', { class: 'cmdk__lead', attrs: { 'aria-hidden': 'true' } }, leadFor(item)),
+          item.host
+            ? h('span', { class: 'cmdk__label cmdk__label--host mono', text: truncateMiddle(item.label, HOST_MAX), attrs: { title: item.label, translate: 'no' } })
+            : h('span', { class: 'cmdk__label', attrs: { title: item.label } }, ...highlight(item.label, hit.ranges)),
+          item.hint ? h('span', { class: 'cmdk__hint', text: item.hint }) : null,
           item.shortcut ? kbd(item.shortcut) : null,
           h('span', { class: 'cmdk__enter', attrs: { 'aria-hidden': 'true' } }, icon('chevronRight', 14)),
         ),
       );
     });
     replace(list, ...rows);
-    empty.textContent = hits.length ? '' : t('cmdkEmpty', input.value.trim());
+    emptyTitle.textContent = hits.length ? '' : t('cmdkEmpty', input.value.trim());
     empty.hidden = hits.length > 0;
+    list.hidden = hits.length === 0;
     if (hits.length) setActive(0);
     else input.removeAttribute('aria-activedescendant');
   };
@@ -336,7 +438,9 @@ async function open(): Promise<void> {
   input.addEventListener('input', draw);
   input.addEventListener('keydown', (ev) => {
     if (ev.isComposing) return;
-    const step = ev.key === 'ArrowDown' || (ev.key === 'Tab' && !ev.shiftKey) ? 1 : ev.key === 'ArrowUp' || (ev.key === 'Tab' && ev.shiftKey) ? -1 : ev.key === 'PageDown' ? 5 : ev.key === 'PageUp' ? -5 : 0;
+    // Without results Tab leaves the field for the suggestions.
+    const tab = ev.key === 'Tab' && hits.length > 0;
+    const step = ev.key === 'ArrowDown' || (tab && !ev.shiftKey) ? 1 : ev.key === 'ArrowUp' || (tab && ev.shiftKey) ? -1 : ev.key === 'PageDown' ? 5 : ev.key === 'PageUp' ? -5 : 0;
     if (step) {
       ev.preventDefault();
       if (Math.abs(step) === 5) setActive(Math.max(0, Math.min(hits.length - 1, active + step)));

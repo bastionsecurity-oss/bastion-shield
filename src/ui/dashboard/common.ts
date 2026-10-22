@@ -7,7 +7,6 @@
 import { append, h, type Child } from '../shared/dom.ts';
 import { t } from '../shared/i18n.ts';
 import { icon } from '../shared/icons.ts';
-import { eyebrow, lockIcon, notice } from '../shared/controls.ts';
 import { openDashboard } from '../shared/messaging.ts';
 
 export interface View {
@@ -73,13 +72,16 @@ export function mount(root: Element, ...children: Child[]): void {
   append(root, children);
 }
 
-/** Page header. The h1 takes focus on navigation so screen readers announce the view. */
+/**
+ * Page header: 40px title (24px in the panel), one visible lead sentence
+ * (16px, ink 2), optional actions aligned to the right and the bottom. The h1
+ * takes focus on navigation so screen readers announce the view.
+ */
 export function pageHead(title: string, lead?: Child, aside?: Child): HTMLElement {
   return h(
     'header',
     { class: 'db-head' },
-    // The lead stays for screen readers only: the title already says what the page is.
-    h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: title, attrs: { tabindex: -1 } }), lead ? (typeof lead === 'string' ? h('p', { class: 'db-head__lead sr-only', text: lead }) : lead) : null),
+    h('div', { class: 'db-head__text' }, h('h1', { class: 'db-head__title', text: title, attrs: { tabindex: -1 } }), lead ? (typeof lead === 'string' ? h('p', { class: 'db-head__lead', text: lead }) : lead) : null),
     aside ? h('div', { class: 'db-head__aside' }, aside) : null,
   );
 }
@@ -93,11 +95,33 @@ export interface PanelOptions {
   flush?: boolean;
 }
 
+/** Section of a settings-like view: 24px h2, then rows separated by 1px lines, no fill (DB27). */
 export function panel(opts: PanelOptions, ...children: Child[]): HTMLElement {
   return h(
     'section',
     { class: `db-panel${opts.flush ? ' db-panel--flush' : ''}${opts.class ? ` ${opts.class}` : ''}`, attrs: { id: opts.id } },
-    opts.title ? h('div', { class: 'db-panel__head' }, eyebrow(opts.title, opts.aside, 'h2')) : null,
+    opts.title ? h('div', { class: 'db-panel__head' }, h('h2', { class: 'db-panel__title', text: opts.title }), opts.aside ? h('span', { class: 'db-panel__aside' }, opts.aside) : null) : null,
+    ...children,
+  );
+}
+
+export interface CardOptions {
+  title?: string;
+  /** Right side of the title row (meta text or a quiet link). */
+  aside?: Child;
+  class?: string;
+  /** Title size: 'section' (24px, list groups) or 'title' (17px, default). */
+  size?: 'section' | 'title';
+  /** Rows go edge to edge (lists): the card has no inner padding. */
+  flush?: boolean;
+}
+
+/** Bordered card (1px line, radius 24): overview charts, top lists, list groups (DB01, DB11). */
+export function card(opts: CardOptions, ...children: Child[]): HTMLElement {
+  return h(
+    'section',
+    { class: `db-card${opts.flush ? ' db-card--flush' : ''}${opts.size === 'section' ? ' db-card--section' : ''}${opts.class ? ` ${opts.class}` : ''}` },
+    opts.title ? h('div', { class: 'db-card__head' }, h('h2', { class: 'db-card__title', text: opts.title }), opts.aside ? h('div', { class: 'db-card__aside' }, opts.aside) : null) : null,
     ...children,
   );
 }
@@ -112,7 +136,11 @@ export interface RowOptions {
   descId?: string;
 }
 
-/** Label + one-line explanation on the left, control (and lock) on the right. */
+/**
+ * Label (14px semibold) with its one-sentence explanation below, control on
+ * the right (DB27/DB28). A locked row says why instead: lock + «Von Ihrer
+ * Organisation festgelegt», and the control is dimmed.
+ */
 export function settingRow(o: RowOptions): HTMLElement {
   return h(
     'div',
@@ -121,28 +149,88 @@ export function settingRow(o: RowOptions): HTMLElement {
       'div',
       { class: 'db-row__text' },
       h('div', { class: 'db-row__label', text: o.label, attrs: { id: o.labelId } }),
-      // Kept as the control's accessible description, not shown: rows stay one line.
-      o.desc ? h('p', { class: 'db-row__desc sr-only', text: o.desc, attrs: { id: o.descId } }) : null,
+      o.locked
+        ? lockedNote(o.descId)
+        : o.desc
+          ? h('p', { class: 'db-row__desc', text: o.desc, attrs: { id: o.descId } })
+          : null,
     ),
-    h('div', { class: 'db-row__ctl' }, o.locked ? lockIcon() : null, o.control),
+    h('div', { class: 'db-row__ctl' }, o.control),
   );
+}
+
+/** «🔒 Von Ihrer Organisation festgelegt»: the line a locked row shows in place of its description. */
+export function lockedNote(id?: string): HTMLElement {
+  return h('p', { class: 'db-locked', attrs: { id } }, icon('lock', 12), h('span', { text: t('lockedByPolicy') }));
 }
 
 export function loading(): HTMLElement {
   return h('div', { class: 'db-loading', attrs: { role: 'status' } }, h('span', { class: 'db-loading__bar' }), h('span', { class: 'sr-only', text: t('stateLoading') }));
 }
 
-export function errorState(onRetry?: () => void): HTMLElement {
+/**
+ * Run `work` while `btn` shows it is busy: the label stays, the spinner
+ * appears after 150 ms and then stays at least 300 ms (AGENTS.md).
+ */
+export async function withBusy<T>(btn: HTMLElement, work: () => Promise<T>): Promise<T> {
+  let shownAt = 0;
+  const timer = setTimeout(() => {
+    shownAt = Date.now();
+    btn.setAttribute('aria-busy', 'true');
+  }, 150);
+  try {
+    return await work();
+  } finally {
+    clearTimeout(timer);
+    if (shownAt) {
+      const left = 300 - (Date.now() - shownAt);
+      if (left > 0) await new Promise((r) => setTimeout(r, left));
+    }
+    btn.removeAttribute('aria-busy');
+  }
+}
+
+/**
+ * Error banner (DB04): danger-soft card, tile, title, one sentence and
+ * «Erneut versuchen», which runs `onRetry` (the view loads again; no page reload).
+ */
+export function errorState(onRetry?: () => void | Promise<void>, title = t('dashErrorTitle'), text = t('dashErrorText')): HTMLElement {
+  const retry = onRetry
+    ? h('button', { class: 'btn btn--primary db-error__retry', attrs: { type: 'button' } }, icon('reload', 15), t('actionRetry'))
+    : null;
+  retry?.addEventListener('click', () => void withBusy(retry, async () => onRetry?.()));
   return h(
     'div',
-    { class: 'db-error' },
-    notice(t('dashErrorTitle'), t('dashErrorText'), 'alert'),
-    onRetry ? h('button', { class: 'btn btn--secondary', attrs: { type: 'button' }, on: { click: onRetry } }, icon('reload', 15), t('actionRefresh')) : null,
+    { class: 'db-error', attrs: { role: 'alert' } },
+    h('span', { class: 'db-error__tile', attrs: { 'aria-hidden': 'true' } }, icon('alert', 22)),
+    h('div', { class: 'db-error__text' }, h('h2', { class: 'db-error__title', text: title }), h('p', { class: 'db-error__body', text })),
+    retry,
   );
 }
 
-export function emptyState(title: string, text?: string, action?: Child): HTMLElement {
-  return h('div', { class: 'db-empty' }, h('p', { class: 'db-empty__title', text: title }), text ? h('p', { class: 'db-empty__text', text }) : null, action ?? null);
+/** Render the current view again (the router listens): the retry action of a view's error banner. */
+export function retryView(): void {
+  document.dispatchEvent(new CustomEvent('db:retry'));
+}
+
+/** Dark banner «Schutz pausiert» while the organisation's policy switched protection off everywhere (DB04). */
+export function pausedBanner(): HTMLElement {
+  return h(
+    'div',
+    { class: 'db-paused', attrs: { role: 'status' } },
+    h('span', { class: 'db-paused__tile', attrs: { 'aria-hidden': 'true' } }, icon('pause', 16)),
+    h('div', null, h('p', { class: 'db-paused__title', text: t('dashPausedTitle') }), h('p', { class: 'db-paused__body', text: t('dashPausedText') })),
+  );
+}
+
+/** Empty state (DB03, DB10): optional decorative picture, title, one sentence, optional action. */
+export function emptyState(title: string, text?: string, action?: Child, art?: Child): HTMLElement {
+  return h(
+    'div',
+    { class: `db-empty${art ? ' db-empty--art' : ''}` },
+    art ? h('div', { class: 'db-empty__art', attrs: { 'aria-hidden': 'true' } }, art) : null,
+    h('div', { class: 'db-empty__main' }, h('p', { class: 'db-empty__title', text: title }), text ? h('p', { class: 'db-empty__text', text }) : null, action ?? null),
+  );
 }
 
 /** Local calendar day key, YYYY-MM-DD (matches DailyAggregate.day). */

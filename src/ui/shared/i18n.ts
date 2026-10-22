@@ -148,6 +148,29 @@ export function clearI18nCache(): void {
 }
 
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt'] as const;
+const BRAND = 'Bastion Shield';
+
+/**
+ * Set `text` as the content of `el`, with «Bastion Shield» inside a
+ * translate="no" span so page translators leave the brand alone (AGENTS.md).
+ */
+export function setBrandedText(el: HTMLElement, text: string): void {
+  if (!text.includes(BRAND) || el.closest('[translate="no"]') || el.tagName === 'TITLE' || el.tagName === 'OPTION') {
+    el.textContent = text;
+    return;
+  }
+  el.replaceChildren(
+    ...text
+      .split(BRAND)
+      .flatMap((part, i) => {
+        const brand = document.createElement('span');
+        brand.setAttribute('translate', 'no');
+        brand.textContent = BRAND;
+        return i ? [brand, part] : [part];
+      })
+      .filter((n) => n !== ''),
+  );
+}
 
 /**
  * Fill every element below `root` that carries data-i18n (textContent) or
@@ -163,7 +186,7 @@ export function translate(root: ParentNode = document): void {
   for (const el of Array.from(root.querySelectorAll<HTMLElement>('[data-i18n]'))) {
     const subs = el.dataset.i18nSub ? el.dataset.i18nSub.split('|') : undefined;
     const msg = t(el.dataset.i18n ?? '', subs);
-    if (msg) el.textContent = msg;
+    if (msg) setBrandedText(el, msg);
   }
   for (const attr of ATTRS) {
     const dataKey = `i18n${attr.replace(/(^|-)([a-z])/g, (_m, _d: string, c: string) => c.toUpperCase())}`;

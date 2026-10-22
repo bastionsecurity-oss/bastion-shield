@@ -1,10 +1,11 @@
 <!doctype html>
 <!--
-  Bastion Shield — toolbar popup (compact). Control-Center style modules:
-  protection switch for the current site, data and time saved, blocked count,
-  blocking mode, and actions (report, all settings, incident CTA). The gear
-  opens the expanded view (panel.html) in the same popup. Static skeleton so
-  the first paint happens before any script runs; popup.ts fills it in.
+  Bastion Shield — toolbar popup (compact), artboards P01–P15. Tiles on the
+  popup ground: protection switch for the current site, data and time saved,
+  blocked count, blocking mode, and actions (report, all settings, incident
+  CTA). The gear opens the expanded view (panel.html) in the same popup.
+  Static skeleton so the first paint happens before any script runs;
+  popup.ts fills it in. Focus order: protection, mode, report, settings, CTA.
   SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
@@ -13,6 +14,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#F2F4F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#131215" media="(prefers-color-scheme: dark)">
   <title data-i18n="extName">Bastion Shield</title>
   <link rel="preload" href="shared/fonts/inter-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="shared/fonts/inter-tight-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
@@ -26,53 +29,80 @@
   <link rel="prefetch" href="dashboard.js">
 </head>
 <body class="pp" data-state="loading">
-  <h1 class="sr-only" data-i18n="extName">Bastion Shield</h1>
-  <div class="pp-org" id="pp-org" hidden></div>
+  <h1 class="sr-only" translate="no" data-i18n="extName">Bastion Shield</h1>
 
   <main class="pp-main" id="pp-main">
+    <div class="pp-org" id="pp-org" hidden></div>
+
     <div class="pp-top">
       <!-- Protection for this site: the whole tile is the switch. -->
       <button type="button" class="pp-mod pp-protect" id="pp-protect" role="switch" aria-checked="true" aria-labelledby="pp-toggle-label" aria-describedby="pp-host pp-toggle-lock">
-        <span class="pp-protect__icon"><span data-mark data-mark-size="26" id="pp-mark"></span></span>
+        <span class="pp-protect__head" aria-hidden="true">
+          <span class="pp-protect__icon"><span data-mark data-mark-size="26" id="pp-mark"></span></span>
+          <span class="pp-protect__switch"></span>
+        </span>
         <span class="pp-protect__text">
           <span class="sr-only" id="pp-toggle-label" data-i18n="popupSiteToggle">Schutz für diese Website</span>
-          <span class="pp-protect__state" id="pp-toggle-state" aria-hidden="true">&nbsp;</span>
-          <span class="pp-protect__host" id="pp-host">&nbsp;</span>
+          <span class="pp-protect__line">
+            <span class="pp-protect__state" id="pp-toggle-state" aria-hidden="true">&nbsp;</span>
+            <span class="pp-protect__lock" id="pp-toggle-lock" hidden></span>
+          </span>
+          <span class="pp-protect__host" id="pp-host" translate="no"><span class="pp-protect__host-vis" id="pp-host-vis" aria-hidden="true">&nbsp;</span><span class="sr-only" id="pp-host-full"></span></span>
         </span>
-        <span class="pp-protect__lock" id="pp-toggle-lock" hidden></span>
       </button>
 
       <div class="pp-col" id="pp-savings">
-        <div class="pp-mod pp-stat">
-          <div class="pp-stat__value"><span class="num" id="pp-data">0</span> <span class="pp-stat__unit" id="pp-data-unit">kB</span></div>
+        <div class="pp-mod pp-stat" id="pp-stat-data">
+          <div class="pp-stat__value"><span class="num" id="pp-data">0</span><span class="pp-stat__unit" id="pp-data-unit">kB</span></div>
           <div class="pp-stat__label" data-i18n="popupDataSaved">weniger geladen</div>
         </div>
-        <div class="pp-mod pp-stat">
-          <div class="pp-stat__value"><span class="num" id="pp-time">0</span> <span class="pp-stat__unit" id="pp-time-unit">s</span></div>
+        <div class="pp-mod pp-stat" id="pp-stat-time">
+          <div class="pp-stat__value"><span class="num" id="pp-time">0</span><span class="pp-stat__unit" id="pp-time-unit">s</span></div>
           <div class="pp-stat__label" data-i18n="popupTimeSaved">schneller geladen</div>
         </div>
       </div>
     </div>
 
-    <!-- Non-filterable pages (chrome://, edge://, web stores, ...) -->
-    <section class="pp-mod pp-calm" id="pp-unfilterable" hidden>
-      <span data-icon="info" data-icon-size="20" class="pp-calm__icon"></span>
-      <h2 class="pp-calm__title" data-i18n="popupUnfilterableTitle">Diese Seite wird nicht gefiltert</h2>
-      <p class="pp-calm__text" data-i18n="popupUnfilterableText">Browser-Seiten und Erweiterungs-Stores sind für Erweiterungen gesperrt.</p>
+    <!-- P05: browser pages (chrome://, edge://, web stores, ...) -->
+    <section class="pp-mod pp-calm" id="pp-unfilterable" aria-labelledby="pp-unf-title" hidden>
+      <div class="pp-calm__head">
+        <span class="pp-calm__tile pp-calm__tile--quiet" aria-hidden="true"><span data-mark="off" data-mark-size="24"></span></span>
+        <div class="pp-calm__text">
+          <h2 class="pp-calm__title" id="pp-unf-title" data-i18n="popupNotActiveTitle">Hier nicht aktiv</h2>
+          <p class="pp-calm__body" data-i18n="popupNotActiveText">Browser-Seiten und Stores sind für Erweiterungen gesperrt.</p>
+        </div>
+      </div>
     </section>
 
-    <!-- Managed fleet-wide kill switch (policy protectionEnabled: false) -->
-    <section class="pp-mod pp-calm" id="pp-global-off" hidden>
-      <span data-icon="info" data-icon-size="20" class="pp-calm__icon"></span>
-      <h2 class="pp-calm__title" data-i18n="popupGlobalOffTitle">Schutz wurde von Ihrer Organisation vorübergehend deaktiviert</h2>
-      <p class="pp-calm__text" data-i18n="popupGlobalOffText">Bei Fragen wenden Sie sich an Ihre IT-Abteilung.</p>
+    <!-- P06: managed fleet-wide kill switch (policy protectionEnabled: false) -->
+    <section class="pp-mod pp-calm" id="pp-global-off" aria-labelledby="pp-off-title" hidden>
+      <div class="pp-calm__head">
+        <span class="pp-calm__tile" aria-hidden="true"><span data-icon="pause" data-icon-size="22"></span></span>
+        <div class="pp-calm__text">
+          <h2 class="pp-calm__title" id="pp-off-title" data-i18n="popupPausedTitle">Schutz pausiert</h2>
+          <p class="pp-calm__body" data-i18n="popupPausedText">Ihre IT hat Bastion Shield vorübergehend ausgeschaltet.</p>
+        </div>
+      </div>
+      <div class="pp-calm__more" id="pp-contact-slot" hidden></div>
     </section>
 
-    <!-- Service worker unreachable -->
-    <section class="pp-mod pp-calm" id="pp-error" hidden>
-      <span data-icon="alert" data-icon-size="20" class="pp-calm__icon"></span>
-      <h2 class="pp-calm__title" data-i18n="popupErrorTitle">Keine Verbindung zum Schutzdienst</h2>
-      <p class="pp-calm__text" data-i18n="popupErrorText">Schliessen Sie dieses Fenster und öffnen Sie es erneut.</p>
+    <!-- P07: service worker unreachable; «Erneut versuchen» asks again -->
+    <section class="pp-mod pp-calm pp-calm--error" id="pp-error" aria-labelledby="pp-err-title" hidden>
+      <div class="pp-calm__head">
+        <span class="pp-calm__tile" aria-hidden="true"><span data-mark data-mark-size="24" class="pp-mark--mono"></span><span class="pp-calm__badge">!</span></span>
+        <div class="pp-calm__text" role="alert">
+          <h2 class="pp-calm__title" id="pp-err-title" data-i18n="popupNoConnTitle">Keine Verbindung</h2>
+          <p class="pp-calm__body" data-i18n="popupNoConnText">Bastion Shield antwortet gerade nicht.</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn--primary btn--h-popup pp-calm__retry" id="pp-retry" data-i18n="actionRetry">Erneut versuchen</button>
+      <p class="pp-calm__hint" id="pp-retry-hint" data-i18n="popupNoConnHint">Klappt es dreimal nicht: Browser neu starten.</p>
+    </section>
+
+    <!-- P02: protection off for this site -->
+    <section class="pp-mod pp-note" id="pp-site-off" hidden>
+      <span data-icon="info" data-icon-size="18" aria-hidden="true"></span>
+      <p class="pp-note__text" data-i18n="popupSiteOffNote">Auf dieser Website wird nichts blockiert.</p>
     </section>
 
     <!-- Blocked on this page load -->
@@ -81,12 +111,16 @@
         <div class="pp-count__line">
           <span class="pp-count__value num" id="pp-count">0</span>
           <span class="pp-count__label" data-i18n="popupBlockedShort">Tracker blockiert</span>
-          <span class="pp-count__aside" id="pp-c-third"></span>
+          <span class="pp-count__aside num" id="pp-c-third"></span>
         </div>
         <div class="pp-bar" id="pp-bar" aria-hidden="true">
           <span class="pp-bar__seg pp-bar__seg--blocked" id="pp-bar-blocked"></span>
           <span class="pp-bar__seg pp-bar__seg--replaced" id="pp-bar-replaced"></span>
           <span class="pp-bar__seg pp-bar__seg--rest" id="pp-bar-rest"></span>
+        </div>
+        <div class="pp-legend" aria-hidden="true">
+          <span class="pp-legend__item" id="pp-legend-blocked"><span class="pp-legend__dot pp-legend__dot--blocked"></span><span class="num" id="pp-legend-blocked-text"></span></span>
+          <span class="pp-legend__item" id="pp-legend-replaced"><span class="pp-legend__dot pp-legend__dot--replaced"></span><span class="num" id="pp-legend-replaced-text"></span></span>
         </div>
         <dl class="sr-only">
           <div><dt data-i18n="popupCountAds">Werbung &amp; Tracker</dt><dd id="pp-c-blocked">0</dd></div>
@@ -95,7 +129,11 @@
           <div><dt data-i18n="popupCountDebounced">Weiterleitungen übersprungen</dt><dd id="pp-c-debounced">0</dd></div>
         </dl>
       </div>
-      <p class="pp-count__off" id="pp-count-off" hidden></p>
+      <!-- P12: counting switched off -->
+      <div class="pp-count__off" id="pp-count-off" hidden>
+        <p class="pp-count__off-text" data-i18n="popupCounterOff">Zähler ausgeschaltet. Schutz ist aktiv.</p>
+        <button type="button" class="btn btn--quiet pp-count__on" id="pp-count-on" data-i18n="popupCounterOn">Einschalten</button>
+      </div>
     </section>
 
     <!-- Blocking mode for this site -->
@@ -106,8 +144,8 @@
     </section>
 
     <div class="pp-actions">
-      <button type="button" class="pp-round" id="pp-report" hidden data-i18n-title="popupReport" data-i18n-aria-label="popupReport"><span data-icon="flag" data-icon-size="18"></span></button>
-      <button type="button" class="pp-round" id="pp-expand" data-i18n-title="popupAllSettings" data-i18n-aria-label="popupAllSettings"><span data-icon="settings" data-icon-size="18"></span></button>
+      <button type="button" class="pp-round" id="pp-report" hidden data-i18n-title="popupReport" data-i18n-aria-label="popupReport" aria-haspopup="dialog"><span data-icon="flag" data-icon-size="18" aria-hidden="true"></span></button>
+      <button type="button" class="pp-round" id="pp-expand" data-i18n-title="popupAllSettings" data-i18n-aria-label="popupAllSettings"><span data-icon="settings" data-icon-size="18" aria-hidden="true"></span></button>
       <span class="pp-actions__cta" id="pp-cta-slot"></span>
     </div>
 
@@ -115,12 +153,11 @@
     <footer class="pp-sl" id="pp-nerd" data-i18n-aria-label="nerdSlLabel" hidden></footer>
   </main>
 
-  <!-- Shown after a per-site change -->
+  <!-- P04: shown after a per-site change; the popup reserves room for it so it never covers the CTA -->
   <div class="pp-reload" id="pp-reload" role="status" hidden>
-    <span data-icon="reload" data-icon-size="15"></span>
-    <span class="pp-reload__text" data-i18n="popupReloadHint">Neu laden, um die Änderung anzuwenden</span>
-    <button type="button" class="btn btn--sm pp-reload__btn" id="pp-reload-btn" data-i18n="actionReload">Neu laden</button>
-    <button type="button" class="pp-reload__close" id="pp-reload-close" data-i18n-aria-label="actionDismiss"><span data-icon="close" data-icon-size="14"></span></button>
+    <span class="pp-reload__icon" aria-hidden="true"><span data-icon="reload" data-icon-size="18"></span></span>
+    <span class="pp-reload__text" data-i18n="popupReloadBar">Gilt nach dem Neuladen</span>
+    <button type="button" class="btn pp-reload__btn" id="pp-reload-btn" data-i18n="actionReload">Neu laden</button>
   </div>
 </body>
 </html>

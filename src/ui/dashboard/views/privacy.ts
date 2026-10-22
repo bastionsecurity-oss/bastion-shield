@@ -11,11 +11,13 @@ import type { DeepPartial, EffectiveConfig, FingerprintLevel, Settings, WebRtcPo
 import { h, toast } from '../../shared/dom.ts';
 import { t } from '../../shared/i18n.ts';
 import { icon } from '../../shared/icons.ts';
-import { notice, segmented, switchControl } from '../../shared/controls.ts';
-import { errorState, nextId, pageHead, panel, settingRow, type View, mount } from '../common.ts';
+import { segmented, switchControl } from '../../shared/controls.ts';
+import { errorState, nextId, pageHead, panel, popupMode, retryView, settingRow, type View, mount } from '../common.ts';
 import { getConfig, isLocked, saveSettings } from '../store.ts';
 
 type PrivacyKey = keyof Settings['privacy'];
+
+const PRIVACY_PATHS: readonly string[] = ['gpc', 'stripParams', 'debounce', 'deAmp', 'clipboardGuard', 'fingerprinting', 'blockHyperlinkAuditing', 'disablePrivacySandboxAds', 'webrtcPolicy', 'blockThirdPartyCookies'].map((k) => `privacy.${k}`);
 
 /** Save one setting. Resolves false (the control reverts) when the service worker refused it. */
 export async function persist(patch: DeepPartial<Settings>): Promise<boolean> {
@@ -35,12 +37,38 @@ export async function persist(patch: DeepPartial<Settings>): Promise<boolean> {
   return true;
 }
 
+/** A row's one-sentence explanation; the expanded popup shows labels only (DB41, DB42). */
+export function rowDesc(key: string): string | undefined {
+  return popupMode ? undefined : t(key);
+}
+
+/** «Erneut versuchen» of an error banner: ask the service worker again, then render the view again. */
+export async function retryConfig(): Promise<void> {
+  await getConfig(true);
+  retryView();
+}
+
+/**
+ * «Von Ihrer Organisation verwaltet» above a settings view: fully when the
+ * policy locks every setting, «teilweise» when only some rows carry a lock.
+ */
+export function lockNotice(cfg: EffectiveConfig, paths: readonly string[]): HTMLElement | null {
+  const all = !!cfg.managed.lockSettings;
+  if (!all && !paths.some((p) => isLocked(cfg, p))) return null;
+  return h(
+    'div',
+    { class: 'notice notice--lock db-lock-notice', attrs: { role: 'status' } },
+    icon('lock', 16),
+    h('div', null, h('div', { class: 'notice__title', text: t(all ? 'privLockedTitle' : 'privLockedPartTitle') }), h('div', { class: 'notice__body', text: t('privLockedText') })),
+  );
+}
+
 export function privacyView(): View {
   return {
     async render(root) {
       const r = await getConfig();
       if (!r.ok) {
-        mount(root, pageHead(t('privTitle'), t('privLead')), errorState(() => location.reload()));
+        mount(root, pageHead(t('privTitle'), t('privLead')), errorState(retryConfig));
         return;
       }
       const cfg: EffectiveConfig = r.data;
@@ -57,7 +85,7 @@ export function privacyView(): View {
           disabled: locked,
           onChange: (v) => persist({ privacy: { [key]: v } as DeepPartial<Settings['privacy']> }),
         });
-        return settingRow({ label: t(labelKey), desc: t(descKey), control: sw.el, locked, labelId, descId });
+        return settingRow({ label: t(labelKey), desc: rowDesc(descKey), control: sw.el, locked, labelId, descId });
       };
 
       // Fingerprinting default level.
@@ -112,9 +140,10 @@ export function privacyView(): View {
         onChange: (v) => persist({ privacy: { blockThirdPartyCookies: v === 'browser' ? null : v === 'block' } as DeepPartial<Settings['privacy']> }),
       });
 
-      mount(root, 
-        pageHead(t('privTitle'), t('privLead')),
-        cfg.managed.lockSettings ? h('div', { class: 'db-gap' }, notice(t('privLockedTitle'), t('privLockedText'), 'info')) : null,
+      mount(
+        root,
+        pageHead(t('privTitle'), popupMode ? undefined : t('privLead')),
+        lockNotice(cfg, PRIVACY_PATHS),
         panel(
           { title: t('privGroupSignals'), flush: true },
           toggle('gpc', 'privGpc', 'privGpcDesc'),
@@ -125,20 +154,17 @@ export function privacyView(): View {
         panel(
           { title: t('privGroupClipboard'), flush: true },
           toggle('clipboardGuard', 'privClipboard', 'privClipboardDesc'),
-        ),
-        panel(
-          { title: t('privGroupFingerprint'), flush: true },
-          settingRow({ label: t('privFingerprint'), desc: t('privFingerprintDesc'), control: fp.el, locked: fpLocked, labelId: fpLabel, descId: fpDesc }),
-          h('p', { class: 'db-row__aside', text: t('privFingerprintNote') }),
+          settingRow({ label: t('privFingerprint'), desc: rowDesc('privFingerprintDesc'), control: fp.el, locked: fpLocked, labelId: fpLabel, descId: fpDesc }),
+          popupMode ? null : h('p', { class: 'priv-note' }, icon('info', 16), h('span', { text: t('privFingerprintNote') })),
         ),
         panel(
           { title: t('privGroupBrowser'), flush: true },
           toggle('blockHyperlinkAuditing', 'privPing', 'privPingDesc'),
           toggle('disablePrivacySandboxAds', 'privSandbox', 'privSandboxDesc'),
-          settingRow({ label: t('privWebrtc'), desc: t('privWebrtcDesc'), control: rtc, locked: rtcLocked, labelId: rtcLabel, descId: rtcDesc }),
-          settingRow({ label: t('privCookies'), desc: t('privCookiesDesc'), control: ck.el, locked: ckLocked, labelId: ckLabel, descId: ckDesc }),
+          settingRow({ label: t('privWebrtc'), desc: rowDesc('privWebrtcDesc'), control: rtc, locked: rtcLocked, labelId: rtcLabel, descId: rtcDesc }),
+          settingRow({ label: t('privCookies'), desc: rowDesc('privCookiesDesc'), control: ck.el, locked: ckLocked, labelId: ckLabel, descId: ckDesc }),
         ),
-        h('p', { class: 'db-footnote', text: t('privFootnote') }),
+        popupMode ? null : h('p', { class: 'db-footnote', text: t('privFootnote') }),
       );
     },
   };

@@ -2,7 +2,8 @@
 // while popup:state carries `nerd` (nerd mode on); with nerd mode off the
 // popup is unchanged. One quiet mono row at the bottom of the popup:
 //
-//   fp 11   clip 1   14 hosts   ≠ microsoft.com                   ctrl k
+//   ≠ microsoft.com   fp 11   clip 1   14 hosts                   Ctrl K
+//   [Sieht aus wie microsoft.com - the explanation, inline]
 //
 // Ctrl+K, "/" or ":" turn it into a command line (commands.ts). A running
 // filter bisect takes over the row and is answered with single keys (y / n /
@@ -89,6 +90,44 @@ export function stepLabel(v: Pick<BisectView, 'step' | 'maxSteps'>): string {
   return `bisect ${fmtNumber(step)}/${max === step ? '' : '≤'}${fmtNumber(max)}`;
 }
 
+/**
+ * The visited host in runs that match the imitated domain and runs that do
+ * not (longest common subsequence of characters): "rnicrosoft-login.com" vs
+ * "microsoft.com" -> rn | icrosoft | -login | .com, with "rn" and "-login"
+ * marked. The popup shows marked runs boxed (shape, not colour).
+ */
+export function lookalikeRuns(host: string, target: string): { text: string; diff: boolean }[] {
+  const a = Array.from(host);
+  const b = Array.from(target);
+  // Hosts are at most 253 characters: a plain DP table is fine.
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
+  for (let i = a.length - 1; i >= 0; i--) {
+    for (let j = b.length - 1; j >= 0; j--) dp[i]![j] = a[i] === b[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+  }
+  const marks: boolean[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length) {
+    if (j < b.length && a[i] === b[j]) {
+      marks.push(false);
+      i++;
+      j++;
+    } else if (j < b.length && dp[i]![j + 1]! > dp[i + 1]![j]!) {
+      j++;
+    } else {
+      marks.push(true);
+      i++;
+    }
+  }
+  const runs: { text: string; diff: boolean }[] = [];
+  a.forEach((ch, k) => {
+    const last = runs[runs.length - 1];
+    if (last && last.diff === marks[k]) last.text += ch;
+    else runs.push({ text: ch, diff: marks[k]! });
+  });
+  return runs;
+}
+
 /** "Alt+Shift+X" -> "alt+shift+x" (the manifest command as the user set it). */
 export function shortcutLabel(s: string | undefined): string {
   return (s ?? '').toLowerCase();
@@ -141,6 +180,13 @@ async function copyText(text: string): Promise<boolean> {
 
 // ----------------------------------------------------------------- render --
 
+/** "Sieht aus wie microsoft.com" with the domain marked translate="no". */
+function withTarget(target: string): (Node | string)[] {
+  const MARK = '';
+  const [before = '', after = ''] = t('nerdSlLookTitle', MARK).split(MARK);
+  return [before, h('span', { attrs: { translate: 'no' }, text: target }), after];
+}
+
 export interface NerdStatuslineOptions {
   tabId: number;
   /** Bisect needs the activity log (it lists the hosts blocked on this page load). */
@@ -169,6 +215,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
   let hostsAt = 0;
   let hostsBusy = false;
   let fpOpen = false;
+  let clipOpen = false;
   let flash = '';
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
   const shortcuts: Partial<Record<CommandId, string>> = {};
@@ -413,7 +460,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
 
   // --- statusline ----------------------------------------------------------
 
-  const sep = (): HTMLElement => h('span', { class: 'pp-sl__sep', attrs: { 'aria-hidden': 'true' }, text: '·' });
+  const sep = (): HTMLElement => h('span', { class: 'pp-sl__sep', attrs: { 'aria-hidden': 'true' }, text: '-' });
 
   const keyBtn = (k: string, label: string, onClick: () => void): HTMLButtonElement =>
     h('button', { class: 'pp-sl__key', attrs: { type: 'button', disabled: busy }, on: { click: onClick } }, h('kbd', { text: k }), h('span', { text: label }));
@@ -424,7 +471,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
       : h(
           'button',
           { class: 'pp-sl__hint', attrs: { type: 'button', title: t('nerdSlCommands'), 'aria-label': t('nerdSlCommands') }, on: { click: openCmd } },
-          h('kbd', { text: isMac() ? '⌘ k' : 'ctrl k' }),
+          h('kbd', { attrs: { translate: 'no' }, text: isMac() ? '⌘\u00a0K' : 'Ctrl\u00a0K' }),
         );
 
   const statusRows = (): HTMLElement[] => {
@@ -433,7 +480,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     const parts: HTMLElement[] = [];
     const fp = fpSummary(n.fp);
     if (fp.total > 0) {
-      const breakdown = fp.top.map((x) => `${x.vector} ${fmtNumber(x.n)}`).join(' · ');
+      const breakdown = fp.top.map((x) => `${x.vector} ${fmtNumber(x.n)}`).join(' - ');
       parts.push(
         h('button', {
           class: 'pp-sl__item pp-sl__item--btn',
@@ -443,16 +490,41 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
         }),
       );
     }
-    if (n.clipboardBlocked > 0) parts.push(h('span', { class: 'pp-sl__item', attrs: { title: t('nerdSlClipTitle') }, text: `clip ${fmtNumber(n.clipboardBlocked)}` }));
-    const hostN = hosts?.length ?? 0;
-    if (hostN > 0) parts.push(h('span', { class: 'pp-sl__item', attrs: { title: t('nerdSlHostsTitle') }, text: plural(hostN, 'nerdSlHostsOne', 'nerdSlHosts') }));
-    const l = n.lookalike;
-    if (l) {
-      const why = t(l.reason === 'homoglyph' ? 'nerdPopupLookalikeHomoglyph' : l.reason === 'typo' ? 'nerdPopupLookalikeTypo' : 'nerdPopupLookalikeCombo');
-      const label = t('nerdSlLookalike', [l.host, l.target, why]);
-      parts.push(h('span', { class: 'pp-sl__item pp-sl__warn', attrs: { title: label, 'aria-label': label, role: 'img' }, text: `≠ ${l.target}` }));
+    if (n.clipboardBlocked > 0) {
+      parts.push(
+        h('button', {
+          class: 'pp-sl__item pp-sl__item--btn',
+          attrs: { type: 'button', 'aria-expanded': String(clipOpen), 'aria-controls': 'pp-sl-clip' },
+          on: { click: () => ((clipOpen = !clipOpen), render()) },
+          text: `clip ${fmtNumber(n.clipboardBlocked)}`,
+        }),
+      );
     }
+    const hostN = hosts?.length ?? 0;
+    if (hostN > 0) parts.push(h('span', { class: 'pp-sl__item', text: plural(hostN, 'nerdSlHostsOne', 'nerdSlHosts') }));
+    const l = n.lookalike;
+    // Lookalike: a marker in the row and the explanation inline below (never a tooltip).
+    if (l) parts.unshift(h('span', { class: 'pp-sl__item pp-sl__look', attrs: { translate: 'no' }, text: `≠ ${l.target}` }));
     const rows: HTMLElement[] = [h('div', { class: 'pp-sl__line' }, h('div', { class: 'pp-sl__items' }, ...parts), hint())];
+    if (l) {
+      const why = t(l.reason === 'homoglyph' ? 'nerdSlLookHomoglyph' : l.reason === 'typo' ? 'nerdSlLookTypo' : 'nerdSlLookCombo');
+      rows.push(
+        h(
+          'div',
+          { class: 'pp-sl__card', attrs: { role: 'note' } },
+          h('p', { class: 'pp-sl__card-title' }, ...withTarget(l.target)),
+          h(
+            'p',
+            { class: 'pp-sl__look-host', attrs: { translate: 'no', title: l.host } },
+            ...lookalikeRuns(l.host, l.target).map((r) => (r.diff ? h('mark', { class: 'pp-sl__diff', text: r.text }) : r.text)),
+          ),
+          h('p', { class: 'pp-sl__card-text', text: `${why} ${t('nerdSlLookCheck')}` }),
+          clipOpen && n.clipboardBlocked > 0 ? h('p', { class: 'pp-sl__card-note', attrs: { id: 'pp-sl-clip' }, text: t('nerdSlClipLegend', fmtNumber(n.clipboardBlocked)) }) : null,
+        ),
+      );
+    } else if (clipOpen && n.clipboardBlocked > 0) {
+      rows.push(h('div', { class: 'pp-sl__note', attrs: { id: 'pp-sl-clip' }, text: t('nerdSlClipLegend', fmtNumber(n.clipboardBlocked)) }));
+    }
     if (fpOpen && fp.total > 0) {
       rows.push(h('div', { class: 'pp-sl__rows' }, ...fp.top.flatMap((x) => [h('span', { text: x.vector }), h('span', { class: 'pp-sl__num', text: fmtNumber(x.n) })])));
       if (s.siteSettings.enabled && s.siteSettings.fingerprinting !== 'off') rows.push(h('div', { class: 'pp-sl__note', text: t('nerdPopupFpNoise') }));
@@ -466,7 +538,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
       ...(many ? [h('div', { class: 'pp-sl__host', text: c.host })] : []),
       ...c.filters.slice(0, FILTERS_SHOWN).map((f) => h('div', { class: 'pp-sl__code', attrs: { title: f }, text: f })),
       ...(c.filters.length === 0 ? [h('div', { class: 'pp-sl__note', text: t('nerdBisectNoFilterText') })] : []),
-      ...(names.length ? [h('div', { class: 'pp-sl__note', text: names.join(' · ') })] : []),
+      ...(names.length ? [h('div', { class: 'pp-sl__note', text: names.join(' - ') })] : []),
     ];
   };
 
@@ -534,7 +606,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     root.hidden = false;
     if (cmdOpen) return;
     const n = s.nerd;
-    const key = JSON.stringify([n.fp, n.clipboardBlocked, n.lookalike, hosts?.length ?? 0, bisect, busy, !!dir, fpOpen, flash, s.siteSettings.enabled, s.siteSettings.fingerprinting]);
+    const key = JSON.stringify([n.fp, n.clipboardBlocked, n.lookalike, hosts?.length ?? 0, bisect, busy, !!dir, fpOpen, clipOpen, flash, s.siteSettings.enabled, s.siteSettings.fingerprinting]);
     if (key === shown) return;
     shown = key;
     // A re-rendered button keeps focus (matched by its text).
@@ -568,8 +640,9 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     else if (v && !busy && v.phase === 'found' && lower === 'k') void act('keep');
     else if (v && v.phase === 'found' && lower === 'b') blame(v.culprit?.filters[0]);
     else if (v && !busy && key === 'Escape') void act('cancel');
-    else if (key === 'Escape' && fpOpen) {
+    else if (key === 'Escape' && (fpOpen || clipOpen)) {
       fpOpen = false;
+      clipOpen = false;
       render();
     } else handled = false;
     // A handled Escape must not close the popup.

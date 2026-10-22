@@ -131,6 +131,9 @@ test.describe('strict block', () => {
     expect(blockedUrl, `main_frame to ${pick.host} (${pick.rulesetId}#${pick.ruleId}) redirected to the interstitial`).toMatch(/^chrome-extension:\/\/[^/]+\/pages\/blocked\.html/);
     expect(server.hitsFor(pick.host).length, 'the blocked site was never contacted').toBe(0);
 
+    // Reason and list sit behind the «Details» disclosure (phase 2 redesign).
+    const details = page.locator('#bl-details-toggle');
+    if (await details.count()) await details.click().catch(() => {});
     const body = await poll(() => page.locator('body').innerText().catch(() => ''), (t) => t.includes(pick.host), 5000);
     expect(body, 'interstitial names the blocked host').toContain(pick.host);
     if (pick.listId) {

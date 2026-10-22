@@ -1,21 +1,47 @@
 /*
- * Bastion Shield — bounce page. Usually visible for a frame at most; the
- * invalid state is the only one users read at length.
+ * Bastion Shield — bounce page (artboards S08–S10): tile 56 + title + one
+ * line, at most two buttons. Usually visible for a frame at most; the
+ * same-site and invalid states are the ones users read.
  *
  * SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-body.bn { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 20px; background: var(--bg-quiet); }
-.bn-main { width: 100%; max-width: 520px; }
-.bn-ok, .bn-invalid, .bn-same { display: none; flex-direction: column; align-items: flex-start; gap: 14px; }
+body.bn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-6);
+  background: var(--bg);
+  overflow-wrap: anywhere;
+}
+.bn-main { width: 100%; max-width: 456px; }
+
+.bn-state { display: none; align-items: flex-start; gap: var(--space-4); }
 body[data-state="ok"] .bn-ok, body[data-state="pending"] .bn-ok { display: flex; }
 body[data-state="invalid"] .bn-invalid { display: flex; }
 body[data-state="samesite"] .bn-same { display: flex; }
-.bn-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.bn-dest .bn-host { overflow-wrap: anywhere; }
 body[data-state="pending"] .bn-text { visibility: hidden; }
-.bn-title { font-size: 26px; line-height: 32px; letter-spacing: var(--tracking-heading); }
-.bn-text { color: var(--text-2); font-size: var(--text-base); line-height: 24px; }
-.bn-host { color: var(--text-strong); }
-.bn-icon { color: var(--text-strong); }
+
+.bn-tile { width: 56px; height: 56px; border-radius: 16px; }
+.bn-tile svg { width: 26px; height: 26px; }
+.bn-ok .bn-tile svg { width: 28px; height: 28px; }
+.bn-tile--quiet { background: var(--bg-cool); color: var(--text-strong); }
+
+.bn-body { display: flex; flex: 1 1 0; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.bn-copy { display: flex; flex-direction: column; gap: var(--space-1); }
+.bn-ok .bn-body { gap: var(--space-1); }
+.bn-title { font-size: 24px; line-height: 30px; letter-spacing: var(--tracking-heading); }
+.bn-text { color: var(--text-2); font-size: var(--text-md); line-height: 20px; }
+.bn-host { color: var(--text-strong); font-size: var(--text-md); line-height: 20px; }
+.bn-host--link { text-decoration-color: var(--color-nebel); text-underline-offset: 3px; }
+.bn-host--link:hover { text-decoration-color: currentColor; }
+
+.bn-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.bn-actions .btn--quiet { padding-inline: 10px; }
+
+/* Until the UI language bundle is loaded (a few ms), the copy stays invisible. */
+body[data-lang="pending"] .bn-main { opacity: 0; }
+.bn-main { transition: opacity var(--dur-fast) var(--ease); }

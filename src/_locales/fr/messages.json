@@ -24,13 +24,10 @@
     "message": "Créateur"
   },
   "aboutFootnote": {
-    "message": "Bastion Shield est un logiciel libre sous licence GNU General Public License, version 3 ou ultérieure. Les listes de filtres et composants relèvent des licences de leurs auteurs."
-  },
-  "aboutIssues": {
-    "message": "Bugs et suggestions"
+    "message": "Bastion Shield est un logiciel libre sous GPL, version 3 ou ultérieure. Les listes de filtres et composants sont soumis aux licences de leurs auteurs."
   },
   "aboutIssuesLink": {
-    "message": "Signaler sur GitHub"
+    "message": "Signaler un bug sur GitHub"
   },
   "aboutLicence": {
     "message": "Licence"
@@ -44,14 +41,20 @@
   "aboutPrivacyLink": {
     "message": "Lire la déclaration de confidentialité"
   },
+  "aboutPrivacyShort": {
+    "message": "Ni pistage ni télémétrie."
+  },
   "aboutPrivacyStatement": {
-    "message": "Bastion Shield n’envoie aucune donnée. Aucun pistage, aucune télémétrie."
+    "message": "Aucune donnée ne quitte votre appareil"
   },
   "aboutPrivacyText": {
-    "message": "Les listes de filtres sont livrées avec l’extension, jamais téléchargées à la volée. Statistiques et historique restent dans votre navigateur. Vous créez vous-même les signalements de sites défectueux et en voyez chaque détail au préalable."
+    "message": "Ni pistage ni télémétrie. Les listes de filtres sont livrées avec l’extension. Vous rédigez vous-même les signalements et voyez chaque détail avant."
   },
   "aboutPublisher": {
     "message": "Éditeur"
+  },
+  "aboutRepoLink": {
+    "message": "GitHub"
   },
   "aboutSource": {
     "message": "Code source"
@@ -71,8 +74,11 @@
   "actClearHistory": {
     "message": "Effacer l’historique"
   },
+  "actClearHistoryOpen": {
+    "message": "Supprimer l’historique…"
+  },
   "actClearHistoryText": {
-    "message": "Toutes les entrées et statistiques journalières enregistrées sont supprimées de cet appareil. Cette action est irréversible."
+    "message": "Toutes les entrées et statistiques journalières sont supprimées de cet appareil. Cette action est irréversible."
   },
   "actClearHistoryTitle": {
     "message": "Effacer l’historique ?"
@@ -117,6 +123,33 @@
       }
     }
   },
+  "actCountCappedShort": {
+    "message": "$P1$ plus récentes sur $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "actCountLoaded": {
+    "message": "$P1$ entrées chargées",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "actCountLoadedOne": {
+    "message": "$P1$ entrée chargée",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "actCountOne": {
     "message": "$P1$ entrée",
     "placeholders": {
@@ -131,17 +164,57 @@
   "actEmptyHistory": {
     "message": "Aucun historique enregistré"
   },
+  "actEmptyHistoryText": {
+    "message": "Dès que Bastion Shield bloque quelque chose, cela apparaît ici."
+  },
   "actEmptyLive": {
     "message": "En attente d’activité"
   },
   "actEmptyLiveText": {
     "message": "Ouvrez un site dans un autre onglet. Les requêtes bloquées apparaissent ici aussitôt."
   },
+  "actEmptyNoHits": {
+    "message": "Aucune entrée pour «$P1$»",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "actEmptyNoHitsLive": {
+    "message": "En direct, le type et l’action ne s’appliquent qu’aux entrées chargées."
+  },
+  "actExport": {
+    "message": "Exporter…"
+  },
+  "actExportCsv": {
+    "message": "Enregistrer en CSV"
+  },
   "actExportEmpty": {
     "message": "Rien à exporter"
   },
+  "actExportJson": {
+    "message": "Enregistrer en JSON"
+  },
+  "actExportText": {
+    "message": "Le fichier contient les $P1$ entrées filtrées et reste sur cet appareil.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "actExportTitle": {
+    "message": "Exporter l’activité"
+  },
+  "actFilterAnyPh": {
+    "message": "Filtrer l’hôte ou le site…"
+  },
   "actFilterHost": {
     "message": "Filtrer par hôte"
+  },
+  "actFilterHostPh": {
+    "message": "Filtrer l’hôte…"
   },
   "actFilterKind": {
     "message": "Action"
@@ -149,8 +222,33 @@
   "actFilterSite": {
     "message": "Filtrer par site"
   },
+  "actFilterSitePh": {
+    "message": "Filtrer le site…"
+  },
   "actFilterType": {
     "message": "Type"
+  },
+  "actFootHistory": {
+    "message": "Charge $P1$ à la fois. Au plus $P2$ entrées sont conservées.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "actFootLive": {
+    "message": "Affiche au plus $P1$ lignes en direct",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "actFootTrunc": {
+    "message": "Les adresses longues sont raccourcies. L’adresse complète apparaît au survol et dans l’export."
   },
   "actHistoryCleared": {
     "message": "Historique effacé"
@@ -164,17 +262,11 @@
   "actionCancel": {
     "message": "Annuler"
   },
-  "actionDismiss": {
-    "message": "Masquer"
-  },
   "actionExport": {
     "message": "Exporter"
   },
   "actionImport": {
     "message": "Importer"
-  },
-  "actionRefresh": {
-    "message": "Actualiser"
   },
   "actionReload": {
     "message": "Recharger"
@@ -182,17 +274,29 @@
   "actionRemove": {
     "message": "Supprimer"
   },
+  "actionRetry": {
+    "message": "Réessayer"
+  },
+  "actionUndo": {
+    "message": "Annuler"
+  },
+  "actKeepHistory": {
+    "message": "Conserver l’historique"
+  },
   "actLead": {
-    "message": "Ce que Bastion Shield a bloqué, en direct dans tous les onglets et dans l’historique enregistré. Les données ne quittent jamais cet appareil."
+    "message": "Ce qui est bloqué en ce moment, dans tous les onglets. Les données restent sur cet appareil."
   },
   "actLoadOlder": {
     "message": "Charger des entrées plus anciennes"
   },
   "actLogOffText": {
-    "message": "Bastion Shield bloque toujours mais n’enregistre rien. Activez-le dans « Paramètres »."
+    "message": "Bastion Shield continue de bloquer mais n’enregistre rien."
   },
   "actLogOffTitle": {
-    "message": "Le journal d’activité est désactivé"
+    "message": "Journal désactivé"
+  },
+  "actLogOn": {
+    "message": "Activer le journal"
   },
   "actModeHistory": {
     "message": "Historique"
@@ -205,6 +309,9 @@
   },
   "actPause": {
     "message": "Pause"
+  },
+  "actResetFilters": {
+    "message": "Réinitialiser les filtres"
   },
   "actResume": {
     "message": "Reprendre"
@@ -226,6 +333,9 @@
   "actToolbar": {
     "message": "Vue et filtres"
   },
+  "blockedAddress": {
+    "message": "Adresse"
+  },
   "blockedCategory": {
     "message": "Motif"
   },
@@ -239,70 +349,104 @@
     "message": "Publicité / pistage"
   },
   "blockedConfirmGo": {
-    "message": "Ouvrir quand même"
+    "message": "Ouvrir la page"
   },
   "blockedConfirmText": {
-    "message": "N’ouvrez cette page que si vous faites confiance à l’adresse. L’exception ne vaut que pour cet onglet et prend fin à sa fermeture."
+    "message": "L’exception ne vaut que pour cette adresse et prend fin à la fermeture de l’onglet."
   },
   "blockedConfirmTextSecurity": {
-    "message": "Cette page peut mettre en danger vos données et votre appareil. Ne continuez que si vous êtes certain que l’avertissement est erroné. L’exception ne vaut que pour cet onglet."
+    "message": "La page peut voler des identifiants. L’exception prend fin à la fermeture de l’onglet."
+  },
+  "blockedConfirmTextTracking": {
+    "message": "La page peut suivre votre navigation. L’exception prend fin à la fermeture de l’onglet."
   },
   "blockedConfirmTitle": {
-    "message": "Vraiment continuer ?"
+    "message": "Ouvrir dans cet onglet seulement ?"
   },
-  "blockedEyebrow": {
-    "message": "Page bloquée"
-  },
-  "blockedEyebrowSecurity": {
-    "message": "Page dangereuse"
+  "blockedDetails": {
+    "message": "Détails"
   },
   "blockedFoot": {
-    "message": "Bastion Shield vérifie les adresses localement à l’aide de listes de filtres publiques. Aucune donnée n’est transmise."
+    "message": "Bastion Shield vérifie localement. Aucune donnée n’est envoyée."
   },
   "blockedList": {
     "message": "Liste de filtres"
   },
   "blockedProceed": {
-    "message": "Continuer quand même"
+    "message": "Ouvrir quand même…"
   },
   "blockedProceedFailed": {
-    "message": "L’exception n’a pas pu être créée. Rechargez la page et réessayez."
+    "message": "Exception non créée"
   },
-  "blockedReasonGeneric": {
-    "message": "Bastion Shield a empêché le chargement de cette adresse, car elle figure sur une liste de filtres."
+  "blockedProceedFailedText": {
+    "message": "La page reste bloquée. Rechargez-la et réessayez."
   },
-  "blockedReasonSecurity": {
-    "message": "Cette adresse est connue pour diffuser des logiciels malveillants ou des arnaques. Ces pages tentent de voler des identifiants ou d’installer des logiciels malveillants."
+  "blockedTextNoHost": {
+    "message": "Cette adresse figure sur une liste de filtres."
   },
-  "blockedReasonTracking": {
-    "message": "Cette adresse appartient à un service de publicité ou de pistage. Elle a été ouverte directement, Bastion Shield affiche donc cet avis à la place de la page."
+  "blockedTextOther": {
+    "message": "$P1$ figure sur une liste de filtres.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "blockedTextSecurity": {
+    "message": "$P1$ est connu pour des arnaques.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "blockedTextTracking": {
+    "message": "$P1$ collecte des données pour la publicité.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "blockedTitle": {
-    "message": "Cette page a été bloquée"
+    "message": "Page bloquée"
+  },
+  "blockedTitleSecurity": {
+    "message": "Page dangereuse bloquée"
+  },
+  "blockedTitleTracking": {
+    "message": "Page de pistage bloquée"
   },
   "bounceInvalidText": {
-    "message": "La destination de cette redirection est invalide ou n’est pas une adresse web ordinaire. Bastion Shield ne l’ouvre donc pas."
+    "message": "Bastion Shield n’ouvre pas cette adresse."
   },
   "bounceInvalidTitle": {
-    "message": "Redirection impossible"
+    "message": "Destination invalide"
   },
   "bounceOpening": {
-    "message": "Vers"
-  },
-  "bounceSameSiteDest": {
-    "message": "Destination :"
+    "message": "Vers $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "bounceSameSiteOpen": {
-    "message": "Ouvrir quand même la destination"
+    "message": "Ouvrir la destination"
   },
   "bounceSameSiteText": {
-    "message": "La destination appartient au même site que la redirection. Ce n’est pas du bounce tracking, Bastion Shield ne l’ouvre donc pas automatiquement."
+    "message": "Pas de pistage. Destination : $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "bounceSameSiteTitle": {
-    "message": "Redirection non contournée"
+    "message": "Redirection normale"
   },
   "bounceTitle": {
-    "message": "Redirection de pistage contournée"
+    "message": "Détour de pistage évité"
   },
   "catAds": {
     "message": "Publicité"
@@ -325,16 +469,16 @@
   "catUnknown": {
     "message": "Non attribué"
   },
-  "cfAdminText": {
-    "message": "$P1$ règles gérées par votre service informatique. Elles s’ajoutent aux vôtres et ne peuvent pas être modifiées ici.",
+  "cfAdminCount": {
+    "message": "$P1$ règles",
     "placeholders": {
       "p1": {
         "content": "$1"
       }
     }
   },
-  "cfAdminTextOne": {
-    "message": "$P1$ règle gérée par votre service informatique. Elle s’ajoute aux vôtres et ne peut pas être modifiée ici.",
+  "cfAdminCountOne": {
+    "message": "$P1$ règle",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -363,26 +507,169 @@
       }
     }
   },
+  "cfApply": {
+    "message": "Appliquer les filtres"
+  },
   "cfApplying": {
     "message": "Application…"
+  },
+  "cfBadLines": {
+    "message": "$P1$ lignes erronées",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfBadLinesOne": {
+    "message": "$P1$ ligne erronée",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfBuildSub": {
+    "message": "Créer des filtres sans syntaxe"
+  },
+  "cfChanges": {
+    "message": "$P1$ modifications",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfChangesOne": {
+    "message": "$P1$ modification",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfCounter": {
+    "message": "$P1$ - $P2$ sur $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "cfDirty": {
+    "message": "$P1$ modifications non appliquées",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfDirtyOne": {
+    "message": "$P1$ modification non appliquée",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfDiscard": {
+    "message": "Rejeter"
   },
   "cfEditorLabel": {
     "message": "Mes filtres, une règle par ligne"
   },
+  "cfEditorReadOnly": {
+    "message": "Éditeur - lecture seule"
+  },
   "cfEditorTitle": {
     "message": "Éditeur"
   },
+  "cfErrDomain": {
+    "message": "Domaine non valide"
+  },
+  "cfErrDuplicateOption": {
+    "message": "Une option figure deux fois."
+  },
+  "cfErrNeedsSite": {
+    "message": "Nécessite un site devant, par exemple exemple.ch##.banner."
+  },
+  "cfErrNeverMatches": {
+    "message": "La règle ne peut jamais s’appliquer."
+  },
+  "cfErrOption": {
+    "message": "Option inconnue «$P1$».",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfErrOptionSuggest": {
+    "message": "Option inconnue «$P1$». Vouliez-vous dire «$P2$» ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "cfErrorsNote": {
+    "message": "Les lignes erronées sont ignorées lors de l’application. $P1$ au maximum sont listées.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfErrRedirect": {
+    "message": "Cible de redirection inconnue"
+  },
+  "cfErrRegex": {
+    "message": "Cette expression régulière n’est pas prise en charge."
+  },
+  "cfErrScriptlet": {
+    "message": "Les scriptlets nécessitent une nouvelle version de l’extension."
+  },
+  "cfErrSelector": {
+    "message": "Sélecteur CSS non valide"
+  },
+  "cfErrSyntax": {
+    "message": "Règle non valide : vérifiez l’écriture."
+  },
+  "cfErrTooLong": {
+    "message": "Trop long : 1’024 caractères au maximum."
+  },
+  "cfErrTooShort": {
+    "message": "Trop court : la règle toucherait presque tout."
+  },
+  "cfErrUnsupported": {
+    "message": "Ce type de règle n’est pas pris en charge."
+  },
+  "cfErrUnsupportedOption": {
+    "message": "Le navigateur ne peut pas appliquer cette option."
+  },
   "cfExAllow": {
-    "message": "Désactive le filtrage pour un site"
+    "message": "Ne pas filtrer un site"
   },
   "cfExBlockDomain": {
-    "message": "Bloque un domaine et tous ses sous-domaines"
+    "message": "Bloquer un domaine"
   },
   "cfExBlockFile": {
-    "message": "Bloque un script précis"
+    "message": "Bloquer un script"
   },
   "cfExHide": {
-    "message": "Masque un élément sur un site"
+    "message": "Masquer un élément"
+  },
+  "cfImportOther": {
+    "message": "Autre fichier…"
   },
   "cfJumpToLine": {
     "message": "Aller à la ligne $P1$",
@@ -393,19 +680,45 @@
     }
   },
   "cfLead": {
-    "message": "Vos propres règles, en syntaxe uBlock Origin et Adblock Plus. Elles s’ajoutent aux listes de filtres et restent sur cet appareil."
-  },
-  "cfLeaveConfirm": {
-    "message": "Abandonner"
+    "message": "Vos propres règles en syntaxe uBlock, une par ligne."
   },
   "cfLeaveText": {
-    "message": "Vos filtres n’ont pas encore été appliqués."
+    "message": "$P1$ modifications ne sont pas encore appliquées.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfLeaveTextOne": {
+    "message": "$P1$ modification n’est pas encore appliquée.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "cfLeaveTitle": {
-    "message": "Abandonner les modifications ?"
+    "message": "Rejeter les modifications ?"
   },
   "cfLine": {
     "message": "Ligne $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfLines": {
+    "message": "$P1$ lignes",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cfLinesOne": {
+    "message": "$P1$ ligne",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -437,13 +750,10 @@
     "message": "Résultat"
   },
   "cfRevert": {
-    "message": "Annuler les modifications"
-  },
-  "cfScriptletNote": {
-    "message": "Les filtres scriptlet (##+js) sont ignorés ici. Manifest V3 interdit le code chargé à la volée, ils nécessitent donc une nouvelle version de l’extension."
+    "message": "Rejeter les modifications"
   },
   "cfSyntaxLink": {
-    "message": "Syntaxe complète (uBlock Origin)"
+    "message": "Syntaxe complète (uBlock)"
   },
   "cfSyntaxTitle": {
     "message": "Aide-mémoire"
@@ -451,20 +761,87 @@
   "cfTitle": {
     "message": "Mes filtres"
   },
-  "cfTooLarge": {
-    "message": "Trop de filtres pour l’éditeur (2 Mo au maximum)."
+  "cfTooBigBar": {
+    "message": "Trop volumineux pour être appliqué"
   },
-  "cfUnsaved": {
-    "message": "Modifications non appliquées"
+  "cfTooLarge": {
+    "message": "Trop de filtres : $P1$ sur $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "cfTooLargeText": {
+    "message": "Supprimez des lignes ou chargez le fichier sous «Listes de filtres › Mes listes», où chaque liste peut atteindre 10 Mo."
+  },
+  "cfUnitKB": {
+    "message": "Ko"
+  },
+  "cfUnitMB": {
+    "message": "Mo"
+  },
+  "cmdkEmptyHint": {
+    "message": "Recherchez une section, un réglage ou une liste de filtres."
+  },
+  "cmdkFilterLines": {
+    "message": "$P1$ lignes",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkGroupMyLists": {
+    "message": "Vos listes"
+  },
+  "cmdkListsActive": {
+    "message": "$P1$ listes actives",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkMyListFilters": {
+    "message": "$P1$ filtres",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "cmdkMyListFiltersOne": {
+    "message": "1 filtre"
+  },
+  "cmdkSiteOff": {
+    "message": "Protection désactivée"
+  },
+  "cmdkSitesCount": {
+    "message": "$P1$ sites",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "dashErrorText": {
-    "message": "Le service de protection n’a pas répondu. Rechargez la page."
+    "message": "Le service de protection ne répond pas. La protection continue de fonctionner."
   },
   "dashErrorTitle": {
-    "message": "Impossible de charger les données"
+    "message": "Données non chargées"
   },
   "dashNavLabel": {
     "message": "Sections"
+  },
+  "dashPausedText": {
+    "message": "Votre service informatique a désactivé Bastion Shield temporairement. Aucun site n’est filtré."
+  },
+  "dashPausedTitle": {
+    "message": "Protection en pause"
   },
   "dashSkipToContent": {
     "message": "Aller au contenu"
@@ -534,6 +911,9 @@
       }
     }
   },
+  "listsBudgetNetwork": {
+    "message": "Règles réseau"
+  },
   "listsBudgetNote": {
     "message": "Chrome garantit $P1$ règles à chaque extension. Au-delà, le navigateur puise dans une réserve partagée par toutes les extensions.",
     "placeholders": {
@@ -542,24 +922,35 @@
       }
     }
   },
-  "listsBudgetOf": {
-    "message": "sur $P1$",
+  "listsBudgetOf2": {
+    "message": "$P1$ sur $P2$",
     "placeholders": {
       "p1": {
         "content": "$1"
-      }
-    }
-  },
-  "listsBudgetOfGuaranteed": {
-    "message": "sur $P1$ garanties",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
       }
     }
   },
   "listsBudgetOverNote": {
     "message": "Une partie des règles provient de la réserve partagée par toutes les extensions. Si elle est épuisée, le navigateur ignore les dernières listes."
+  },
+  "listsBudgetPct": {
+    "message": "$P1$ du budget garanti",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "listsBudgetPctHigh": {
+    "message": "$P1$ - Le navigateur peut refuser d’autres listes.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "listsBudgetRegex": {
     "message": "Règles regex"
@@ -572,19 +963,28 @@
       }
     }
   },
-  "listsBudgetStatic": {
-    "message": "Règles réseau actives"
-  },
   "listsBudgetTitle": {
     "message": "Budget de règles du navigateur"
   },
-  "listsDetails": {
-    "message": "Détails et sources ($P1$)",
+  "listsBudgetWhat": {
+    "message": "Qu’est-ce que c’est ?"
+  },
+  "listsBudgetWhatHide": {
+    "message": "Masquer l’explication"
+  },
+  "listsCostLine": {
+    "message": "occupe $P1$ règles",
     "placeholders": {
       "p1": {
         "content": "$1"
       }
     }
+  },
+  "listsDetailsHide": {
+    "message": "Masquer les détails"
+  },
+  "listsDetailsShow": {
+    "message": "Détails et sources"
   },
   "listsDisabledToast": {
     "message": "« $P1$ » désactivée",
@@ -593,6 +993,9 @@
         "content": "$1"
       }
     }
+  },
+  "listsEditInTab": {
+    "message": "Modifier dans l’onglet"
   },
   "listsEnabledToast": {
     "message": "« $P1$ » activée",
@@ -605,11 +1008,13 @@
   "listsErrorTitle": {
     "message": "Liste partiellement active"
   },
-  "listsFilterOne": {
-    "message": "filtre"
-  },
-  "listsFilters": {
-    "message": "filtres"
+  "listsFilterLine": {
+    "message": "$P1$ filtres",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "listsFootnote": {
     "message": "Chaque liste est traduite en règles du navigateur lors de la compilation de l’extension. Les filtres impossibles à exprimer en Manifest V3 sont ignorés et comptés dans les détails."
@@ -629,7 +1034,23 @@
     "message": "Site web"
   },
   "listsLead": {
-    "message": "Bastion Shield combine des listes de filtres reconnues comme EasyList, EasyPrivacy et les filtres uBlock avec les siennes. Elles sont mises à jour à chaque version de l’extension. Les désactiver est possible, mais rarement utile."
+    "message": "Des listes éprouvées contre la publicité, les traqueurs et les sites nuisibles. Vos propres listes se trouvent plus bas."
+  },
+  "listsLicenceLine": {
+    "message": "Licence $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "listsMoreAside": {
+    "message": "Pour bloquer davantage - $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "listsMoreLead": {
     "message": "Des listes vérifiées, désactivées par défaut, pour bloquer davantage. Chacune ajoute des règles au budget ci-dessus; au-delà de 30 000 règles, le navigateur peut refuser d'activer une liste. Les listes qui bloquent des domaines entiers peuvent casser des sites: dans ce cas, désactivez la liste."
@@ -637,11 +1058,22 @@
   "listsMoreTitle": {
     "message": "Autres listes"
   },
-  "listsRuleCost": {
-    "message": "Règles"
+  "listsPanelLead": {
+    "message": "$P1$ règles utilisées sur $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
   },
-  "listsLicence": {
-    "message": "Licence"
+  "listsRefusedText": {
+    "message": "Le budget de règles est plein. Désactivez une autre liste."
+  },
+  "listsRefusedTitle": {
+    "message": "Le navigateur a refusé l’activation"
   },
   "listsLockedAllText": {
     "message": "Les modifications sont désactivées. Pour toute question, contactez votre service informatique."
@@ -649,35 +1081,29 @@
   "listsLockedAllTitle": {
     "message": "Les listes de filtres sont gérées par votre organisation"
   },
-  "listsStatCosmetic": {
-    "message": "Filtres cosmétiques"
+  "listsStatCosmeticN": {
+    "message": "cosmétiques"
   },
-  "listsStatDnrRules": {
-    "message": "Règles du navigateur (budget)"
+  "listsStatDnrRulesN": {
+    "message": "règles du navigateur"
   },
-  "listsStatFilters": {
-    "message": "Filtres"
+  "listsStatFiltersN": {
+    "message": "filtres"
   },
-  "listsStatNetwork": {
-    "message": "Règles réseau"
+  "listsStatNetworkN": {
+    "message": "règles réseau"
   },
-  "listsStatRegex": {
-    "message": "Règles regex"
+  "listsStatRegexN": {
+    "message": "règles regex"
   },
-  "listsStatScriptlets": {
-    "message": "Scriptlets"
-  },
-  "listsStatUnsupported": {
-    "message": "Non pris en charge (MV3)"
+  "listsStatUnsupportedN": {
+    "message": "impossibles en MV3"
   },
   "listsTitle": {
     "message": "Listes de filtres"
   },
   "listsUpdated": {
     "message": "Mise à jour"
-  },
-  "listsVersion": {
-    "message": "Version"
   },
   "localeCode": {
     "message": "fr"
@@ -702,6 +1128,112 @@
   "modeStandard": {
     "message": "Standard"
   },
+  "myListsAddedAt": {
+    "message": "État au $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsAutoOff": {
+    "message": "Mise à jour quotidienne : désactivée"
+  },
+  "myListsAutoOn": {
+    "message": "Mise à jour quotidienne : activée"
+  },
+  "myListsCheckedAt": {
+    "message": "Vérifiée le $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsEmptyText": {
+    "message": "Déposez un fichier ici ou collez une adresse ci-dessus."
+  },
+  "myListsEmptyTitle": {
+    "message": "Pas encore de listes personnelles"
+  },
+  "myListsErrDuplicateName": {
+    "message": "Cette adresse figure déjà dans vos listes : «$P1$».",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrSize": {
+    "message": "Plus de $P1$ Mo. Divisez la liste.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsErrType": {
+    "message": "Ce n’est pas une liste de filtres. Formats acceptés : .txt, .list et .hosts."
+  },
+  "myListsErrUrlLong": {
+    "message": "L’adresse dépasse $P1$ caractères. Raccourcissez-la.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsFull": {
+    "message": "$P1$ listes au maximum. Supprimez-en une pour faire de la place.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsHow": {
+    "message": "Fonctionnement des listes personnelles"
+  },
+  "myListsLoadError": {
+    "message": "Mes listes non chargées"
+  },
+  "myListsNameEmpty": {
+    "message": "Saisissez un nom."
+  },
+  "myListsNameLabel": {
+    "message": "Nom"
+  },
+  "myListsOff": {
+    "message": "désactivée"
+  },
+  "myListsOtherFile": {
+    "message": "Autre fichier…"
+  },
+  "myListsRename": {
+    "message": "Renommer…"
+  },
+  "myListsRestoredToast": {
+    "message": "«$P1$» est de retour",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsRuleCost": {
+    "message": "Occupe $P1$ règles",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "myListsSaveName": {
+    "message": "Enregistrer le nom"
+  },
+  "myListsUrlField": {
+    "message": "Adresse de la liste"
+  },
   "navAbout": {
     "message": "À propos"
   },
@@ -711,6 +1243,15 @@
   "navFilters": {
     "message": "Mes filtres"
   },
+  "navGroupOverview": {
+    "message": "Vue d’ensemble"
+  },
+  "navGroupRules": {
+    "message": "Règles"
+  },
+  "navGroupSystem": {
+    "message": "Système"
+  },
   "navLists": {
     "message": "Listes de filtres"
   },
@@ -719,6 +1260,9 @@
   },
   "navPrivacy": {
     "message": "Confidentialité"
+  },
+  "navSearch": {
+    "message": "Rechercher…"
   },
   "navSettings": {
     "message": "Paramètres"
@@ -765,32 +1309,11 @@
       }
     }
   },
-  "noticeClose": {
-    "message": "Fermer"
+  "nerdLabOpenSettings": {
+    "message": "Ouvrir les réglages"
   },
-  "noticeClipTitle": {
-    "message": "Bastion Shield a bloqué une possible attaque ClickFix"
-  },
-  "noticeClipBody": {
-    "message": "Cette page a tenté de placer une commande dans votre presse-papiers. Ne collez jamais de commandes provenant de sites web dans « Exécuter », le Terminal ou PowerShell."
-  },
-  "noticeClipCommandLabel": {
-    "message": "Commande bloquée"
-  },
-  "noticeClipManual": {
-    "message": "Si vous avez vraiment besoin de cette commande, sélectionnez-la et copiez-la vous-même, après avoir vérifié ce qu’elle fait."
-  },
-  "noticeSourceUbo": {
-    "message": "Détecté par : filtres uBlock"
-  },
-  "noticeSourceBastion": {
-    "message": "Détecté par : protection ClickFix de Bastion"
-  },
-  "noticeLookalikeTitle": {
-    "message": "Attention : phishing possible"
-  },
-  "noticeLookalikeBody": {
-    "message": "Cette adresse ressemble à $P1$, mais ce n’est pas elle : $P2$",
+  "nerdSettingsDomainsBad": {
+    "message": "$P1$. Non valides et ignorés : $P2$.",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -800,26 +1323,168 @@
       }
     }
   },
-  "noticeLookalikeReasonHomoglyph": {
-    "message": "L’adresse contient des caractères qui se ressemblent (homoglyphes)."
+  "nerdSettingsDomainsBadItem": {
+    "message": "«$P1$» (ligne $P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
   },
-  "noticeLookalikeReasonTypo": {
-    "message": "L’adresse diffère par une faute de frappe (typosquatting)."
+  "nerdSettingsDomainsCount": {
+    "message": "$P1$ sur $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
   },
-  "noticeLookalikeReasonCombo": {
-    "message": "L’adresse associe le nom de marque à d’autres mots (combosquatting)."
+  "nerdSettingsDomainsMore": {
+    "message": "+$P1$ autres",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
-  "noticeLookalikeHint": {
-    "message": "Vérifiez l’adresse avant de vous connecter ou de payer."
+  "nerdSettingsDomainsSave": {
+    "message": "Enregistrer les domaines"
+  },
+  "nerdSlClipLegend": {
+    "message": "clip $P1$ = commandes du presse-papiers (ClickFix) bloquées.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSlLookCheck": {
+    "message": "Vérifiez l’adresse avant de vous connecter."
+  },
+  "nerdSlLookCombo": {
+    "message": "Nom de marque avec un mot ajouté (combosquatting)."
+  },
+  "nerdSlLookHomoglyph": {
+    "message": "Caractères semblables (homoglyphes)."
+  },
+  "nerdSlLookTitle": {
+    "message": "Ressemble à $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdSlLookTypo": {
+    "message": "Domaine à faute de frappe (typosquatting)."
+  },
+  "noticeChars": {
+    "message": "$P1$ caractères",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeClose": {
+    "message": "Fermer"
+  },
+  "noticeClipTitle": {
+    "message": "Commande dangereuse bloquée"
+  },
+  "noticeClipBody": {
+    "message": "Ne collez rien dans Exécuter, le Terminal ou PowerShell."
+  },
+  "noticeClipCommandLabel": {
+    "message": "Commande bloquée"
+  },
+  "noticeCopyHint": {
+    "message": "Ne la copiez que si vous la comprenez."
+  },
+  "noticeFullAddress": {
+    "message": "Adresse complète"
+  },
+  "noticeHiddenMany": {
+    "message": "$P1$ caractères cachés",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeHiddenOne": {
+    "message": "1 caractère caché"
+  },
+  "noticeHideCommand": {
+    "message": "Masquer la commande"
+  },
+  "noticeInvisibleChar": {
+    "message": "Caractère invisible $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeLookReal": {
+    "message": "Vrai site"
+  },
+  "noticeLookThis": {
+    "message": "Cette page"
+  },
+  "noticeLookTitle": {
+    "message": "Ce n’est pas $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeMore": {
+    "message": "$P1$ autres alertes",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeMoreAddr": {
+    "message": "1 adresse"
+  },
+  "noticeMoreCmdOne": {
+    "message": "1 commande"
+  },
+  "noticeMoreCmds": {
+    "message": "$P1$ commandes",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "noticeMoreHide": {
+    "message": "Masquer"
+  },
+  "noticeMoreOne": {
+    "message": "1 autre alerte"
+  },
+  "noticeMoreShow": {
+    "message": "Afficher"
+  },
+  "noticeShowCommand": {
+    "message": "Voir la commande"
   },
   "noticeLookalikeLeave": {
     "message": "Quitter le site"
   },
-  "noticeLookalikeProceed": {
-    "message": "Continuer quand même"
-  },
-  "noticeSourceLookalike": {
-    "message": "Détecté par : protection Bastion contre les domaines lookalike"
+  "noticeStay": {
+    "message": "Rester quand même"
   },
   "ovByCategory": {
     "message": "Par catégorie"
@@ -832,8 +1497,19 @@
       }
     }
   },
-  "ovChartSum": {
-    "message": "30 jours : $P1$",
+  "ovChartPeak": {
+    "message": "Pic de $P1$ le $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "ovChartPeakShort": {
+    "message": "Pic $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -858,6 +1534,9 @@
   "ovHistoryOffTitle": {
     "message": "L’historique est désactivé"
   },
+  "ovHistoryOffTotal": {
+    "message": "bloqués au total"
+  },
   "ovKindBlocked": {
     "message": "Publicités et traqueurs bloqués"
   },
@@ -873,6 +1552,14 @@
   "ovKindStripped": {
     "message": "Paramètres de pistage supprimés"
   },
+  "ovLead": {
+    "message": "Ce que Bastion Shield a bloqué ces $P1$ derniers jours.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "ovListsOf": {
     "message": "$P1$ sur $P2$",
     "placeholders": {
@@ -884,8 +1571,8 @@
       }
     }
   },
-  "ovLocalNote": {
-    "message": "Tous les chiffres sont calculés localement sur cet appareil et jamais transmis."
+  "ovLocalShort": {
+    "message": "Tous les chiffres restent sur cet appareil."
   },
   "ovNoDataText": {
     "message": "Naviguez comme d’habitude. Ce que Bastion Shield bloque chaque jour apparaîtra ici."
@@ -896,6 +1583,20 @@
   "ovOpenActivity": {
     "message": "Voir l’activité"
   },
+  "ovShowAll": {
+    "message": "Afficher les $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ovShowAllShort": {
+    "message": "Tout"
+  },
+  "ovShowLess": {
+    "message": "Afficher moins"
+  },
   "ovStatusLists": {
     "message": "Listes"
   },
@@ -904,6 +1605,24 @@
   },
   "ovStatusRules": {
     "message": "Règles réseau"
+  },
+  "ovTileBlockedShort": {
+    "message": "bloqués"
+  },
+  "ovTileEstimate": {
+    "message": "Estimation"
+  },
+  "ovTileLabelBlocked": {
+    "message": "Bloqué"
+  },
+  "ovTileLabelData": {
+    "message": "Moins téléchargé"
+  },
+  "ovTileLabelTime": {
+    "message": "Moins d’attente"
+  },
+  "ovTileRequests": {
+    "message": "requêtes"
   },
   "ovTitle": {
     "message": "La protection est active"
@@ -937,29 +1656,29 @@
   "popupBlockedOnPage": {
     "message": "Bloqué sur cette page"
   },
+  "popupContactIt": {
+    "message": "Contacter l’informatique"
+  },
   "popupCountAds": {
     "message": "Publicités et traqueurs"
   },
   "popupCountDebounced": {
     "message": "Redirections contournées"
   },
+  "popupCounterOff": {
+    "message": "Compteur désactivé. La protection est active."
+  },
+  "popupCounterOn": {
+    "message": "Activer"
+  },
   "popupCountOff": {
     "message": "Compteur désactivé – la protection est active"
-  },
-  "popupCountOffSiteOff": {
-    "message": "Compteur désactivé"
   },
   "popupCountParams": {
     "message": "Paramètres de pistage supprimés"
   },
   "popupCountRedirects": {
     "message": "Remplacés par des substituts"
-  },
-  "popupErrorText": {
-    "message": "Fermez cette fenêtre et rouvrez-la. Si le problème persiste, redémarrez le navigateur."
-  },
-  "popupErrorTitle": {
-    "message": "Service de protection injoignable"
   },
   "popupFeedAll": {
     "message": "Journal complet"
@@ -979,6 +1698,22 @@
   "popupGlobalOffTitle": {
     "message": "La protection a été temporairement désactivée par votre organisation"
   },
+  "popupLegendBlocked": {
+    "message": "$P1$ bloqués",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "popupLegendReplaced": {
+    "message": "$P1$ remplacés",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "popupMode": {
     "message": "Mode de blocage"
   },
@@ -988,17 +1723,38 @@
   "popupModeStandardHint": {
     "message": "Contenu du site autorisé"
   },
+  "popupNoConnHint": {
+    "message": "Si cela échoue trois fois, redémarrez le navigateur."
+  },
+  "popupNoConnText": {
+    "message": "Bastion Shield ne répond pas."
+  },
+  "popupNoConnTitle": {
+    "message": "Pas de connexion"
+  },
+  "popupNotActiveText": {
+    "message": "Les pages du navigateur et les boutiques sont fermées aux extensions."
+  },
+  "popupNotActiveTitle": {
+    "message": "Inactif ici"
+  },
   "popupOpenDashboard": {
     "message": "Tableau de bord"
   },
   "popupOpenSettings": {
     "message": "Ouvrir les paramètres"
   },
-  "popupReloadHint": {
-    "message": "Rechargez pour appliquer la modification"
+  "popupPausedText": {
+    "message": "Votre service informatique a désactivé Bastion Shield temporairement."
+  },
+  "popupPausedTitle": {
+    "message": "Protection en pause"
+  },
+  "popupReloadBar": {
+    "message": "S’applique après rechargement"
   },
   "popupReport": {
-    "message": "Site défectueux ? Signaler"
+    "message": "Signaler un site défectueux…"
   },
   "popupRuleMeta": {
     "message": "$P1$× déclenchée, règle $P2$",
@@ -1092,6 +1848,9 @@
   "popupScriptsHint": {
     "message": "Limite fortement la plupart des sites"
   },
+  "popupSiteOffNote": {
+    "message": "Rien n’est bloqué sur ce site."
+  },
   "popupSiteOffState": {
     "message": "Désactivée, rien n’est filtré"
   },
@@ -1150,7 +1909,7 @@
     "message": "Contourner les pages AMP"
   },
   "privAmpDesc": {
-    "message": "Ouvre la page d’origine de l’éditeur au lieu de la version AMP de Google."
+    "message": "Ouvre la page d’origine au lieu de la version Google AMP."
   },
   "privCookies": {
     "message": "Cookies tiers"
@@ -1165,67 +1924,67 @@
     "message": "Navigateur"
   },
   "privCookiesDesc": {
-    "message": "Cookies des services intégrés d’autres entreprises. Les bloquer peut gêner la connexion à certains services."
+    "message": "Le blocage peut gêner la connexion à certains services."
   },
   "privDebounce": {
-    "message": "Protection contre le bounce tracking"
+    "message": "Éviter les redirections de pistage"
   },
   "privDebounceDesc": {
-    "message": "Évite les pages intermédiaires qui ne font qu’enregistrer votre clic et ouvre directement la destination."
+    "message": "Ouvre directement la destination, sans page intermédiaire qui compte les clics."
   },
   "privFingerprint": {
     "message": "Protection contre l’empreinte"
   },
   "privFingerprintDesc": {
-    "message": "Rend votre navigateur plus difficile à reconnaître par ses caractéristiques techniques. S’applique à tous les sites sans réglage propre."
+    "message": "Rend votre navigateur plus difficile à reconnaître."
   },
   "privFingerprintNote": {
-    "message": "Standard brouille discrètement les données Canvas, WebGL et audio. Strict masque en plus carte graphique, langues, voix et appareils, ce qui peut gêner certains sites."
+    "message": "Standard brouille discrètement canvas, WebGL et audio. Strict masque davantage et peut perturber certains sites."
   },
   "privFootnote": {
-    "message": "Les réglages du navigateur valent pour tout le profil. Si votre organisation ou une autre extension contrôle le même réglage, celui-ci prime."
+    "message": "S’applique à tout le profil du navigateur. Si votre organisation ou une autre extension contrôle le même réglage, c’est le sien qui l’emporte."
   },
   "privGpc": {
     "message": "Envoyer Global Privacy Control"
   },
   "privGpcDesc": {
-    "message": "Indique aux sites de ne pas vendre ni partager vos données."
+    "message": "Les sites apprennent qu’ils ne peuvent pas vendre vos données."
   },
   "privGroupBrowser": {
     "message": "Réglages du navigateur"
-  },
-  "privGroupFingerprint": {
-    "message": "Empreinte numérique"
   },
   "privGroupSignals": {
     "message": "Signaux et redirections"
   },
   "privLead": {
-    "message": "Une protection qui va au-delà du blocage. Les valeurs par défaut sont celles de Brave Shields."
+    "message": "Une protection au-delà du blocage. Les modifications s’appliquent aussitôt."
+  },
+  "privLockedPartTitle": {
+    "message": "Partiellement géré par votre organisation"
   },
   "privLockedText": {
-    "message": "Les options verrouillées sont signalées par un cadenas."
+    "message": "Les options verrouillées portent un cadenas."
   },
   "privLockedTitle": {
-    "message": "Les paramètres sont gérés par votre organisation"
+    "message": "Géré par votre organisation"
   },
   "privParams": {
     "message": "Supprimer les paramètres de pistage"
   },
   "privParamsDesc": {
-    "message": "Retire des identifiants comme fbclid ou gclid des liens vers d’autres sites."
+    "message": "Retire des liens les identifiants comme fbclid ou gclid."
   },
   "privPing": {
     "message": "Bloquer l’audit des liens"
   },
   "privPingDesc": {
-    "message": "Empêche les liens d’avertir discrètement des tiers lors d’un clic (<a ping>)."
+    "message": "Les liens n’envoient aucun signal à des tiers lors du clic."
   },
   "privSandbox": {
     "message": "Désactiver les API publicitaires de la Privacy Sandbox"
   },
   "privSandboxDesc": {
-    "message": "Désactive Topics, Protected Audience et Attribution Reporting dans le navigateur."
+    "message": "Désactive Topics, Protected Audience et Attribution Reporting."
   },
   "privTitle": {
     "message": "Confidentialité"
@@ -1237,7 +1996,7 @@
     "message": "Par défaut du navigateur"
   },
   "privWebrtcDesc": {
-    "message": "Détermine quelles adresses IP les appels vidéo et services similaires peuvent voir."
+    "message": "Définit les adresses IP visibles par les appels vidéo."
   },
   "privWebrtcProxy": {
     "message": "Proxy uniquement (strict)"
@@ -1245,16 +2004,29 @@
   "privWebrtcPublic": {
     "message": "Adresse publique uniquement"
   },
-  "reportEmailText": {
-    "message": "Votre messagerie ouvre un brouillon adressé à $P1$. Rien n’est envoyé avant que vous ne l’envoyiez.",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
+  "reportCloseSheet": {
+    "message": "Fermer"
   },
-  "reportGithubText": {
-    "message": "Un ticket GitHub public et prérempli s’ouvre. Vous pouvez le compléter avant de l’envoyer."
+  "reportGithubFailText": {
+    "message": "Vos informations sont conservées. Réessayez dans un instant."
+  },
+  "reportGithubFailTitle": {
+    "message": "GitHub inaccessible"
+  },
+  "reportKeyBrowser": {
+    "message": "Navigateur"
+  },
+  "reportKeyLists": {
+    "message": "Listes de filtres"
+  },
+  "reportKeyMode": {
+    "message": "Mode"
+  },
+  "reportKeySite": {
+    "message": "Site"
+  },
+  "reportKeyVersion": {
+    "message": "Version"
   },
   "reportMailDescribe": {
     "message": "Qu’est-ce qui ne fonctionne pas ? Décrivez brièvement :"
@@ -1267,20 +2039,40 @@
       }
     }
   },
-  "reportNotShared": {
-    "message": "Ne sont pas partagés : chemin de la page, paramètres, historique et données personnelles."
+  "reportNotSharedShort": {
+    "message": "Non partagés : chemin, recherche, historique, données personnelles."
   },
-  "reportOpenEmail": {
+  "reportOpenDraft": {
     "message": "Ouvrir le brouillon"
   },
   "reportOpenGithub": {
     "message": "Ouvrir sur GitHub"
   },
-  "reportShared": {
-    "message": "Informations partagées"
+  "reportRetryOpen": {
+    "message": "Rouvrir"
   },
-  "reportTitle": {
-    "message": "Signaler un site défectueux"
+  "reportSharedAside": {
+    "message": "Sans chemin ni historique"
+  },
+  "reportSheetEmail": {
+    "message": "Votre messagerie ouvre un brouillon. Vous l’envoyez vous-même."
+  },
+  "reportSheetGithub": {
+    "message": "Ouvre un ticket GitHub public. Vous l’envoyez vous-même."
+  },
+  "reportSheetTitle": {
+    "message": "Signaler $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "reportSheetTo": {
+    "message": "À"
+  },
+  "reportWhatShared": {
+    "message": "Ce qui est partagé"
   },
   "ruleDebounce": {
     "message": "Protection contre le bounce tracking"
@@ -1310,10 +2102,21 @@
     "message": "Journal d’activité"
   },
   "setActivityLogDesc": {
-    "message": "Enregistre les requêtes bloquées pour la fenêtre et le tableau de bord. Sans journal, Bastion Shield est encore plus léger."
+    "message": "Enregistre les requêtes bloquées pour la fenêtre et l’aperçu."
+  },
+  "setBackupConfirm": {
+    "message": "Importer la sauvegarde"
+  },
+  "setBackupCreated": {
+    "message": "Créée le $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "setBackupDesc": {
-    "message": "Exporte les paramètres, exceptions par site et filtres personnels dans un fichier JSON. L’historique n’est pas inclus."
+    "message": "Réglages, exceptions et filtres personnels. Sans historique."
   },
   "setBackupExport": {
     "message": "Exporter une sauvegarde"
@@ -1321,8 +2124,24 @@
   "setBackupFailed": {
     "message": "Échec de la sauvegarde"
   },
+  "setBackupFilters": {
+    "message": "$P1$ filtres personnels",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "setBackupFiltersOne": {
+    "message": "$P1$ filtre personnel",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "setBackupImport": {
-    "message": "Importer une sauvegarde"
+    "message": "Importer une sauvegarde…"
   },
   "setBackupImported": {
     "message": "Sauvegarde restaurée"
@@ -1331,15 +2150,7 @@
     "message": "Sauvegarde restaurée. Les paramètres définis par votre organisation restent inchangés."
   },
   "setBackupImportText": {
-    "message": "Les paramètres, exceptions par site et filtres personnels seront remplacés par la sauvegarde."
-  },
-  "setBackupImportTextDated": {
-    "message": "Les paramètres, exceptions par site et filtres personnels seront remplacés par la sauvegarde du $P1$.",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
+    "message": "Vos réglages, exceptions et filtres sont remplacés par la sauvegarde."
   },
   "setBackupImportTitle": {
     "message": "Restaurer la sauvegarde ?"
@@ -1347,17 +2158,51 @@
   "setBackupInvalid": {
     "message": "Ce n’est pas une sauvegarde Bastion Shield valide."
   },
+  "setBackupRow": {
+    "message": "Sauvegarde dans un fichier"
+  },
+  "setBackupSites": {
+    "message": "$P1$ exceptions",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "setBackupSitesOne": {
+    "message": "$P1$ exception",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
   "setBadge": {
     "message": "Compteur sur l’icône"
   },
   "setBadgeDesc": {
-    "message": "Affiche sur l’icône de l’extension le nombre de requêtes bloquées sur la page."
+    "message": "Indique sur l’icône ce qui a été bloqué sur la page."
+  },
+  "setClearConfirm": {
+    "message": "Supprimer l’historique"
   },
   "setClearHistory": {
-    "message": "Effacer l’historique maintenant"
+    "message": "Supprimer l’historique"
+  },
+  "setClearHistoryAction": {
+    "message": "Supprimer l’historique…"
   },
   "setClearHistoryDesc": {
-    "message": "Supprime toutes les entrées et statistiques journalières enregistrées."
+    "message": "Supprime toutes les entrées et statistiques journalières. Irréversible."
+  },
+  "setClearKeep": {
+    "message": "Garder l’historique"
+  },
+  "setClearText": {
+    "message": "Toutes les entrées et statistiques journalières disparaissent de cet appareil. C’est irréversible."
+  },
+  "setClearTitle": {
+    "message": "Supprimer l’historique ?"
   },
   "setDays": {
     "message": "$P1$ jours",
@@ -1376,11 +2221,8 @@
   "setGroupBackup": {
     "message": "Sauvegarde"
   },
-  "setGroupBlocking": {
-    "message": "Blocage"
-  },
-  "setGroupDisplay": {
-    "message": "Affichage"
+  "setGroupGeneral": {
+    "message": "Général"
   },
   "setGroupReset": {
     "message": "Réinitialisation"
@@ -1389,7 +2231,18 @@
     "message": "Conserver l’historique"
   },
   "setHistoryDesc": {
-    "message": "Enregistre localement les statistiques et entrées, sans paramètres de requête. Rien n’est transmis."
+    "message": "Conserve les statistiques en local, sans paramètres de recherche."
+  },
+  "setLanguageAutoNamed": {
+    "message": "Comme le navigateur ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "setLanguageDesc": {
+    "message": "La page se recharge après le changement."
   },
   "setLead": {
     "message": "Le fonctionnement de Bastion Shield et ce qu’il conserve sur cet appareil."
@@ -1398,16 +2251,19 @@
     "message": "Mode de blocage par défaut"
   },
   "setModeDesc": {
-    "message": "Standard autorise le contenu propre au site, comme Brave Shields. Agressif le bloque aussi et peut gêner davantage de sites."
+    "message": "Agressif bloque aussi le contenu du site lui-même et peut perturber des pages."
   },
   "setResetAction": {
-    "message": "Rétablir les valeurs par défaut"
+    "message": "Tout réinitialiser…"
+  },
+  "setResetCheck": {
+    "message": "J’ai une sauvegarde"
   },
   "setResetConfirm": {
-    "message": "Réinitialiser"
+    "message": "Tout réinitialiser"
   },
   "setResetDesc": {
-    "message": "Rétablit tous les paramètres par défaut et supprime les exceptions par site et filtres personnels. L’historique est conservé."
+    "message": "Supprime exceptions et filtres personnels. L’historique reste."
   },
   "setResetDone": {
     "message": "Valeurs par défaut rétablies"
@@ -1415,8 +2271,11 @@
   "setResetDonePartly": {
     "message": "Valeurs par défaut rétablies. Les paramètres définis par votre organisation restent inchangés."
   },
+  "setResetRow": {
+    "message": "Tout par défaut"
+  },
   "setResetText": {
-    "message": "Les paramètres, exceptions par site et filtres personnels seront perdus. Exportez d’abord une sauvegarde pour les conserver."
+    "message": "Les réglages, exceptions de sites et filtres personnels sont perdus."
   },
   "setResetTitle": {
     "message": "Tout réinitialiser ?"
@@ -1425,13 +2284,28 @@
     "message": "Durée de conservation"
   },
   "setRetentionDesc": {
-    "message": "Les entrées plus anciennes sont supprimées automatiquement chaque jour."
+    "message": "Les entrées plus anciennes sont supprimées chaque jour."
   },
   "setTitle": {
     "message": "Paramètres"
   },
+  "siteLockedAll": {
+    "message": "Le mode et les scripts sont définis par votre organisation."
+  },
+  "siteLockedMode": {
+    "message": "Le mode est défini par votre organisation."
+  },
+  "siteOffText": {
+    "message": "Ne concerne que ce domaine. Compteur désactivé."
+  },
+  "siteOffTitle": {
+    "message": "Rien n’est bloqué sur ce site"
+  },
+  "siteReloadAction": {
+    "message": "Recharger la page"
+  },
   "sitesAdd": {
-    "message": "Ajouter"
+    "message": "Ajouter le site"
   },
   "sitesAdded": {
     "message": "$P1$ ajouté. La protection y est désactivée.",
@@ -1442,16 +2316,24 @@
     }
   },
   "sitesAddHint": {
-    "message": "Une nouvelle exception désactive la protection pour le site. Chaque réglage peut ensuite être ajusté."
-  },
-  "sitesAddLabel": {
-    "message": "Adresse du site"
+    "message": "Une nouvelle exception y désactive la protection. Chaque réglage peut ensuite être modifié séparément."
   },
   "sitesAddPlaceholder": {
-    "message": "exemple.ch ou https://exemple.ch/page"
+    "message": "exemple.ch"
   },
   "sitesAddTitle": {
-    "message": "Ajouter une exception"
+    "message": "Ajouter un site"
+  },
+  "sitesCharCount": {
+    "message": "$P1$ sur $P2$ caractères",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
   },
   "sitesColFingerprinting": {
     "message": "Empreinte"
@@ -1463,7 +2345,7 @@
     "message": "Protection"
   },
   "sitesColScripts": {
-    "message": "Bloquer scripts"
+    "message": "Scripts"
   },
   "sitesColSite": {
     "message": "Site"
@@ -1476,6 +2358,28 @@
       }
     }
   },
+  "sitesCountLimit": {
+    "message": "$P1$ sur $P2$ sites",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "sitesCountOf": {
+    "message": "$P1$ sur $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
   "sitesCountOne": {
     "message": "$P1$ entrée",
     "placeholders": {
@@ -1483,6 +2387,9 @@
         "content": "$1"
       }
     }
+  },
+  "siteScriptsHint": {
+    "message": "Peut rendre des pages inutilisables"
   },
   "sitesDefault": {
     "message": "Défaut : $P1$",
@@ -1493,21 +2400,49 @@
     }
   },
   "sitesEmptyText": {
-    "message": "Tous les sites sont protégés avec les réglages par défaut. Les exceptions peuvent aussi être définies depuis la fenêtre de l’extension."
+    "message": "Tous les sites sont protégés avec les réglages par défaut. Vous pouvez aussi définir des exceptions directement dans la fenêtre contextuelle."
   },
   "sitesEmptyTitle": {
-    "message": "Aucune exception"
+    "message": "Pas encore d’exception"
   },
-  "sitesExists": {
-    "message": "$P1$ figure déjà dans la liste.",
+  "sitesErrChars": {
+    "message": "Adresse non valide : utilisez des lettres, chiffres, points et traits d’union. Exemple : exemple.ch"
+  },
+  "sitesErrEmpty": {
+    "message": "Saisissez une adresse. Exemple : exemple.ch"
+  },
+  "sitesErrFull": {
+    "message": "$P1$ sites au maximum : supprimez d’abord une exception.",
     "placeholders": {
       "p1": {
         "content": "$1"
       }
     }
   },
-  "sitesFootnote": {
-    "message": "L’export est un fichier JSON à réimporter sur un autre appareil. L’import accepte aussi un fichier texte avec un site par ligne."
+  "sitesErrLong": {
+    "message": "Trop long : raccourcissez l’adresse à $P1$ caractères au maximum.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sitesErrNoTld": {
+    "message": "Adresse non valide : l’extension manque. Exemple : exemple.ch"
+  },
+  "sitesExists": {
+    "message": "$P1$ est déjà dans la liste. Modifiez ses réglages dans la ligne ci-dessous.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sitesImport": {
+    "message": "Importer…"
+  },
+  "sitesImportConfirm": {
+    "message": "Importer les sites"
   },
   "sitesImported": {
     "message": "$P1$ sites importés",
@@ -1528,39 +2463,85 @@
   "sitesImportInvalid": {
     "message": "Le fichier ne contient aucun site valide."
   },
-  "sitesImportText": {
-    "message": "$P1$ sites seront importés. Les entrées existantes pour ces sites seront remplacées.",
+  "sitesImportMore": {
+    "message": "+$P1$ autres",
     "placeholders": {
       "p1": {
         "content": "$1"
       }
     }
   },
-  "sitesImportTextOne": {
-    "message": "$P1$ site sera importé. Une entrée existante pour ce site sera remplacée.",
+  "sitesImportOver": {
+    "message": "$P1$ au-delà de la limite de $P2$, non reprises",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "sitesImportSkipped": {
+    "message": "$P1$ lignes non valides, ignorées",
     "placeholders": {
       "p1": {
         "content": "$1"
       }
     }
+  },
+  "sitesImportSkippedOne": {
+    "message": "$P1$ ligne non valide, ignorée",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sitesImportText": {
+    "message": "Les entrées existantes pour les mêmes sites sont remplacées."
   },
   "sitesImportTitle": {
-    "message": "Importer les sites ?"
+    "message": "Importer $P1$ sites ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
-  "sitesInvalid": {
-    "message": "Veuillez saisir une adresse valide, p. ex. exemple.ch."
+  "sitesImportTitleOne": {
+    "message": "Importer $P1$ site ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "sitesLead": {
-    "message": "Réglages valables pour certains sites uniquement. Tous les autres sites suivent les réglages par défaut. Une exception couvre aussi tous les sous-domaines."
+    "message": "Réglages pour des sites précis. S’appliquent aussi aux sous-domaines."
+  },
+  "sitesLimits": {
+    "message": "La recherche trouve aussi les sous-domaines. $P1$ sites au maximum, adresses jusqu’à $P2$ caractères.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
   },
   "sitesListTitle": {
     "message": "Sites"
   },
+  "sitesNewBadge": {
+    "message": "Nouveau"
+  },
   "sitesNoMatch": {
     "message": "Aucun site ne correspond à la recherche."
   },
-  "sitesPolicyRow": {
-    "message": "Défini par votre organisation"
+  "sitesOrgBadge": {
+    "message": "Organisation"
   },
   "sitesRemoveAria": {
     "message": "Supprimer $P1$",
@@ -1571,7 +2552,7 @@
     }
   },
   "sitesRemoved": {
-    "message": "$P1$ supprimé",
+    "message": "«$P1$» supprimé",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -1579,13 +2560,41 @@
     }
   },
   "sitesSearch": {
-    "message": "Rechercher un site"
+    "message": "Rechercher des sites…"
+  },
+  "sitesSearchReset": {
+    "message": "Effacer la recherche"
+  },
+  "sitesShowMore": {
+    "message": "Afficher $P1$ de plus",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sitesSumFp": {
+    "message": "Empreinte $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sitesSumOff": {
+    "message": "Protection désactivée"
+  },
+  "sitesSumScripts": {
+    "message": "Scripts bloqués"
   },
   "sitesTitle": {
     "message": "Exceptions par site"
   },
   "stateLoading": {
     "message": "Chargement…"
+  },
+  "toastClose": {
+    "message": "Fermer le message"
   },
   "typeCspReport": {
     "message": "Rapport CSP"
@@ -1633,34 +2642,34 @@
     "message": "XHR/Fetch"
   },
   "welcomeLead": {
-    "message": "Votre navigateur est désormais protégé contre les publicités, les traqueurs et les sites malveillants connus. Aucune configuration n’est nécessaire."
+    "message": "Votre navigateur est désormais protégé. Rien à configurer."
   },
   "welcomeLists": {
     "message": "Voir les listes"
   },
   "welcomeLocalText": {
-    "message": "Aucune télémétrie, aucun compte, aucun cloud. Les statistiques restent dans votre navigateur."
+    "message": "Pas de compte, pas de télémétrie. Les statistiques restent dans le navigateur."
   },
   "welcomeLocalTitle": {
     "message": "Rien ne quitte votre appareil"
   },
   "welcomeOnText": {
-    "message": "Bloque publicités et traqueurs avec toutes les listes sous «Listes de filtres», avec en plus une protection contre l’empreinte et les redirections de pistage."
+    "message": "Publicités, traqueurs et sites malveillants connus sont bloqués."
   },
   "welcomeOnTitle": {
     "message": "Déjà actif"
   },
   "welcomePin": {
-    "message": "Astuce : épinglez Bastion Shield via l’icône de puzzle dans la barre d’outils pour toujours voir le compteur."
+    "message": "Astuce : épinglez Bastion Shield via l’icône puzzle. Vous verrez ainsi toujours le compteur."
   },
   "welcomeSeeText": {
-    "message": "La fenêtre de l’extension montre, pour chaque page, ce qui a été bloqué et quelle règle s’est appliquée."
+    "message": "Le popup montre pour chaque page ce qui a été bloqué et pourquoi."
   },
   "welcomeSeeTitle": {
     "message": "Transparent"
   },
   "welcomeStart": {
-    "message": "Voir la vue d’ensemble"
+    "message": "Ouvrir l’aperçu"
   },
   "welcomeTitle": {
     "message": "Bienvenue dans Bastion Shield"
@@ -1721,7 +2730,7 @@
     "message": "Réduire"
   },
   "panelEditInTab": {
-    "message": "Modifier"
+    "message": "Modifier dans l’onglet"
   },
   "panelOpenInTab": {
     "message": "Ouvrir dans un onglet"
@@ -1730,13 +2739,13 @@
     "message": "Règles de filtrage appliquées"
   },
   "siteReport": {
-    "message": "La page ne fonctionne pas ? Signaler"
+    "message": "Page défectueuse ? Signaler…"
   },
   "setIncidentCta": {
-    "message": "Bouton « Cyberincident ? »"
+    "message": "Bouton «Cyberincident ?»"
   },
   "setIncidentCtaDesc": {
-    "message": "Lien vers le contact d'urgence de Bastion. Désactivé, seul « Bastion Shield » s'affiche."
+    "message": "Lien vers le contact d’urgence de Bastion."
   },
   "setBackupInTab": {
     "message": "Exporter ou importer"
@@ -1749,34 +2758,11 @@
       }
     }
   },
-  "ovTileBlocked": {
-    "message": "bloqués en $P1$ jours",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
   "ovTileTime": {
     "message": "d'attente en moins"
   },
-  "setGroupLanguage": {
-    "message": "Langue"
-  },
   "setLanguage": {
-    "message": "Langue de l'interface"
-  },
-  "setLanguageAuto": {
-    "message": "Comme le navigateur"
-  },
-  "nerdPopupLookalikeHomoglyph": {
-    "message": "homoglyphes (caractères semblables)"
-  },
-  "nerdPopupLookalikeTypo": {
-    "message": "faute de frappe (typosquatting)"
-  },
-  "nerdPopupLookalikeCombo": {
-    "message": "marque avec mots ajoutés (combosquatting)"
+    "message": "Langue"
   },
   "nerdPopupFpNoise": {
     "message": "réponses avec des valeurs aléatoires"
@@ -1835,12 +2821,6 @@
   "nerdSlFpTitle": {
     "message": "Appels de fingerprinting sur cette page"
   },
-  "nerdSlClipTitle": {
-    "message": "Commandes du presse-papiers remplacées (ClickFix)"
-  },
-  "nerdSlHostsTitle": {
-    "message": "Hôtes bloqués sur cette page"
-  },
   "nerdSlHosts": {
     "message": "$P1$ hôtes",
     "placeholders": {
@@ -1854,20 +2834,6 @@
     "placeholders": {
       "p1": {
         "content": "$1"
-      }
-    }
-  },
-  "nerdSlLookalike": {
-    "message": "$P1$ ressemble à $P2$ ($P3$). Vérifiez l’adresse.",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      },
-      "p2": {
-        "content": "$2"
-      },
-      "p3": {
-        "content": "$3"
       }
     }
   },
@@ -1995,7 +2961,7 @@
     "message": "Activer le mode nerd"
   },
   "nerdSettingsEnabledDesc": {
-    "message": "Outils de développement, ligne de commande (Ctrl+K), menu contextuel et bisect. Rien ne quitte cet appareil."
+    "message": "Outils de développement, ligne de commande, menu contextuel et bisect. Rien ne quitte cet appareil."
   },
   "nerdKeysTitle": {
     "message": "Raccourcis clavier"
@@ -2025,34 +2991,34 @@
     "message": "Menu contextuel"
   },
   "nerdSettingsContextMenuDesc": {
-    "message": "Ajoute «Bastion Shield» au menu du clic droit : vérifier pourquoi un lien ou une image est bloqué, tester ou rechercher le texte de filtre sélectionné, trouver le filtre fautif, ouvrir les outils de développement."
+    "message": "Ajoute «Bastion Shield» au menu du clic droit."
   },
   "nerdSettingsFilterHistory": {
     "message": "Liens vers l’historique des filtres"
   },
   "nerdSettingsFilterHistoryDesc": {
-    "message": "Affiche «GitHub ↗» à côté des filtres appliqués dans le popup et dans l’activité, avec un lien vers l’historique du filtre à la source."
+    "message": "Affiche «GitHub ↗» à côté des filtres touchés, avec un lien vers leur historique."
   },
   "nerdSettingsFpMeter": {
     "message": "Compteur de fingerprinting"
   },
   "nerdSettingsFpMeterDesc": {
-    "message": "Compte par page combien de fois canvas, WebGL, l’audio et d’autres API de fingerprinting sont lus."
+    "message": "Compte par page les accès à canvas, WebGL, audio et interfaces semblables."
   },
   "nerdSettingsLookalike": {
-    "message": "Domaines similaires (typosquatting)"
+    "message": "Alerte de domaine similaire"
   },
   "nerdSettingsLookalikeDesc": {
-    "message": "Avertit lorsqu’une adresse ressemble à s’y méprendre à un domaine protégé (faute de frappe, caractères semblables, nom de marque avec mots ajoutés)."
+    "message": "Avertit des adresses qui ressemblent à un domaine protégé."
   },
   "nerdSettingsDomains": {
     "message": "Domaines protégés"
   },
   "nerdSettingsDomainsHint": {
-    "message": "Un domaine par ligne, p. ex. celui de votre banque. Les domaines similaires déclenchent l’alerte."
+    "message": "Un domaine par ligne, par exemple celui de votre banque."
   },
   "nerdSettingsDomainsPolicy": {
-    "message": "Définis par votre organisation"
+    "message": "De votre organisation :"
   },
   "nerdSettingsDomainsSaved": {
     "message": "$P1$ domaines enregistrés",
@@ -2064,14 +3030,6 @@
   },
   "nerdSettingsDomainsSavedOne": {
     "message": "$P1$ domaine enregistré",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
-  "nerdSettingsDomainsInvalid": {
-    "message": "Enregistré. Noms de domaine non valides, ignorés : $P1$",
     "placeholders": {
       "p1": {
         "content": "$1"
@@ -2091,7 +3049,7 @@
     "message": "Le mode nerd est désactivé"
   },
   "nerdLabOffText": {
-    "message": "Activez-le dans « Paramètres » pour ouvrir les outils de développement."
+    "message": "Activez-le dans les réglages pour utiliser les outils de développement."
   },
   "nerdLabTabsLabel": {
     "message": "Outil"
@@ -2751,13 +3709,13 @@
     "message": "quitter le champ"
   },
   "privGroupClipboard": {
-    "message": "Presse-papiers"
+    "message": "Presse-papiers et empreinte"
   },
   "privClipboard": {
     "message": "Protection ClickFix"
   },
   "privClipboardDesc": {
-    "message": "Empêche les sites de placer en secret dans le presse-papiers des commandes destinées à vous inciter à les exécuter (ClickFix : PowerShell, mshta, curl | sh). Ce que vous copiez vous-même n’est pas touché."
+    "message": "Bloque les commandes que des sites placent en cachette dans le presse-papiers."
   },
   "panelOpenDashboard": {
     "message": "Ouvrir le tableau de bord"
@@ -2792,11 +3750,8 @@
   "cmdkOpensTab": {
     "message": "S’ouvre dans l’onglet du tableau de bord"
   },
-  "cmdkListOn": {
-    "message": "Liste de filtres · active"
-  },
   "cmdkListOff": {
-    "message": "Liste de filtres · désactivée"
+    "message": "Désactivée"
   },
   "cmdkNerdOn": {
     "message": "Activer le mode nerd"
@@ -2813,7 +3768,7 @@
     }
   },
   "cmdkHintMove": {
-    "message": "naviguer"
+    "message": "choisir"
   },
   "cmdkHintOpen": {
     "message": "ouvrir"
@@ -2825,10 +3780,15 @@
     "message": "Exporter"
   },
   "cfImport": {
-    "message": "Importer"
+    "message": "Importer un fichier…"
   },
   "cfImportInvalid": {
-    "message": "Ce fichier n’est ni une liste de filtres (.txt) ni une sauvegarde Bastion Shield."
+    "message": "«$P1$» n’est ni une liste de filtres (.txt) ni une sauvegarde.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
   },
   "cfImportNothing": {
     "message": "Rien de nouveau : tous les filtres de ce fichier sont déjà là."
@@ -2942,34 +3902,22 @@
     "message": "Ajoutez n'importe quelle liste de filtres depuis un fichier ou une adresse web. Un fichier reste tel quel jusqu'à ce que vous le remplaciez. Une adresse web peut se mettre à jour une fois par jour; Bastion la télécharge alors depuis ce site, qui voit votre adresse IP. Les listes importées utilisent le budget de règles dynamiques du navigateur, partagé avec vos propres filtres; leurs scriptlets ne sont pas appliqués."
   },
   "myListsUpload": {
-    "message": "Charger un fichier…"
+    "message": "Téléverser un fichier…"
   },
   "myListsOr": {
     "message": "ou"
   },
-  "myListsUrlLabel": {
-    "message": "Adresse web d'une liste de filtres"
-  },
   "myListsAdd": {
-    "message": "Ajouter"
-  },
-  "myListsDownloading": {
-    "message": "Téléchargement…"
+    "message": "Ajouter la liste"
   },
   "myListsHint": {
-    "message": "Fichiers texte au format uBlock Origin, Adblock Plus ou hosts, jusqu'à 10 Mo. Les adresses web doivent commencer par https://."
-  },
-  "myListsEmpty": {
-    "message": "Aucune liste importée pour l'instant."
+    "message": "Fichier texte jusqu’à 10 Mo (uBlock, Adblock Plus, hosts) ou adresse en https://"
   },
   "myListsSourceUrl": {
     "message": "Web"
   },
   "myListsSourceFile": {
     "message": "Fichier"
-  },
-  "myListsChecked": {
-    "message": "Vérifiée"
   },
   "myListsScriptlets": {
     "message": "$P1$ scriptlets non appliqués",
@@ -2987,31 +3935,14 @@
       }
     }
   },
-  "myListsAutoUpdate": {
-    "message": "Mettre à jour chaque jour"
-  },
   "myListsUpdateNow": {
     "message": "Mettre à jour"
   },
   "myListsReplace": {
     "message": "Remplacer…"
   },
-  "myListsReplaceHint": {
-    "message": "Remplacer le contenu par un fichier; le nom et l'interrupteur restent"
-  },
   "myListsRemove": {
     "message": "Supprimer"
-  },
-  "myListsRemoveTitle": {
-    "message": "Supprimer «$P1$»?",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
-  "myListsRemoveText": {
-    "message": "Ses filtres ne s'appliquent plus. Vous pouvez réimporter la liste à tout moment."
   },
   "myListsSameTitle": {
     "message": "«$P1$» existe déjà",
@@ -3022,13 +3953,13 @@
     }
   },
   "myListsSameTitleText": {
-    "message": "Remplacer le contenu de cette liste par ce fichier, ou ajouter le fichier comme liste séparée?"
+    "message": "Remplacer le contenu ou ajouter le fichier comme liste distincte ?"
   },
   "myListsAddNew": {
     "message": "Ajouter comme nouvelle liste"
   },
   "myListsReplaceIt": {
-    "message": "Remplacer"
+    "message": "Remplacer le contenu"
   },
   "myListsAddedToast": {
     "message": "«$P1$» ajoutée",
@@ -3065,27 +3996,8 @@
   "myListsDownloadFailed": {
     "message": "Dernière mise à jour échouée"
   },
-  "myListsLockedTitle": {
-    "message": "Défini par votre organisation"
-  },
   "myListsLocked": {
     "message": "Votre organisation n'autorise pas les listes de filtres importées. Les listes importées auparavant sont désactivées."
-  },
-  "myListsErrTooMany": {
-    "message": "Vous pouvez importer jusqu'à $P1$ listes.",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
-  },
-  "myListsErrTooLarge": {
-    "message": "La liste dépasse $P1$ Mo.",
-    "placeholders": {
-      "p1": {
-        "content": "$1"
-      }
-    }
   },
   "myListsErrFetch": {
     "message": "La liste n'a pas pu être téléchargée ($P1$).",

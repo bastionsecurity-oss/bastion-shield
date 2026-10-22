@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
-  Bastion Shield — strict-block interstitial (ARCHITECTURE §4.5). A DNR rule
-  redirects main-frame navigations to known malicious or tracking hosts here;
-  blocked.ts asks the service worker (blocked:info) what was blocked.
+  Bastion Shield — strict-block interstitial (ARCHITECTURE §4.5, artboards
+  S01–S07). A DNR rule redirects main-frame navigations to known malicious or
+  tracking hosts here; blocked.ts asks the service worker (blocked:info) what
+  was blocked.
   SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
@@ -11,49 +12,71 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#171C1E">
   <meta name="referrer" content="no-referrer">
-  <title data-i18n="blockedTitle">Diese Seite wurde blockiert</title>
+  <title data-i18n="blockedTitle">Seite blockiert</title>
   <link rel="stylesheet" href="../ui/shared/tokens.css">
   <link rel="stylesheet" href="blocked.css">
   <script src="blocked.js" defer></script>
 </head>
-<body class="bl" data-category="unknown" data-state="loading">
+<body class="bl" data-kind="other" data-state="loading">
   <main class="bl-main">
-    <header class="bl-brand">
-      <span data-mark data-mark-size="30"></span>
-      <span class="bl-brand__word" data-i18n="extName">Bastion Shield</span>
-    </header>
-
-    <div class="bl-body">
-      <div class="eyebrow" id="bl-eyebrow"><span data-icon="tick" data-icon-size="11" class="eyebrow__tick"></span><span id="bl-eyebrow-text" data-i18n="blockedEyebrow">Seite gesperrt</span></div>
-      <h1 class="bl-title" data-i18n="blockedTitle">Diese Seite wurde blockiert</h1>
-      <p class="bl-host mono" id="bl-host" hidden></p>
-      <p class="bl-reason" id="bl-reason" data-i18n="blockedReasonGeneric">Bastion Shield hat das Laden dieser Adresse verhindert, weil sie auf einer Filterliste steht.</p>
-
-      <dl class="bl-facts">
-        <div class="bl-facts__item"><dt data-i18n="blockedCategory">Grund</dt><dd id="bl-category">–</dd></div>
-        <div class="bl-facts__item"><dt data-i18n="blockedList">Filterliste</dt><dd id="bl-list">–</dd></div>
-      </dl>
-
-      <div class="bl-actions" id="bl-actions">
-        <button type="button" class="btn btn--primary bl-btn" id="bl-back"><span data-icon="arrowLeft" data-icon-size="15"></span><span data-i18n="actionBack">Zurück</span></button>
-        <button type="button" class="btn btn--secondary bl-btn" id="bl-proceed" aria-expanded="false" aria-controls="bl-confirm" data-i18n="blockedProceed">Trotzdem fortfahren</button>
-      </div>
-
-      <section class="bl-confirm" id="bl-confirm" hidden aria-labelledby="bl-confirm-title">
-        <h2 class="bl-confirm__title" id="bl-confirm-title" data-i18n="blockedConfirmTitle">Wirklich fortfahren?</h2>
-        <p class="bl-confirm__text" id="bl-confirm-text" data-i18n="blockedConfirmText">Öffnen Sie diese Seite nur, wenn Sie der Adresse vertrauen. Die Ausnahme gilt nur in diesem Tab und endet, wenn Sie ihn schliessen.</p>
-        <div class="bl-confirm__actions">
-          <button type="button" class="btn btn--secondary" id="bl-confirm-cancel" data-i18n="actionCancel">Abbrechen</button>
-          <button type="button" class="btn btn--primary" id="bl-confirm-go" data-i18n="blockedConfirmGo">Seite trotzdem öffnen</button>
-        </div>
-        <div class="bl-confirm__error" id="bl-error" role="alert" hidden></div>
-      </section>
+    <div class="tile tile--page bl-tile" aria-hidden="true">
+      <svg class="bl-tile__icon bl-tile__icon--security" viewBox="0 0 16 16" width="40" height="40" focusable="false"><path d="M8 1.75 13.25 3.75v3.75c0 3.25-2.25 5.5-5.25 6.75-3-1.25-5.25-3.5-5.25-6.75V3.75z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3.25M8 10.25v.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>
+      <svg class="bl-tile__icon bl-tile__icon--tracking" viewBox="0 0 16 16" width="40" height="40" focusable="false"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.1"/><path class="bl-tile__gap" d="M2.5 13.5 13.5 2.5" fill="none" stroke-width="2.6"/><path d="M2.5 13.5 13.5 2.5" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      <svg class="bl-tile__icon bl-tile__icon--other" viewBox="0 0 16 16" width="40" height="40" focusable="false"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M3.75 12.25 12.25 3.75" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
     </div>
 
-    <footer class="bl-foot">
-      <p data-i18n="blockedFoot">Bastion Shield prüft Adressen lokal anhand öffentlicher Filterlisten. Es wurden keine Daten übertragen.</p>
-    </footer>
+    <div class="bl-head">
+      <h1 class="bl-title" id="bl-title" data-i18n="blockedTitle">Seite blockiert</h1>
+      <p class="bl-text" id="bl-text">
+        <span class="bl-text__before" id="bl-text-before" hidden></span>
+        <span class="bl-host mono" id="bl-host" translate="no" hidden></span>
+        <span class="bl-text__after" id="bl-text-after" data-i18n="blockedTextNoHost">Diese Adresse steht auf einer Filterliste.</span>
+      </p>
+    </div>
+
+    <div class="bl-actions" id="bl-actions">
+      <button type="button" class="btn btn--primary bl-btn" id="bl-back"><span data-icon="arrowLeft" data-icon-size="16"></span><span data-i18n="actionBack">Zurück</span></button>
+      <button type="button" class="btn btn--quiet bl-btn bl-proceed" id="bl-proceed" aria-expanded="false" aria-controls="bl-confirm" data-i18n="blockedProceed">Trotzdem öffnen…</button>
+    </div>
+
+    <section class="bl-confirm" id="bl-confirm" hidden aria-labelledby="bl-confirm-title" aria-describedby="bl-confirm-text">
+      <div class="bl-confirm__copy">
+        <h2 class="bl-confirm__title" id="bl-confirm-title" data-i18n="blockedConfirmTitle">Nur in diesem Tab öffnen?</h2>
+        <p class="bl-confirm__text" id="bl-confirm-text" data-i18n="blockedConfirmText">Die Ausnahme gilt nur für diese Adresse und endet, wenn Sie den Tab schliessen.</p>
+      </div>
+      <div class="bl-confirm__actions">
+        <button type="button" class="btn btn--outline btn--h" id="bl-confirm-cancel" data-i18n="actionCancel">Abbrechen</button>
+        <button type="button" class="btn btn--danger btn--h" id="bl-confirm-go" data-i18n="blockedConfirmGo">Seite öffnen</button>
+      </div>
+    </section>
+
+    <div class="bl-error" id="bl-error" role="alert" hidden>
+      <span data-icon="alert" data-icon-size="18" class="bl-error__icon"></span>
+      <div class="bl-error__copy">
+        <p class="bl-error__title" data-i18n="blockedProceedFailed">Ausnahme nicht eingerichtet</p>
+        <p class="bl-error__text" data-i18n="blockedProceedFailedText">Die Seite bleibt gesperrt. Laden Sie sie neu und versuchen Sie es nochmals.</p>
+      </div>
+      <button type="button" class="btn btn--outline btn--h bl-error__retry" id="bl-retry" data-i18n="actionRetry">Erneut versuchen</button>
+    </div>
+
+    <div class="bl-details">
+      <button type="button" class="bl-details__toggle" id="bl-details-toggle" aria-expanded="false" aria-controls="bl-details">
+        <span data-icon="chevronRight" data-icon-size="12" class="bl-details__chev"></span><span data-i18n="blockedDetails">Details</span>
+      </button>
+      <dl class="bl-facts" id="bl-details" hidden>
+        <div class="bl-facts__row" id="bl-url-row" hidden><dt data-i18n="blockedAddress">Adresse</dt><dd class="bl-facts__url mono" id="bl-url" translate="no"></dd></div>
+        <div class="bl-facts__row"><dt data-i18n="blockedCategory">Grund</dt><dd id="bl-category">–</dd></div>
+        <div class="bl-facts__row"><dt data-i18n="blockedList">Filterliste</dt><dd id="bl-list">–</dd></div>
+      </dl>
+    </div>
   </main>
+
+  <footer class="bl-foot">
+    <span data-mark data-mark-size="16"></span>
+    <p id="bl-foot" data-i18n="blockedFoot">Bastion Shield prüft lokal. Es werden keine Daten gesendet.</p>
+  </footer>
 </body>
 </html>

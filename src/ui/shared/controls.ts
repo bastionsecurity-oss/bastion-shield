@@ -5,8 +5,8 @@
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { h, type Child } from './dom.ts';
-import { icon } from './icons.ts';
+import { h, toast, type Child, type ToastHandle } from './dom.ts';
+import { icon, type IconName } from './icons.ts';
 import { t } from './i18n.ts';
 
 export interface SwitchOptions {
@@ -191,32 +191,103 @@ export function notice(title: string, body?: string, kind: 'info' | 'alert' = 'i
 export interface ConfirmOptions {
   title: string;
   body?: Child;
+  /** Names the outcome («Verlauf löschen»). */
   confirmLabel: string;
+  /** Names the safe outcome («Verlauf behalten»); defaults to «Abbrechen». */
   cancelLabel?: string;
   /** Extra content between the text and the actions. */
   content?: Child;
+  /** Pictogram in the 48px tile; defaults to «trash» for danger, else none. */
+  icon?: IconName;
+  /** Destructive outcome: danger tile and `.btn--danger` confirm button. */
+  danger?: boolean;
+  /** Heavy actions: a checkbox that must be ticked before confirming. */
+  check?: { label: string; aside?: Child };
+}
+
+/** Header of a dialog: tile (decorative) + title + one sentence. */
+function dialogHead(titleId: string, title: string, body: Child, iconName: IconName | undefined, danger: boolean): HTMLElement {
+  return h(
+    'div',
+    { class: 'dialog__head' },
+    iconName ? h('span', { class: `tile${danger ? ' tile--danger' : ''}`, attrs: { 'aria-hidden': 'true' } }, icon(iconName, 22)) : null,
+    h(
+      'div',
+      { class: 'dialog__head-text' },
+      h('h2', { class: 'dialog__title', text: title, attrs: { id: titleId } }),
+      typeof body === 'string' ? h('p', { class: 'dialog__text', text: body }) : (body ?? null),
+    ),
+  );
 }
 
 /**
- * Modal confirmation using <dialog>. Escape and «Abbrechen» resolve false.
- * Focus starts on the cancel button so a stray Enter never confirms.
+ * Shows a modal <dialog>, focuses `initial` (the safe action) and returns
+ * focus to the element that opened it once it closes.
+ */
+function openDialog(dlg: HTMLDialogElement, initial: HTMLElement, onClose: () => void): void {
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  // Tab wraps inside the dialog instead of leaving for the browser toolbar.
+  dlg.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Tab') return;
+    const focusable = Array.from(dlg.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(
+      (el) => !(el as HTMLButtonElement).disabled && el.getClientRects().length > 0,
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (ev.shiftKey && document.activeElement === first) {
+      ev.preventDefault();
+      last.focus();
+    } else if (!ev.shiftKey && document.activeElement === last) {
+      ev.preventDefault();
+      first.focus();
+    }
+  });
+  dlg.addEventListener('close', () => {
+    dlg.remove();
+    if (opener?.isConnected) opener.focus({ preventScroll: true });
+    onClose();
+  });
+  document.body.appendChild(dlg);
+  try {
+    dlg.showModal();
+  } catch {
+    dlg.setAttribute('open', '');
+  }
+  initial.focus();
+}
+
+/**
+ * Modal confirmation (D01–D08). Escape and the cancel button resolve false.
+ * Primary first, both buttons name their outcome; focus starts on the safe
+ * (cancel) button so a stray Enter never confirms.
  */
 export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
     const titleId = `dlg-${Math.random().toString(36).slice(2, 8)}`;
-    const cancel = h('button', { class: 'btn btn--secondary', text: opts.cancelLabel ?? t('actionCancel'), attrs: { type: 'button' } });
-    const ok = h('button', { class: 'btn btn--primary', text: opts.confirmLabel, attrs: { type: 'button' } });
+    const danger = !!opts.danger;
+    const cancel = h('button', { class: 'btn btn--outline', text: opts.cancelLabel ?? t('actionCancel'), attrs: { type: 'button', 'data-dialog': 'cancel' } });
+    const ok = h('button', { class: `btn ${danger ? 'btn--danger' : 'btn--primary'}`, text: opts.confirmLabel, attrs: { type: 'button', 'data-dialog': 'confirm' } });
+    let checkRow: HTMLElement | null = null;
+    if (opts.check) {
+      const box = h('input', { class: 'check', attrs: { type: 'checkbox', id: `${titleId}-check` } });
+      const sync = (): void => {
+        ok.disabled = !box.checked;
+      };
+      box.addEventListener('change', sync);
+      sync();
+      checkRow = h(
+        'div',
+        { class: 'dialog__check' },
+        h('label', { attrs: { for: box.id } }, box, h('span', { text: opts.check.label })),
+        opts.check.aside ?? null,
+      );
+    }
     const dlg = h(
       'dialog',
       { class: 'dialog', attrs: { 'aria-labelledby': titleId } },
-      h(
-        'div',
-        { class: 'dialog__body' },
-        h('h2', { class: 'dialog__title', text: opts.title, attrs: { id: titleId } }),
-        typeof opts.body === 'string' ? h('p', { class: 'dialog__text', text: opts.body }) : (opts.body ?? null),
-        opts.content ?? null,
-      ),
-      h('div', { class: 'dialog__actions' }, cancel, ok),
+      h('div', { class: 'dialog__body' }, dialogHead(titleId, opts.title, opts.body, opts.icon ?? (danger ? 'trash' : undefined), danger), checkRow, opts.content ?? null),
+      h('div', { class: 'dialog__actions' }, ok, cancel),
     );
     let result = false;
     const finish = (v: boolean): void => {
@@ -229,18 +300,10 @@ export function confirmDialog(opts: ConfirmOptions): Promise<boolean> {
       }
     };
     cancel.addEventListener('click', () => finish(false));
-    ok.addEventListener('click', () => finish(true));
-    dlg.addEventListener('close', () => {
-      dlg.remove();
-      resolve(result);
+    ok.addEventListener('click', () => {
+      if (!ok.disabled) finish(true);
     });
-    document.body.appendChild(dlg);
-    try {
-      dlg.showModal();
-    } catch {
-      dlg.setAttribute('open', '');
-    }
-    cancel.focus();
+    openDialog(dlg, cancel, () => resolve(result));
   });
 }
 
@@ -248,19 +311,27 @@ export interface Choice<V extends string> {
   value: V;
   label: string;
   primary?: boolean;
+  danger?: boolean;
 }
 
 /**
- * Modal with several answers (for example «Replace», «Add as new»). Resolves
- * the chosen value, or null for «Cancel» and Escape. Focus starts on Cancel.
+ * Modal with several answers (for example «Inhalt ersetzen», «Als neue Liste
+ * hinzufügen»). Resolves the chosen value, or null for «Abbrechen» and
+ * Escape. With two or more answers «Abbrechen» moves below them as a quiet
+ * button. Focus starts on «Abbrechen».
  */
-export function choiceDialog<V extends string>(opts: { title: string; body?: string; choices: Choice<V>[] }): Promise<V | null> {
+export function choiceDialog<V extends string>(opts: { title: string; body?: string; icon?: IconName; choices: Choice<V>[]; cancelLabel?: string }): Promise<V | null> {
   return new Promise((resolve) => {
     const titleId = `dlg-${Math.random().toString(36).slice(2, 8)}`;
     let result: V | null = null;
-    const cancel = h('button', { class: 'btn btn--secondary', text: t('actionCancel'), attrs: { type: 'button' } });
+    const quietCancel = opts.choices.length > 1;
+    const cancel = h('button', { class: `btn ${quietCancel ? 'btn--quiet' : 'btn--outline'}`, text: opts.cancelLabel ?? t('actionCancel'), attrs: { type: 'button', 'data-dialog': 'cancel' } });
     const buttons = opts.choices.map((c) => {
-      const b = h('button', { class: `btn ${c.primary ? 'btn--primary' : 'btn--secondary'}`, text: c.label, attrs: { type: 'button' } });
+      const b = h('button', {
+        class: `btn ${c.danger ? 'btn--danger' : c.primary ? 'btn--primary' : 'btn--outline'}`,
+        text: c.label,
+        attrs: { type: 'button', 'data-dialog': c.value },
+      });
       b.addEventListener('click', () => {
         result = c.value;
         close();
@@ -270,13 +341,8 @@ export function choiceDialog<V extends string>(opts: { title: string; body?: str
     const dlg = h(
       'dialog',
       { class: 'dialog', attrs: { 'aria-labelledby': titleId } },
-      h(
-        'div',
-        { class: 'dialog__body' },
-        h('h2', { class: 'dialog__title', text: opts.title, attrs: { id: titleId } }),
-        opts.body ? h('p', { class: 'dialog__text', text: opts.body }) : null,
-      ),
-      h('div', { class: 'dialog__actions' }, cancel, ...buttons),
+      h('div', { class: 'dialog__body' }, dialogHead(titleId, opts.title, opts.body, opts.icon, false)),
+      h('div', { class: 'dialog__actions' }, ...buttons, cancel),
     );
     const close = (): void => {
       try {
@@ -287,16 +353,21 @@ export function choiceDialog<V extends string>(opts: { title: string; body?: str
       }
     };
     cancel.addEventListener('click', close);
-    dlg.addEventListener('close', () => {
-      dlg.remove();
-      resolve(result);
-    });
-    document.body.appendChild(dlg);
-    try {
-      dlg.showModal();
-    } catch {
-      dlg.setAttribute('open', '');
-    }
-    cancel.focus();
+    openDialog(dlg, cancel, () => resolve(result));
   });
+}
+
+/** Toast for a reversible action (T01): «… entfernt» with «Rückgängig» for 6 s. */
+export function undoToast(message: string, undo: () => unknown): ToastHandle {
+  return toast(message, icon('check', 15), { action: { label: t('actionUndo'), run: undo } });
+}
+
+/** Error toast with «Erneut versuchen»: stays until closed (T01). */
+export function retryToast(message: string, retry: () => unknown): ToastHandle {
+  return toast(message, icon('alert', 15), { sticky: true, closeLabel: t('toastClose'), action: { label: t('actionRetry'), run: retry } });
+}
+
+/** Text with «Bastion Shield» wrapped in translate="no" (AGENTS.md: brand never translated). */
+export function brandText(text: string): Node[] {
+  return text.split(/(Bastion Shield)/).filter(Boolean).map((part) => (part === 'Bastion Shield' ? h('span', { text: part, attrs: { translate: 'no' } }) : document.createTextNode(part)));
 }

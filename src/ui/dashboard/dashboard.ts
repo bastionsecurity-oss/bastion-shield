@@ -63,14 +63,12 @@ function viewName(): string {
   return raw in VIEWS ? raw : fallback;
 }
 
-async function route(): Promise<void> {
-  let name = viewName();
-  // «Entwicklertools» (developer tools) exists only while nerd mode is on.
-  if (name === 'lab' && !(await nerdOn())) {
-    name = popupMode ? 'site' : 'overview';
-    history.replaceState(null, '', `#${name}`);
-  }
-  if (current && current.name === name && !firstRoute) return;
+/** Show the view the hash names; `force` renders it again (error banner «Erneut versuchen»). */
+async function route(force = false): Promise<void> {
+  const name = viewName();
+  // #lab renders even while nerd mode is off: labView then shows «Der Nerd-Modus ist aus» (DB32);
+  // only the navigation entry is hidden.
+  if (current && current.name === name && !firstRoute && !force) return;
   if (popupMode && TAB_ONLY.has(name)) {
     history.replaceState(null, '', `#${current?.name ?? 'site'}`);
     await openInTab(name);
@@ -113,7 +111,7 @@ async function route(): Promise<void> {
     await view.render(container);
   } catch (err) {
     console.error('[bastion] view failed', err);
-    replace(container, errorState(() => location.reload()));
+    replace(container, errorState(() => route(true)));
   }
   if (token !== navToken) return; // the user moved on while this view loaded
   replace(root, container);
@@ -129,11 +127,6 @@ async function route(): Promise<void> {
   firstRoute = false;
 }
 
-async function nerdOn(): Promise<boolean> {
-  const r = await getConfig();
-  return r.ok && r.data.settings.nerd?.enabled === true;
-}
-
 let nerdWasOn: boolean | null = null;
 
 /** Show the «Entwicklertools» (developer tools) entry while nerd mode is on; leave the Lab when it is switched off. Switching it on decodes the entry in place. */
@@ -142,7 +135,6 @@ function syncNerdNav(on: boolean): void {
   if (li) li.hidden = !on;
   if (nerdWasOn === false && on) revealNerd(li?.querySelector('.db-nav__label'));
   nerdWasOn = on;
-  if (!on && current?.name === 'lab') location.hash = popupMode ? '#site' : '#overview';
 }
 
 /** Navigation footer: managing organisation (if any) and the «Cyber-Vorfall?» CTA or the brand plate. */
@@ -256,6 +248,8 @@ async function main(): Promise<void> {
   bindPopupChrome();
   if (embedded) bindMorph();
   window.addEventListener('hashchange', () => void route());
+  // «Erneut versuchen» in a view's error banner (common.ts retryView) renders the view again.
+  document.addEventListener('db:retry', () => void route(true));
   onStoreChange(() => void renderFoot());
   void renderFoot();
   await route();

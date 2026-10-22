@@ -76,10 +76,10 @@ test.describe('ui buttons', () => {
     await expect(popup.locator('#pp-reload')).toBeVisible();
     const sitesOff = await ext.send<{ sites?: Record<string, { enabled?: boolean }> }>({ type: 'sites:get' });
     expect.soft(Object.values(sitesOff?.sites ?? {}).some((s) => s?.enabled === false), 'site saved as off').toBe(true);
-    await popup.locator('#pp-reload-close').click();
-    await expect(popup.locator('#pp-reload')).toBeHidden();
+    // Phase 3: the reload bar has no close button; it hides when the site is back to how it was loaded.
     await protect.click();
     await expect(protect).toHaveAttribute('aria-checked', 'true');
+    await expect(popup.locator('#pp-reload')).toBeHidden();
 
     // ---- Blocking mode -------------------------------------------------------
     const aggressive = popup.locator('#pp-mode-slot [data-value="aggressive"]');
@@ -88,12 +88,12 @@ test.describe('ui buttons', () => {
     await popup.locator('#pp-mode-slot [data-value="standard"]').click();
     await expect(popup.locator('#pp-mode-slot [data-value="standard"]')).toHaveAttribute('aria-checked', 'true');
 
-    // ---- Report dialog opens and cancels --------------------------------------
+    // ---- Report sheet opens and cancels ---------------------------------------
     if (await popup.locator('#pp-report').isVisible()) {
       await popup.locator('#pp-report').click();
-      const dlg = popup.locator('dialog.dialog');
+      const dlg = popup.locator('dialog.pp-sheet');
       await expect(dlg).toBeVisible();
-      await dlg.locator('.btn--secondary').click();
+      await dlg.locator('[data-dialog="cancel"]').click();
       await expect(dlg).toHaveCount(0);
     }
 
@@ -149,7 +149,7 @@ test.describe('ui buttons', () => {
     // «Eigene Filter» (↗) never renders in the popup: it opens the dashboard tab.
     await popup.locator('.db-nav__link[data-view="filters"]').click();
     const filtersTab = await dashboardTab(ext, 'filters');
-    await expect(filtersTab.locator('.cf-area')).toBeVisible();
+    await expect(filtersTab.locator('.cf-field')).toBeVisible();
     expect.soft(await popup.locator('body').getAttribute('data-view'), 'popup stays on its section').not.toBe('filters');
 
     // Settings: backup is tab-only, the CTA switch swaps CTA and brand plate.
@@ -238,7 +238,8 @@ test.describe('ui buttons', () => {
     await expect(tab.locator('body')).toHaveAttribute('data-view', 'overview');
     await expect(tab.locator('.db-nav__link[data-view="site"]')).toHaveCount(0);
     await expect(tab.locator('.db-nav__foot a[data-cta="incident"]')).toHaveAttribute('href', INCIDENT);
-    await expect(tab.locator('.site-tile')).toHaveCount(3);
+    // Overview: three figure tiles once there is history, else the empty or history-off state.
+    await expect(tab.locator('.ov-tile, .db-page--overview .db-empty, .ov-off').first()).toBeVisible();
     for (const s of ['activity', 'lists', 'filters', 'sites', 'privacy', 'settings', 'about', 'overview']) {
       await tab.locator(`.db-nav__link[data-view="${s}"]`).click();
       await expect(tab.locator('body')).toHaveAttribute('data-view', s);

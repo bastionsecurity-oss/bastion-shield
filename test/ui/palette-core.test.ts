@@ -60,3 +60,19 @@ test('rankEntries: best match first, limit respected', () => {
   assert.equal(rankEntries(E, 'easy')[0].entry.id, 'list:easy');
   assert.equal(rankEntries(E, 'e', 2).length, 2);
 });
+
+test('groupHits keeps each group together, ordered by its best hit', async () => {
+  const { groupHits } = await import(`${ROOT}/ui/dashboard/palette-core.ts`);
+  const hit = (id: string, group: string, score: number) => ({ entry: { id, group, label: id }, score, ranges: [] });
+  const out = groupHits([hit('a', 'settings', 9), hit('b', 'views', 8), hit('c', 'settings', 7), hit('d', 'lists', 6), hit('e', 'views', 5)]);
+  assert.deepEqual(out.map((h: { entry: { id: string } }) => h.entry.id), ['a', 'c', 'b', 'e', 'd']);
+});
+
+test('initials gives two letters for list tiles', async () => {
+  const { initials } = await import(`${ROOT}/ui/dashboard/palette-core.ts`);
+  assert.equal(initials('EasyList'), 'EL');
+  assert.equal(initials('AdGuard Base'), 'AB');
+  assert.equal(initials('uBlock filters – Privacy'), 'UF');
+  assert.equal(initials('hagezi'), 'HA');
+  assert.equal(initials('Ausnahmen Sparkasse'), 'AS');
+});
