@@ -53,7 +53,7 @@ export function welcomeView(): View {
               'div',
               { class: 'welcome__pin' },
               // Where to click: puzzle › pin › mark.
-              h('span', { class: 'welcome__pin-path', attrs: { 'aria-hidden': 'true' } }, icon('puzzle', 16), icon('chevronRight', 10), icon('pin', 16), mark(18)),
+              h('span', { class: 'welcome__pin-path', attrs: { 'aria-hidden': 'true' } }, icon('puzzle', 18), icon('chevronRight', 10), icon('pin', 18), mark(18)),
               h('p', null, ...brandText(t('welcomePin'))),
             ),
             h(
