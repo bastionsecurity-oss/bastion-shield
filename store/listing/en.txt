@@ -1,0 +1,37 @@
+Bastion Shield blocks ads, trackers and known malicious websites in Chrome, Edge and Brave. It is open source, keeps everything on your device and shows exactly what it blocked and why.
+
+FAST
+Blocking happens inside the browser's own network engine (declarativeNetRequest). No extension code runs for each request, and the background process sleeps when nothing happens.
+
+PROVEN FILTER LISTS
+Bastion Shield ships the filter lists that Brave Shields uses by default: uBlock Origin filters, EasyList, EasyPrivacy, Brave's lists, Peter Lowe's list, URLhaus malware domains, cookie-notice and app-banner lists, plus regional lists for German, French and Italian. New lists arrive with every weekly update. More vetted lists can be switched on, and you can import your own lists from a file or a web address.
+
+TRANSPARENT
+• Live activity per tab: every blocked, redirected or cleaned request, with the filter list and the exact rule that matched.
+• Local statistics for up to 30 days. You can delete them at any time or switch them off.
+• Open source under GPL-3.0. Every release lists the exact filter lists it was built from.
+
+PRIVACY PROTECTION
+• Global Privacy Control, removal of tracking parameters from links, skipping of bounce-tracking redirects.
+• Fingerprinting protection for canvas, WebGL, audio and browser properties.
+• Hyperlink auditing and the Privacy Sandbox advertising APIs switched off.
+• Per site: protection on or off, Standard or Aggressive mode, block JavaScript.
+
+SECURITY
+• Warning page before known malware and scam websites.
+• ClickFix protection: blocks dangerous commands (PowerShell, mshta, curl | sh) that websites secretly put on your clipboard to trick you into running them. What you copy yourself is not affected.
+
+FOR ORGANISATIONS
+Every setting can be set and locked by browser policy. A ready-made kit for Microsoft Intune, registry files and macOS profiles is included. A fleet-wide emergency switch turns protection off on every device without uninstalling.
+
+PRIVATE BY DESIGN
+No account, no telemetry, no analytics, no remote configuration. Your settings and history stay on your device. The extension's only own network request downloads a filter list that you add by web address.
+
+Languages: English, German, French, Italian.
+
+Source code: https://github.com/bastionsecurity-oss/bastion-shield
+Privacy policy: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+
+Made in Zurich by Bastion Security GmbH (https://bastionsecurity.ch).
+
+Bastion Shield is not affiliated with or endorsed by Brave Software, Google, Microsoft, the uBlock Origin project, EasyList or AdGuard.
