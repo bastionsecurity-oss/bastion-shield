@@ -1,0 +1,9 @@
+# Text files are stored and checked out with LF on every platform, so builds,
+# hashes (filters/lock.json) and diffs are the same on Windows, macOS and Linux.
+* text=auto eol=lf
+
+*.png binary
+*.gif binary
+*.woff2 binary
+*.mp3 binary
+*.mp4 binary

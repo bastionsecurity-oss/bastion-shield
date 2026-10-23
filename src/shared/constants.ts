@@ -226,9 +226,9 @@ export const PORT_LIVE = 'live';
 
 /** Project links. Change REPO_URL when the public repository is created. */
 export const LINKS = {
-  REPO_URL: 'https://github.com/bastionsecurity-ch/bastion-shield',
+  REPO_URL: 'https://github.com/bastionsecurity-oss/bastion-shield',
   HOMEPAGE: 'https://bastionsecurity.ch',
-  PRIVACY: 'https://github.com/bastionsecurity-ch/bastion-shield/blob/main/docs/PRIVACY.md',
+  PRIVACY: 'https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md',
   /** Incident contact form on bastionsecurity.ch («Cyber-Vorfall?»), German and English pages. */
   INCIDENT_DE: 'https://www.bastionsecurity.ch/kontakt#vorfall',
   INCIDENT_EN: 'https://www.bastionsecurity.ch/en/contact#vorfall',

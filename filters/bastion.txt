@@ -3,7 +3,7 @@
 ! Copyright (C) 2026 Bastion Security GmbH and contributors
 ! Creator: Luca Seeberger
 ! Description: Bastion's own fixes and additions for Swiss websites and customer environments.
-! Homepage: https://github.com/bastionsecurity-ch/bastion-shield/tree/main/filters
+! Homepage: https://github.com/bastionsecurity-oss/bastion-shield/tree/main/filters
 ! License: GPL-3.0-or-later
 ! Expires: 1 day
 !

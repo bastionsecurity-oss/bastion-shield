@@ -206,7 +206,7 @@ async function downloadUncached(url: string, offline: boolean, log: Logger, cach
     return fromCache(cached);
   }
 
-  const ua = `BastionShield-build/${await readPackageVersion()} (+https://github.com/bastionsecurity-ch/bastion-shield)`;
+  const ua = `BastionShield-build/${await readPackageVersion()} (+https://github.com/bastionsecurity-oss/bastion-shield)`;
   let lastError = '';
   let attempts = 0;
   for (let attempt = 0; attempt <= RETRIES; attempt++) {
