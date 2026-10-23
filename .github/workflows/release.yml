@@ -48,12 +48,13 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       skip_review: ${{ steps.skipreview.outputs.eligible }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
+          persist-credentials: false
           # Tags are needed for the build counter and the change check.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -103,7 +104,7 @@ jobs:
       # .cache/regex-unsupported.json (written by `npm run validate`) carries the
       # regexes Chromium's RE2 rejected over to the next run.
       - name: Restore filter list cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             .cache/lists
@@ -115,7 +116,7 @@ jobs:
 
       # The validate pass below needs Chromium, so install it before building.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -215,7 +216,7 @@ jobs:
 
       - name: Upload release assets
         if: steps.decide.outputs.release == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-assets
           path: release/
@@ -231,7 +232,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-assets
           path: release
@@ -265,15 +266,17 @@ jobs:
         if: env.HAS_CREDENTIALS != 'true'
         run: echo "::notice::Chrome Web Store credentials are not configured; skipping store submission."
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         if: env.HAS_CREDENTIALS == 'true'
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: env.HAS_CREDENTIALS == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         if: env.HAS_CREDENTIALS == 'true'
         with:
           name: release-assets
@@ -305,15 +308,17 @@ jobs:
         if: env.HAS_CREDENTIALS != 'true'
         run: echo "::notice::Edge Add-ons credentials are not configured; skipping store submission."
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         if: env.HAS_CREDENTIALS == 'true'
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         if: env.HAS_CREDENTIALS == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         if: env.HAS_CREDENTIALS == 'true'
         with:
           name: release-assets
@@ -347,13 +352,15 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-assets
           path: release

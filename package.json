@@ -53,9 +53,9 @@
   "homepage": "https://bastionsecurity.ch",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bastionsecurity-ch/bastion-shield.git"
+    "url": "git+https://github.com/bastionsecurity-oss/bastion-shield.git"
   },
   "bugs": {
-    "url": "https://github.com/bastionsecurity-ch/bastion-shield/issues"
+    "url": "https://github.com/bastionsecurity-oss/bastion-shield/issues"
   }
 }

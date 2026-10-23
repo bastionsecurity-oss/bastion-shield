@@ -26,7 +26,7 @@
           "path": "filters/bastion.txt"
         }
       ],
-      "homepage": "https://github.com/bastionsecurity-ch/bastion-shield/tree/main/filters",
+      "homepage": "https://github.com/bastionsecurity-oss/bastion-shield/tree/main/filters",
       "license": "GPL-3.0-or-later",
       "attribution": "Bastion Security GmbH and contributors"
     },

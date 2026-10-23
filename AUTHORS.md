@@ -5,7 +5,7 @@
 **Luca Seeberger** is the creator of Bastion Shield, the company's first open-source project.
 
 - Company: [bastionsecurity.ch](https://bastionsecurity.ch)
-- Source and contributions: [bastionsecurity-ch/bastion-shield](https://github.com/bastionsecurity-ch/bastion-shield)
+- Source and contributions: [bastionsecurity-oss/bastion-shield](https://github.com/bastionsecurity-oss/bastion-shield)
 - Copyright (C) 2026 Bastion Security GmbH and contributors.
 - Original project code: [GNU GPL version 3 or later](LICENSE).
 

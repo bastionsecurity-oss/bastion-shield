@@ -206,7 +206,7 @@ async function main(): Promise<void> {
   }
   if (store === 'cws') await publishCws(zip, arg('--skip-review') === 'true', dryRun);
   else {
-    const notes = arg('--notes') ?? 'Automated weekly update of the bundled filter lists. Source code and build inputs: https://github.com/bastionsecurity-ch/bastion-shield';
+    const notes = arg('--notes') ?? 'Automated weekly update of the bundled filter lists. Source code and build inputs: https://github.com/bastionsecurity-oss/bastion-shield';
     await publishEdge(zip, notes, dryRun);
   }
 }

@@ -104,4 +104,12 @@ Bastion Shield does not request `cookies`, `history`, `downloads`, `bookmarks`, 
 
 ## Contact
 
-Questions about privacy: open an issue on GitHub, or contact Bastion Security GmbH, Zurich, through https://bastionsecurity.ch. Security problems: see [SECURITY.md](../SECURITY.md).
+Responsible for Bastion Shield (controller under the Swiss Federal Act on Data Protection, FADP):
+
+Bastion Security GmbH<br>
+Am Wasser 55<br>
+8049 Zürich<br>
+Switzerland<br>
+[info@bastionsecurity.ch](mailto:info@bastionsecurity.ch)
+
+Questions about privacy: e-mail the address above or open an issue on GitHub. Security problems: see [SECURITY.md](../SECURITY.md).

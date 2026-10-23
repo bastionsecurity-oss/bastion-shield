@@ -4,7 +4,7 @@ Thank you for helping. Bastion Shield is maintained by Bastion Security GmbH in 
 
 By contributing you agree that your contribution is licensed under the GNU General Public License, version 3 or later (GPL-3.0-or-later), the licence of the project. Only contribute work you have the right to license this way; for code or data copied from elsewhere, say where it comes from and under which licence.
 
-Be kind and constructive. We follow the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/); report unacceptable behaviour to the maintainers through the contact in [SECURITY.md](SECURITY.md).
+Be kind and constructive. Our [code of conduct](CODE_OF_CONDUCT.md) applies in all project spaces; it also says how to report unacceptable behaviour.
 
 ## Reporting problems
 
@@ -36,7 +36,7 @@ For Swiss specifics, Bastion customer environments, and urgent fixes until upstr
 3. Put a comment with the issue URL on the line above:
 
    ```
-   ! https://github.com/bastionsecurity-ch/bastion-shield/issues/123
+   ! https://github.com/bastionsecurity-oss/bastion-shield/issues/123
    example.ch##.ad-container
    ```
 
