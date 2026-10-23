@@ -1,0 +1,37 @@
+Bastion Shield bloque les publicités, les traqueurs et les sites malveillants connus dans Chrome, Edge et Brave. Il est open source, garde tout sur votre appareil et montre exactement ce qu’il a bloqué et pourquoi.
+
+RAPIDE
+Le blocage se fait dans le moteur réseau du navigateur lui-même (declarativeNetRequest). Aucun code de l’extension ne s’exécute pour chaque requête, et le processus d’arrière-plan se met en veille lorsqu’il ne se passe rien.
+
+DES LISTES DE FILTRES ÉPROUVÉES
+Bastion Shield utilise les listes de filtres que Brave Shields emploie par défaut : filtres uBlock Origin, EasyList, EasyPrivacy, listes de Brave, liste de Peter Lowe, domaines malveillants URLhaus, listes contre les bandeaux de cookies et d’applications, ainsi que des listes régionales pour l’allemand, le français et l’italien. Chaque mise à jour hebdomadaire apporte les listes actuelles. D’autres listes vérifiées peuvent être activées, et vous pouvez importer vos propres listes depuis un fichier ou une adresse web.
+
+TRANSPARENT
+• Activité en direct par onglet : chaque requête bloquée, redirigée ou nettoyée, avec la liste de filtres et la règle exacte qui s’est appliquée.
+• Statistiques locales sur 30 jours au maximum, effaçables et désactivables à tout moment.
+• Open source sous licence GPL-3.0. Chaque version indique les listes de filtres exactes à partir desquelles elle a été construite.
+
+PROTECTION DE LA VIE PRIVÉE
+• Global Privacy Control, suppression des paramètres de pistage dans les liens, contournement des redirections de pistage.
+• Protection contre l’empreinte numérique (canvas, WebGL, audio et propriétés du navigateur).
+• Audit des liens et API publicitaires de la Privacy Sandbox désactivés.
+• Par site : protection activée ou désactivée, mode Standard ou Agressif, blocage de JavaScript.
+
+SÉCURITÉ
+• Page d’avertissement avant les sites de logiciels malveillants et d’escroquerie connus.
+• Protection ClickFix : bloque les commandes dangereuses (PowerShell, mshta, curl | sh) que des sites placent en secret dans le presse-papiers pour vous inciter à les exécuter. Ce que vous copiez vous-même n’est pas concerné.
+
+POUR LES ORGANISATIONS
+Chaque réglage peut être défini et verrouillé par une stratégie du navigateur. Un kit prêt à l’emploi pour Microsoft Intune, des fichiers de registre et des profils macOS sont inclus. Un interrupteur d’urgence désactive la protection sur tous les appareils sans désinstaller l’extension.
+
+CONFIDENTIEL PAR CONCEPTION
+Pas de compte, pas de télémétrie, pas d’analyse, pas de configuration à distance. Vos réglages et votre historique restent sur votre appareil. La seule requête réseau propre à l’extension télécharge une liste de filtres que vous ajoutez vous-même par adresse web.
+
+Langues : français, allemand, anglais, italien.
+
+Code source : https://github.com/bastionsecurity-oss/bastion-shield
+Politique de confidentialité : https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+
+Développé à Zurich par Bastion Security GmbH (https://bastionsecurity.ch).
+
+Bastion Shield n’est ni affilié à Brave Software, Google, Microsoft, au projet uBlock Origin, à EasyList ou à AdGuard, ni approuvé par eux.
