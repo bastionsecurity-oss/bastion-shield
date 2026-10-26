@@ -25,3 +25,9 @@
 ! ---------------------------------------------------------------------------
 ! Swiss publishers
 ! ---------------------------------------------------------------------------
+! 20min.ch: the in-feed ad aside is a full-width row of a 5-column teaser grid
+! (300 / 14 / 300 / 14 / 300). Hiding it with display:none lets the teasers move
+! up a row, and one lands in a 14px divider column. Keep the row, collapse it.
+20min.ch#@#section aside:has(> div > div > div[data-ad-unit-id])
+20min.ch#@#section[class*="ad-content-wrapper"] > div[class] > aside:has(> div[class] > div[class] > div[data-ad-unit-id])
+20min.ch##section aside:has(> div > div > div[data-ad-unit-id]):style(visibility: hidden !important; height: 0 !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; overflow: hidden !important)
