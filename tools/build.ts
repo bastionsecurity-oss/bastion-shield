@@ -716,8 +716,9 @@ export async function build(opts: BuildOptions = {}): Promise<{ meta: BuildMeta;
 function registrationBudget(catalog: Catalog, cosmetic: CosmeticResult, scriptlets: EmitScriptletsResult) {
   const settings = normalizeSettings({});
   const seedFiles = Array.from({ length: SEED_SETS }, (_, set) => `main/seeds/s${set}-0.js`);
+  const softIds = new Set(catalog.lists.filter((l) => l.firstPartyProtected).map((l) => l.id));
   const plan = (ids: Set<string>) =>
-    computeRegistrations({ settings, sites: {}, enabledListIds: ids, cosmeticMeta: cosmetic.meta, scriptletIndex: scriptlets.index, seedFiles });
+    computeRegistrations({ settings, sites: {}, enabledListIds: ids, cosmeticMeta: cosmetic.meta, scriptletIndex: scriptlets.index, seedFiles, softListIds: softIds });
   const defaults = new Set(catalog.lists.filter((l) => l.default).map((l) => l.id));
   const desired = plan(defaults);
   const scriptletBytes = { MAIN: 0, ISOLATED: 0 };

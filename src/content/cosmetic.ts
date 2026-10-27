@@ -9,6 +9,8 @@
 //   2. hands procedural filters to content/procedural.js, which the SW
 //      injects on request (`cosmetic:procedural`),
 //   3. runs the generic id/class surveyor when the response allows it,
+//      and, in Standard mode, un-hides soft selectors (selectors only
+//      first-party-protected lists have) that match first-party content,
 //   4. redirects AMP documents to their canonical URL (top frame only),
 //   5. shows the blocker notices (content/notice.ts, top frame only): the
 //      nerd mode lookalike-domain warning when the response carries one,
@@ -42,6 +44,7 @@ import type { NoticeApi } from './notice.ts';
 import { NOTICE_SOURCES, parseUboDetail } from './notice-model.ts';
 import type { NoticeSource } from './notice-model.ts';
 import { deAmpTarget, frameContext, hasQueuedAncestor, isAmpHtml, SURVEY, surveyTokens, throttleDelay } from './tokens.ts';
+import { firstPartyTest, isSubtreeFirstParty, showsSignificantText, UNHIDE, UnhideQueues } from './unhide.ts';
 
 // Per-build event name of uBO's clipboard scriptlet -> notice channel, set
 // by the build (esbuild define; tools/lib/notice-transform.ts). Unset when
@@ -165,10 +168,143 @@ function startProcedural(raw: unknown[]): void {
 }
 
 // ---------------------------------------------------------------------------
+// Standard-mode un-hiding (ARCHITECTURE §5.2.8, content/unhide.ts)
+// ---------------------------------------------------------------------------
+
+type SoftSink = (selectors: unknown) => void;
+
+/**
+ * Hides soft selectors in a sheet of their own (one rule per selector, so
+ * each can be deleted) and un-hides those that match first-party content,
+ * on Brave's idle-time schedule. Without a usable sheet the selectors are
+ * hidden like the others.
+ */
+function startUnhider(site: string, base: string): SoftSink {
+  let sheet: CSSStyleSheet | null = null;
+  try {
+    sheet = new CSSStyleSheet();
+    const list = doc.adoptedStyleSheets;
+    if (typeof list.push === 'function') list.push(sheet);
+    else doc.adoptedStyleSheets = [...list, sheet];
+  } catch {
+    sheet = null;
+  }
+  if (sheet === null) {
+    return (selectors) => {
+      if (Array.isArray(selectors)) adoptCss(selectors.filter((s) => typeof s === 'string').map((s) => `${s}{display:none!important}`).join('\n'));
+    };
+  }
+  const css = sheet;
+  const queues = new UnhideQueues();
+  const isFirstPartyUrl = firstPartyTest(site, base);
+  const rules = new Map<string, CSSRule>();
+  // Elements already found first party; they still un-hide every selector
+  // that matches them (Brave skips them, which can leave one hidden).
+  const firstParty = new WeakSet<Element>();
+  const idle = (fn: () => void, timeout: number): void => {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout });
+    else setTimeout(fn, 0);
+  };
+  let started = false;
+  let scheduled = false;
+  let sleeping = false;
+
+  const query = (selectors: readonly string[]): ArrayLike<Element> => {
+    try {
+      return doc.querySelectorAll(selectors.join(','));
+    } catch {
+      // One selector the parser takes in a sheet but not in a query: go one by one.
+      const out = new Set<Element>();
+      for (const s of selectors) {
+        try {
+          for (const el of Array.from(doc.querySelectorAll(s))) out.add(el);
+        } catch {
+          // skip it
+        }
+      }
+      return Array.from(out);
+    }
+  };
+
+  const unhide = (selectors: ReadonlySet<string>): void => {
+    for (const s of selectors) {
+      const rule = rules.get(s);
+      if (rule === undefined) continue;
+      rules.delete(s);
+      const i = Array.prototype.indexOf.call(css.cssRules, rule);
+      if (i !== -1) css.deleteRule(i);
+    }
+  };
+
+  const pump = (): void => {
+    scheduled = false;
+    if (dead) return;
+    const work = queues.next();
+    if (work === null) return;
+    const found = new Set<string>();
+    try {
+      const matched = query(work.selectors);
+      const n = Math.min(matched.length, UNHIDE.MAX_ELEMENTS_PER_PUMP);
+      for (let i = 0; i < n; i++) {
+        const el = matched[i];
+        if (!firstParty.has(el)) {
+          if (!isSubtreeFirstParty(el, isFirstPartyUrl) && !showsSignificantText(el as HTMLElement)) continue;
+          firstParty.add(el);
+        }
+        for (const s of work.selectors) {
+          if (found.has(s)) continue;
+          try {
+            if (el.matches(s)) found.add(s);
+          } catch {
+            // ignore
+          }
+        }
+      }
+      unhide(found);
+    } catch {
+      // A detached or exotic node: the selectors move on and stay hidden.
+    }
+    queues.settle(work, found);
+    sleeping = true;
+    setTimeout(() => {
+      sleeping = false;
+      schedule();
+    }, UNHIDE.PUMP_MIN_MS);
+  };
+
+  const schedule = (): void => {
+    if (!started || scheduled || sleeping || queues.pending === 0) return;
+    scheduled = true;
+    idle(pump, UNHIDE.PUMP_MAX_MS);
+  };
+
+  idle(() => {
+    started = true;
+    schedule();
+  }, UNHIDE.START_MAX_MS);
+
+  return (selectors) => {
+    if (!Array.isArray(selectors)) return;
+    const added: string[] = [];
+    for (const s of selectors) {
+      if (typeof s !== 'string' || s === '' || rules.has(s)) continue;
+      try {
+        const i = css.insertRule(`${s}{display:none!important}`, css.cssRules.length);
+        rules.set(s, css.cssRules[i]);
+        added.push(s);
+      } catch {
+        // Invalid selector: never hidden (Brave does the same).
+      }
+    }
+    if (queues.add(added) !== 0) schedule();
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Generic surveyor (ARCHITECTURE §5.2.3)
 // ---------------------------------------------------------------------------
 
-function startSurveyor(url: string, isTop: boolean): void {
+function startSurveyor(url: string, isTop: boolean, soft: SoftSink | null): void {
   const interval = isTop ? SURVEY.INTERVAL_TOP : SURVEY.INTERVAL_SUB;
   const seen = new Set<string>();
   // Raw class strings already tokenised (PERF-3: almost all are repeats).
@@ -292,8 +428,15 @@ function startSurveyor(url: string, isTop: boolean): void {
         stop();
         return;
       }
+      const hasSoft = r !== undefined && Array.isArray(r.soft) && r.soft.length !== 0;
+      if (hasSoft) {
+        if (soft !== null) soft(r.soft);
+        else adoptCss(r.soft!.map((s) => `${s}{display:none!important}`).join('\n'));
+      }
       if (r !== undefined && typeof r.css === 'string' && r.css !== '') {
         adoptCss(r.css);
+        emptyFlushes = 0;
+      } else if (hasSoft) {
         emptyFlushes = 0;
       } else if (++emptyFlushes >= SURVEY.MAX_EMPTY_FLUSHES) {
         stop();
@@ -555,13 +698,22 @@ function main(): void {
     } catch {
       // ignore
     }
+    let soft: SoftSink | null = null;
+    try {
+      if (Array.isArray(r.soft) && typeof r.site === 'string' && r.site !== '') {
+        soft = startUnhider(r.site, url);
+        soft(r.soft);
+      }
+    } catch {
+      soft = null;
+    }
     try {
       if (Array.isArray(r.procedural) && r.procedural.length !== 0) startProcedural(r.procedural);
     } catch {
       // ignore
     }
     try {
-      if (r.generic === true) startSurveyor(url, isTop);
+      if (r.generic === true) startSurveyor(url, isTop, soft);
     } catch {
       // ignore
     }
