@@ -8,10 +8,18 @@
 // `tabIds` = the tab, followed by a reload. `allow` does not lift cosmetic
 // filters or scriptlets: a page broken by those ends in 'clean'.
 //
+// From 'clean' the user can go on with the cosmetic phase (action
+// 'cosmetic'): the same machine over the enabled lists, where "let through"
+// means "cosmetic filters of this list off on this tab" (cosmeticOverride,
+// read by CosmeticService for every frame of the tab), then over the
+// host-specific selectors of the culprit lists. Scriptlets and the
+// registered generic-high CSS are not per tab and stay on.
+//
 // State is per tab in chrome.storage.session (survives service-worker
 // restarts, not browser restarts or updates; apply.ts drops the rules on
 // update). Rules are removed on finish, cancel, keep, tab close, navigation
-// to another site, and for tabs that no longer exist when state is first
+// to another site (also the cosmetic override, which lives in the same
+// record), and for tabs that no longer exist when state is first
 // loaded after a restart, and for every tab when nerd mode is switched off.
 // While a test runs, the tab's toolbar badge shows the step ("2/5"); the
 // activity badge leaves that tab alone until the test phase ends
@@ -22,9 +30,21 @@
 
 import type { DnrRule } from '../compiler/types.ts';
 import { PRIORITY, RULE_ID } from '../shared/constants.ts';
-import { allowConditions, answerBisect, badgeStep, bisectProgress, isBisectableHost, isBisectRuleId, keepFilterLines, MAX_CANDIDATES, startBisect } from '../shared/bisect.ts';
+import {
+  allowConditions,
+  answerBisect,
+  badgeStep,
+  bisectProgress,
+  isBisectableHost,
+  isBisectRuleId,
+  keepCosmeticLines,
+  keepFilterLines,
+  MAX_CANDIDATES,
+  startBisect,
+} from '../shared/bisect.ts';
 import type { BisectMachine } from '../shared/bisect.ts';
 import type { BisectCandidate, BisectView, MsgNerdBisect, NerdBlockedHost } from '../shared/types.ts';
+import type { TabCosmeticOverride } from './cosmetic.ts';
 import * as log from './log.ts';
 import { dayKey, errMsg, isPlainObject, webHostOf } from './util.ts';
 
@@ -43,9 +63,24 @@ export interface BisectDeps {
   addCustomFilters(lines: readonly string[]): Promise<void>;
   /** Tab badge: the step text while a test runs, null to hand the badge back to the normal counter. */
   badge?(tabId: number, text: string | null): void;
+  /**
+   * Cosmetic phase: the enabled lists with cosmetic filters, in test order
+   * (CUSTOM_COSMETIC for the custom filters), and the host-specific selectors
+   * each has in effect on the tab's page. Null without a web page.
+   */
+  cosmeticCandidates?(tabId: number): Promise<{ lists: string[]; selectors: Record<string, string[]> } | null>;
 }
 
 type Described = BisectCandidate & { filters: string[]; lists: string[]; important?: boolean };
+
+/** The cosmetic phase (after a 'clean' network bisect). */
+interface CosmeticBisect {
+  stage: 'lists' | 'selectors';
+  /** Over list ids: "allowed" lists have their cosmetic filters off on the tab. */
+  lists: BisectMachine;
+  /** Over the culprit lists' host-specific selectors: "allowed" ones are off. */
+  selectors?: BisectMachine;
+}
 
 interface TabBisect {
   v: 1;
@@ -59,6 +94,8 @@ interface TabBisect {
   ruleIds: number[];
   /** Described culprits once the machine reports 'found'. */
   culprits: Described[];
+  /** Set once the user goes on with the cosmetic phase. */
+  cos?: CosmeticBisect;
 }
 
 type Reply = { bisect: BisectView | null } | { hosts: NerdBlockedHost[] } | { added: string[] } | { error: string };
@@ -94,7 +131,58 @@ export function collectCandidates(rows: readonly { host: string; rule?: string; 
   };
 }
 
+/** The machine the user is answering: the network one, or the cosmetic stage's. */
+function activeMachine(rec: TabBisect): BisectMachine {
+  const c = rec.cos;
+  if (!c) return rec.m;
+  return c.stage === 'selectors' && c.selectors ? c.selectors : c.lists;
+}
+
+/**
+ * What the cosmetic phase switches off on the tab now: the lists under test,
+ * the selectors under test, or the result (lists when no selector explains
+ * it). Nothing once the lists alone did not help ('clean').
+ */
+export function cosmeticOverrideOf(c: CosmeticBisect | undefined): TabCosmeticOverride | null {
+  if (!c) return null;
+  if (c.stage === 'selectors' && c.selectors) {
+    if (c.selectors.result === 'clean') return { lists: [...c.lists.culprits], selectors: [] };
+    return c.selectors.allowed.length ? { lists: [], selectors: [...c.selectors.allowed] } : null;
+  }
+  return c.lists.allowed.length ? { lists: [...c.lists.allowed], selectors: [] } : null;
+}
+
+function cosmeticViewOf(rec: TabBisect, c: CosmeticBisect, phase?: BisectView['phase']): BisectView {
+  const m = activeMachine(rec);
+  const { step, maxSteps } = bisectProgress(m);
+  // No host-specific selector explains it: the result is the lists.
+  const listsOnly = c.stage === 'selectors' && m.result === 'clean';
+  const p = phase ?? (listsOnly ? 'found' : m.result);
+  let remaining = 0;
+  if (p === 'found') remaining = listsOnly ? c.lists.culprits.length : m.culprits.length;
+  else if (p === 'testing') remaining = m.test === 'all' ? m.hosts.length : m.test === 'half' ? m.suspects.length : m.pool.length;
+  const ov = cosmeticOverrideOf(c);
+  const v: BisectView = {
+    tabId: rec.tabId,
+    site: rec.site,
+    phase: p,
+    step,
+    maxSteps,
+    remaining,
+    allowed: p === 'testing' || p === 'found' ? [...(ov?.lists ?? []), ...(ov?.selectors ?? [])] : [],
+    kind: 'cosmetic',
+    stage: c.stage,
+  };
+  if (p === 'found') {
+    v.lists = [...c.lists.culprits];
+    if (!listsOnly && c.stage === 'selectors') v.selectors = [...m.culprits];
+    if (c.lists.partial || (!listsOnly && m.partial)) v.partial = true;
+  }
+  return v;
+}
+
 function viewOf(rec: TabBisect, phase?: BisectView['phase']): BisectView {
+  if (rec.cos) return cosmeticViewOf(rec, rec.cos, phase);
   const m = rec.m;
   const { step, maxSteps } = bisectProgress(m);
   const p = phase ?? m.result;
@@ -128,7 +216,8 @@ function isTabBisect(v: unknown): v is TabBisect {
     isPlainObject(v.m) &&
     Array.isArray(v.m.hosts) &&
     Array.isArray(v.ruleIds) &&
-    Array.isArray(v.culprits)
+    Array.isArray(v.culprits) &&
+    (v.cos === undefined || (isPlainObject(v.cos) && isPlainObject(v.cos.lists) && Array.isArray(v.cos.lists.hosts)))
   );
 }
 
@@ -195,7 +284,8 @@ export class Bisector {
       .map((r) => r.id);
     if (ids.length) await log.attempt('bisect', () => chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: ids }));
     await log.attempt('bisect', () => chrome.storage.session.remove(keyOf(tabId)));
-    if (reload && (ids.length > 0 || (rec?.ruleIds.length ?? 0) > 0)) await log.attempt('bisect', () => chrome.tabs.reload(tabId));
+    const lifted = ids.length > 0 || (rec?.ruleIds.length ?? 0) > 0 || cosmeticOverrideOf(rec?.cos) !== null;
+    if (reload && lifted) await log.attempt('bisect', () => chrome.tabs.reload(tabId));
     return rec;
   }
 
@@ -240,7 +330,7 @@ export class Bisector {
 
   private async start(tabId: number): Promise<Reply> {
     const prev = this.tabs.get(tabId);
-    if (prev?.m.result === 'testing') return { bisect: viewOf(prev) };
+    if (prev && activeMachine(prev).result === 'testing') return { bisect: viewOf(prev) };
     if (prev) await this.drop(tabId, false);
     const site = await this.deps.siteOf(tabId);
     if (!site) return { error: 'no site' };
@@ -253,6 +343,7 @@ export class Bisector {
 
   private async answer(tabId: number, works: unknown): Promise<Reply> {
     const prev = this.tabs.get(tabId);
+    if (prev?.cos) return this.answerCosmetic(prev, prev.cos, works);
     if (!prev || prev.m.result !== 'testing') return { error: 'not testing' };
     if (typeof works !== 'boolean') return { error: 'invalid answer' };
     const rec: TabBisect = { ...prev, m: answerBisect(prev.m, works) };
@@ -269,8 +360,59 @@ export class Bisector {
     return { bisect: viewOf(rec) };
   }
 
+  /** Go on from a 'clean' network bisect: switch cosmetic filters off per list. */
+  private async startCosmetic(tabId: number): Promise<Reply> {
+    const prev = this.tabs.get(tabId);
+    if (!prev || prev.m.result !== 'clean') return { error: 'not clean' };
+    if (prev.cos) return { bisect: viewOf(prev) };
+    const cands = this.deps.cosmeticCandidates ? await this.deps.cosmeticCandidates(tabId) : null;
+    if (!cands) return { error: 'no site' };
+    const rec: TabBisect = { ...prev, cos: { stage: 'lists', lists: startBisect(cands.lists) } };
+    await this.save(rec);
+    if (rec.cos!.lists.result === 'testing') await log.attempt('bisect', () => chrome.tabs.reload(tabId));
+    return { bisect: viewOf(rec) };
+  }
+
+  private async answerCosmetic(prev: TabBisect, c: CosmeticBisect, works: unknown): Promise<Reply> {
+    if (activeMachine(prev).result !== 'testing') return { error: 'not testing' };
+    if (typeof works !== 'boolean') return { error: 'invalid answer' };
+    let next: CosmeticBisect;
+    if (c.stage === 'selectors' && c.selectors) {
+      next = { ...c, selectors: answerBisect(c.selectors, works) };
+    } else {
+      next = { ...c, lists: answerBisect(c.lists, works) };
+      if (next.lists.result === 'found') {
+        // Narrow the culprit lists down to the selectors they apply on this site.
+        const cands = this.deps.cosmeticCandidates ? await this.deps.cosmeticCandidates(prev.tabId) : null;
+        const selectors = Array.from(new Set(next.lists.culprits.flatMap((id) => cands?.selectors[id] ?? [])));
+        if (selectors.length > 0) next = { ...next, stage: 'selectors', selectors: startBisect(selectors) };
+      }
+    }
+    const rec: TabBisect = { ...prev, cos: next };
+    const before = cosmeticOverrideOf(c);
+    const after = cosmeticOverrideOf(next);
+    await this.save(rec);
+    // Reload whenever what is switched off changed (also back to normal for 'clean').
+    if (JSON.stringify(before) !== JSON.stringify(after)) await log.attempt('bisect', () => chrome.tabs.reload(prev.tabId));
+    return { bisect: viewOf(rec) };
+  }
+
+  private async keepCosmetic(rec: TabBisect, c: CosmeticBisect): Promise<Reply> {
+    const sel = c.stage === 'selectors' && c.selectors?.result === 'found' ? c.selectors.culprits : [];
+    if (sel.length === 0) return { error: 'nothing found' };
+    try {
+      await this.deps.addCustomFilters(keepCosmeticLines(sel, rec.site, dayKey(Date.now())));
+    } catch (e) {
+      const msg = errMsg(e);
+      return { error: msg === 'locked' ? 'locked' : `save failed: ${msg}` };
+    }
+    await this.drop(rec.tabId, true);
+    return { bisect: null };
+  }
+
   private async keep(tabId: number): Promise<Reply> {
     const rec = this.tabs.get(tabId);
+    if (rec?.cos) return this.keepCosmetic(rec, rec.cos);
     if (!rec || rec.m.result !== 'found' || rec.m.culprits.length === 0) return { error: 'nothing found' };
     try {
       const culprits = rec.culprits.length ? rec.culprits : rec.m.culprits.map((host) => ({ host }));
@@ -313,7 +455,7 @@ export class Bisector {
   /** Badge follows the tab's phase: the step while testing, the normal counter otherwise. */
   private syncBadge(tabId: number): void {
     const rec = this.tabs.get(tabId);
-    const text = rec ? badgeStep(rec.m) : null;
+    const text = rec ? badgeStep(activeMachine(rec)) : null;
     if (text !== null) {
       this.badged.add(tabId);
       this.deps.badge?.(tabId, text);
@@ -360,6 +502,8 @@ export class Bisector {
             return await this.start(tabId);
           case 'answer':
             return await this.answer(tabId, msg.works);
+          case 'cosmetic':
+            return await this.startCosmetic(tabId);
           case 'keep':
             return await this.keep(tabId);
           case 'allow':
@@ -404,6 +548,16 @@ export class Bisector {
       if (this.tabs.has(tabId)) this.badged.delete(tabId);
       this.syncBadge(tabId);
     });
+  }
+
+  /**
+   * Cosmetic filtering the tab's bisect switches off (CosmeticService asks
+   * for every frame). Waits for state restored after a worker restart.
+   */
+  async cosmeticOverride(tabId: number): Promise<TabCosmeticOverride | null> {
+    if (this.loaded && this.tabs.size === 0) return null; // hot path: no bisect anywhere
+    await (this.loaded ?? this.serial(() => this.ensureLoaded()));
+    return cosmeticOverrideOf(this.tabs.get(tabId)?.cos);
   }
 
   /** Current view for popup:state (synchronous; the popup asks nerd:bisect 'state' for the authoritative one). */

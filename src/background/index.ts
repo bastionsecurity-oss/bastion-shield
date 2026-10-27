@@ -10,6 +10,7 @@
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { CUSTOM_COSMETIC } from '../shared/bisect.ts';
 import { PORT_LIVE, PRIORITY, STORAGE } from '../shared/constants.ts';
 import type { ListCategory, Settings } from '../shared/types.ts';
 import { ActivityService, classifyRedirect, persistenceFor } from './activity.ts';
@@ -140,18 +141,22 @@ const activity = new ActivityService({
   setTimeout: (fn, ms) => setTimeout(fn, ms),
 });
 
-function enabledMask(s: Settings): { mask: number; ids: Set<string> } {
+function enabledMask(s: Settings): { mask: number; ids: Set<string>; bits: Map<string, number> } {
   let mask = 0;
   const ids = new Set<string>();
+  const bits = new Map<string, number>();
   for (const l of store.meta?.lists ?? []) {
     if (!s.lists[l.id]) continue;
     ids.add(l.id);
-    if (Number.isInteger(l.bit) && l.bit >= 0 && l.bit < 32) mask = (mask | (1 << l.bit)) >>> 0;
+    if (Number.isInteger(l.bit) && l.bit >= 0 && l.bit < 32) {
+      mask = (mask | (1 << l.bit)) >>> 0;
+      bits.set(l.id, l.bit);
+    }
   }
-  return { mask, ids };
+  return { mask, ids, bits };
 }
 
-const cosmetic = new CosmeticService({
+const cosmetic: CosmeticService = new CosmeticService({
   loadMeta: loadCosmeticMeta,
   loadShard,
   loadGeneric: loadGenericIndex,
@@ -159,11 +164,12 @@ const cosmetic = new CosmeticService({
   config: (): CosmeticConfig => {
     const s = settings();
     const sites = store.effectiveSites();
-    const { mask, ids } = enabledMask(s);
+    const { mask, ids, bits } = enabledMask(s);
     const allOff = store.protectionOff();
     return {
       enabledMask: mask,
       enabledListIds: ids,
+      listBits: bits,
       deAmp: s.privacy.deAmp,
       custom: custom().cosmetic,
       isOff: (host) => allOff || !resolveSite(host, sites, s).enabled,
@@ -173,6 +179,8 @@ const cosmetic = new CosmeticService({
     const t = target.documentId ? { tabId: target.tabId, documentIds: [target.documentId] } : { tabId: target.tabId, frameIds: [target.frameId] };
     await chrome.scripting.insertCSS({ target: t as chrome.scripting.InjectionTarget, css, origin: 'USER' });
   },
+  // A running bisect switches cosmetic filters off on its tab (nerd-bisect.ts).
+  tabOverride: (tabId) => nerd.bisector.cosmeticOverride(tabId),
 });
 
 const blocked = new BlockedPages({ meta: () => store.meta, resourceTypes: browserResourceTypes });
@@ -259,6 +267,19 @@ const nerd = new NerdService({
     await store.saveCustom(`${text}${text === '' ? '' : '\n'}${lines.join('\n')}\n`);
     recompileCustom();
     await applier.now();
+  },
+  cosmeticCandidates: async (tabId) => {
+    const tab = await log.attempt('nerd', () => chrome.tabs.get(tabId), null as chrome.tabs.Tab | null);
+    const hostname = tab?.url ? webHostOf(tab.url) : null;
+    if (!hostname) return null;
+    const selectors = await cosmetic.hostSelectors(hostname);
+    // Lists with selectors for this site first (most first), then the other enabled lists.
+    const lists = Array.from(enabledMask(settings()).bits.keys()).sort(
+      (a, b) => (selectors.get(b)?.length ?? 0) - (selectors.get(a)?.length ?? 0) || a.localeCompare(b),
+    );
+    const c = custom().cosmetic;
+    if (c.specific.length > 0 || c.generic.length > 0) lists.push(CUSTOM_COSMETIC);
+    return { lists, selectors: Object.fromEntries(selectors) };
   },
   badge: (tabId, text) => {
     void log.attempt('badge', async () => {

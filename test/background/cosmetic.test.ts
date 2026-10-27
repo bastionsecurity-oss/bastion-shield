@@ -19,9 +19,12 @@ import {
   genericLookupFromText,
   genericSelectorsForTokens,
   hostKeyCandidates,
+  hostSelectorsByList,
   resolveHostCosmetic,
+  withOverride,
+  withoutSelectors,
 } from '../../src/background/cosmetic.ts';
-import type { CosmeticConfig, CosmeticTarget, CustomCosmetic } from '../../src/background/cosmetic.ts';
+import type { CosmeticConfig, CosmeticTarget, CustomCosmetic, TabCosmeticOverride } from '../../src/background/cosmetic.ts';
 
 const A = 1 << 0; // list A
 const B = 1 << 1; // list B
@@ -222,13 +225,20 @@ test('generic-high filtered copy: the selectors of every enabled list on hosts t
 
 // --- service ---------------------------------------------------------------
 
-function makeService(shards: Record<string, CosmeticShard>, opts: { off?: string[]; generic?: GenericIndex; meta?: CosmeticMeta; high?: Record<string, string[]> } = {}) {
+function makeService(
+  shards: Record<string, CosmeticShard>,
+  opts: { off?: string[]; generic?: GenericIndex; meta?: CosmeticMeta; high?: Record<string, string[]>; override?: (tabId: number) => Promise<TabCosmeticOverride | null> } = {},
+) {
   const inserted: { target: CosmeticTarget; css: string }[] = [];
   const loads: string[] = [];
   const meta: CosmeticMeta = opts.meta ?? { shards: 256, genericHighCss: {}, genericHighExcludedHosts: {}, genericHighSelectorsFile: 'cosmetic/generic-high.json' };
   const cfg: CosmeticConfig = {
     enabledMask: A | B,
     enabledListIds: new Set(['a', 'b']),
+    listBits: new Map([
+      ['a', 0],
+      ['b', 1],
+    ]),
     deAmp: true,
     custom: { specific: [], generic: [] },
     isOff: (h) => (opts.off ?? []).some((o) => h === o || h.endsWith(`.${o}`)),
@@ -245,6 +255,7 @@ function makeService(shards: Record<string, CosmeticShard>, opts: { off?: string
     insertCss: async (target, css) => {
       inserted.push({ target, css });
     },
+    ...(opts.override ? { tabOverride: opts.override } : {}),
   });
   return { svc, inserted, loads };
 }
@@ -327,4 +338,98 @@ test('service: hosts skipped by the generic-high registration get the filtered c
   assert.equal(hidden.css, '', 'generichide: no copy');
   const other = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://news.ch/' }, { tabId: 1, frameId: 0, tabUrl: 'https://news.ch/' });
   assert.equal(other.css, '', 'registered CSS applies, no copy needed');
+});
+
+// --- bisect override (nerd-bisect.ts, cosmetic phase) -------------------------
+
+test('bisect override: lists off clear their mask bits, ids and (custom) the custom filters', () => {
+  const custom: CustomCosmetic = { specific: [{ kind: 0, hosts: ['example.com'], excludedHosts: [], payload: '.mine', raw: 'example.com##.mine' }], generic: [] };
+  const cfg: CosmeticConfig = {
+    enabledMask: A | B,
+    enabledListIds: new Set(['a', 'b']),
+    listBits: new Map([
+      ['a', 0],
+      ['b', 1],
+    ]),
+    deAmp: false,
+    custom,
+    isOff: () => false,
+  };
+  assert.equal(withOverride(cfg, { lists: [], selectors: ['.x'] }), cfg);
+  const off = withOverride(cfg, { lists: ['a'], selectors: [] });
+  assert.equal(off.enabledMask, B);
+  assert.deepEqual(Array.from(off.enabledListIds), ['b']);
+  assert.equal(off.custom, custom);
+  const noCustom = withOverride(cfg, { lists: ['custom', 'b'], selectors: [] });
+  assert.equal(noCustom.enabledMask, A);
+  assert.deepEqual(noCustom.custom, { specific: [], generic: [] });
+});
+
+test('bisect override: selectors off act like exceptions for hide, style and procedural entries', () => {
+  const proc = JSON.stringify({ raw: 'div:has-text(Werbung)', selector: 'div', tasks: [['has-text', 'Werbung']] });
+  const host = resolveHostCosmetic([[[0, '.ad', A], [0, '.keep', A], [3, '.x { color: red }', A], [2, proc, A]]], A, ['example.com']);
+  const r = withoutSelectors(host, new Set(['.ad', '.x { color: red }', 'div:has-text(Werbung)']));
+  assert.deepEqual(r.hide, ['.keep']);
+  assert.deepEqual(r.styles, []);
+  assert.deepEqual(r.procedural, []);
+  assert.equal(withoutSelectors(host, new Set()), host);
+});
+
+test('bisect candidates: host-specific selectors in effect, per enabled list', () => {
+  const proc = JSON.stringify({ raw: 'p:has-text(Anzeige)', selector: 'p', tasks: [['has-text', 'Anzeige']] });
+  const host: CosmeticHostEntry[] = [
+    [0, 'section aside:has(> div[data-ad-unit-id])', A | B],
+    [0, '.only-a', A],
+    [0, '.excepted', B],
+    [3, '.x { color: red }', B],
+    [2, proc, A],
+    [0, '.disabled-list', C],
+  ];
+  const parent: CosmeticHostEntry[] = [[1, '.excepted', A]];
+  const custom: CustomCosmetic = { specific: [{ kind: 0, hosts: ['20min.ch'], excludedHosts: [], payload: '.mine', raw: '20min.ch##.mine' }], generic: [] };
+  const bits = new Map([
+    ['a', 0],
+    ['b', 1],
+    ['c', 2],
+  ]);
+  const by = hostSelectorsByList([host, parent], A | B, ['www.20min.ch', '20min.ch'], custom, bits);
+  assert.deepEqual(by.get('a'), ['section aside:has(> div[data-ad-unit-id])', '.only-a', 'p:has-text(Anzeige)']);
+  assert.deepEqual(by.get('b'), ['section aside:has(> div[data-ad-unit-id])', '.x { color: red }']);
+  assert.equal(by.has('c'), false, 'disabled lists have no candidates');
+  assert.deepEqual(by.get('custom'), ['.mine']);
+});
+
+test('service: a tab with a bisect override gets CSS without the switched-off lists and selectors, others are unaffected', async () => {
+  const shards = shardsFor({ 'example.com': [[0, '.from-a', A], [0, '.from-b', B], [0, '.also-b', B]] });
+  const overrides = new Map<number, TabCosmeticOverride>([
+    [1, { lists: ['a'], selectors: [] }],
+    [2, { lists: [], selectors: ['.from-b'] }],
+  ]);
+  const { svc } = makeService(shards, { override: async (tabId) => overrides.get(tabId) ?? null });
+  const frame = async (tabId: number) =>
+    (await svc.onFrame({ type: 'cosmetic:frame', url: 'https://example.com/' }, { tabId, frameId: 0, tabUrl: 'https://example.com/' })).css;
+  const normal = await frame(3);
+  assert.match(normal, /\.from-a/);
+  assert.match(normal, /\.from-b/);
+  const listsOff = await frame(1);
+  assert.doesNotMatch(listsOff, /\.from-a/);
+  assert.match(listsOff, /\.from-b/);
+  const selOff = await frame(2);
+  assert.match(selOff, /\.from-a/);
+  assert.doesNotMatch(selOff, /\.from-b/);
+  assert.match(selOff, /\.also-b/);
+  // The overridden results never reach the shared host cache.
+  assert.match(await frame(3), /\.from-a/);
+  assert.deepEqual(Object.fromEntries(await svc.hostSelectors('example.com')), { a: ['.from-a'], b: ['.from-b', '.also-b'] });
+});
+
+test('service: generic token CSS follows the lists a bisect switched off', async () => {
+  const { svc } = makeService({}, {
+    generic: { tokens: { '#banner': [['#banner', A]], '#promo': [['#promo', B]] } },
+    override: async (tabId) => (tabId === 1 ? { lists: ['a'], selectors: [] } : null),
+  });
+  const sender = (tabId: number) => ({ tabId, frameId: 0, tabUrl: 'https://example.com/' });
+  const msg = { type: 'cosmetic:tokens' as const, url: 'https://example.com/', tokens: ['#banner', '#promo'] };
+  assert.equal((await svc.onTokens(msg, sender(1))).css, '#promo{display:none!important}');
+  assert.match((await svc.onTokens(msg, sender(2))).css, /#banner/);
 });
