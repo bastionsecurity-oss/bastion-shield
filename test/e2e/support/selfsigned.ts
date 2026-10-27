@@ -73,8 +73,10 @@ export function createSelfSigned(dnsNames: string[], commonName = 'Bastion Shiel
   const spki = publicKey.export({ type: 'spki', format: 'der' });
   const sha256WithRsa = seq(oid('1.2.840.113549.1.1.11'), NULL);
   const name = seq(set(seq(oid('2.5.4.3'), tlv(0x0c, Buffer.from(commonName, 'utf8')))));
+  // Positive and minimally encoded: a leading 0x00 byte followed by a byte
+  // below 0x80 is DER "illegal padding", which OpenSSL rejects.
   const serial = randomBytes(16);
-  serial[0] &= 0x7f;
+  serial[0] = (serial[0] & 0x7f) | 0x40;
   const now = Date.now();
   const validity = seq(time(new Date(now - 24 * 3600_000)), time(new Date(now + 365 * 24 * 3600_000)));
   const san = seq(
