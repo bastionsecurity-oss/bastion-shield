@@ -282,7 +282,11 @@ const PORTED: readonly [string, 'high' | 'medium', string][] = [
   ['comspec-start-min', 'high', x('%COM', 'SPEC% /c start /min notepad')],
   ['cmd-temp-bat', 'high', x(CMD, ' /c echo echo test > %TE', 'MP%\\t.bat && %TEMP%\\t.bat')],
   ['cmd-cmdcmdline', 'high', x(CMD, ' /c echo %CMDCMD', 'LINE%')],
-  ['cmd-delayed-expansion', 'high', x(CMD, ' /v:on /q /c "set x=hello&& echo !x!"')],
+  ['cmd-quiet', 'high', x(CMD, ' /v:on /q /c "set x=hello&& echo !x!"')],
+  ['cmd-quiet', 'high', x(CMD, ' /d /q /c echo test')],
+  ['cmd-quiet-for', 'high', x(CMD, ' /s /q /c "fo', 'r %a in (1 2) do echo %a"')],
+  ['cmd-quiet-for', 'high', x(CMD, '.exe /e:on /q /c "set n=2&& fo', 'r /l %i in (1,1,!n!) do echo %i"')],
+  ['cmd-quiet-for', 'high', x(CMD, ' /q /c set a=1\nfo', 'r %a in (1) do echo %a')],
   ['convert-comspec', 'high', x('[Convert]::ToChar(99); $env:Com', 'Spec')],
   ['ps-comment-lure', 'high', x('<#Veri', 'fication ID: 1234#> Write-Output test')],
   ['iwr-wscript', 'high', x('Invoke-Web', 'Request https://example.invalid/a.js -OutFile a.js; wscr', 'ipt a.js')],
@@ -314,6 +318,20 @@ test('line-anchored rules see every line, as uBO (flags msi) does', () => {
   assert.equal(sev(x('Steps\n\n  ', PSH, ' -no', 'p -c "Write-Output test"')), 'high');
   // ...but not text in the middle of a prose line.
   assert.equal(detectDangerousCommand(x('Use ', PSH, ' -no', 'p when profiles are slow.')), null);
+});
+
+test('quiet cmd rules need /q /c with /v:on or /d, or a for loop after it', () => {
+  const NEAR: readonly string[] = [
+    x(CMD, ' /q /c dir'), // quiet, but no for loop and no /v:on or /d
+    x(CMD, ' /d /c dir'), // /d without /q
+    x(CMD, ' /d /s /c npm run build'), // how npm runs scripts on Windows
+    x(CMD, ' /v:off /q /c echo test'),
+    x(CMD, ' /q /k "fo', 'r %a in (1) do echo %a"'), // /k, not /c
+    x(CMD, ' /q /c echo format'), // "for" only inside a word
+    x(CMD, ' /c "fo', 'r %a in (1) do echo %a"'), // a for loop without /q
+    x('Use ', CMD, ' /q /c for quiet batch runs.'), // prose, not a line start
+  ];
+  for (const s of NEAR) assert.equal(detectDangerousCommand(s), null, `${s} -> ${JSON.stringify(detectDangerousCommand(s))}`);
 });
 
 test('uBO excludeMatches is an allow-list for medium verdicts only', () => {
@@ -356,9 +374,14 @@ test('more everyday text (docs one-liners, prose, JSON, URLs) is not flagged', (
   for (const s of BENIGN_MORE) assert.equal(detectDangerousCommand(s), null, `${s} -> ${JSON.stringify(detectDangerousCommand(s))}`);
 });
 
+// CI's build job sets BASTION_REQUIRE_LISTS=1 after `npm run build` fetched the
+// lists: there a missing cache or filter fails instead of skipping, so the next
+// upstream alternative cannot slip through unnoticed.
 test('the cached uBO filter has no ClickFix alternative that is not ported', (t) => {
+  const required = process.env.BASTION_REQUIRE_LISTS === '1';
   const file = new URL('../../.cache/lists/combined/ublock.txt', import.meta.url);
   if (!existsSync(file)) {
+    assert.ok(!required, 'BASTION_REQUIRE_LISTS=1 but .cache/lists/combined/ublock.txt is missing (run npm run build)');
     t.skip('no cached lists (.cache/lists)');
     return;
   }
@@ -366,6 +389,7 @@ test('the cached uBO filter has no ClickFix alternative that is not ported', (t)
     .split(/\r?\n/)
     .find((l) => l.startsWith('*,') && l.includes('##+js(prevent-clipboard-write,') && l.includes('ClickFix'));
   if (line === undefined) {
+    assert.ok(!required, 'generic ClickFix filter not found in the uBlock list: update this test and clip-detect.ts');
     t.skip('generic ClickFix filter not in the cached uBlock list');
     return;
   }

@@ -210,7 +210,8 @@ const R_IRM_IEX = rl(String.raw`^\(?\s*irm\s[\s\S]*?\biex\b`);
 const R_COMSPEC_START_MIN = rl(String.raw`^["'@(]*%comspec%[\s\S]*?\bstart\b[\s\S]*?\/min\b`);
 const R_CMD_TEMP_BAT = rl(String.raw`^["'@(]*cmd(?:\.exe)?\b[\s\S]*?\/c\b[\s\S]*?%temp%[\s\S]*?\.bat\b`);
 const R_CMD_CMDCMDLINE = rl(String.raw`^["'@(]*cmd(?:\.exe)?\b[\s\S]*?\/c\b[\s\S]*?\bcmdcmdline\b`);
-const R_CMD_DELAYED = rl(String.raw`^["'@(]*cmd(?:\.exe)?\s+\/v:on\s+\/q\s+\/c\b`);
+const R_CMD_QUIET = rl(String.raw`^["'@(]*cmd(?:\.exe)?\s+\/(?:v:on|d)\s+\/q\s+\/c\b`);
+const R_CMD_QUIET_FOR = rl(String.raw`^["'@(]*cmd(?:\.exe)?\b[\s\S]*?\/q\s+\/c\b[\s\S]*?\bfor\s`);
 const R_CONVERT_COMSPEC = re(String.raw`\bconvert\b.*\$env:comspec\b`);
 const R_PS_COMMENT_LURE = rl(String.raw`^<#\s*verification`);
 const R_IWR_WSCRIPT = rl(String.raw`^(?:invoke-webrequest|iwr)\b[\s\S]*?\bwscript(?:\.exe)?\b`);
@@ -250,7 +251,8 @@ const RULES: readonly Rule[] = [
   { rule: 'herestring-base64', severity: 'high', test: ({ l }) => R_HERESTRING_B64.test(l) },
   { rule: 'cmd-for-delims', severity: 'high', test: ({ l }) => R_CMD_FOR_DELIMS.test(l) },
   { rule: 'cmd-nop-iex', severity: 'high', test: ({ l }) => R_CMD_NOP_IEX.test(l) },
-  { rule: 'cmd-delayed-expansion', severity: 'high', test: ({ l }) => R_CMD_DELAYED.test(l) },
+  { rule: 'cmd-quiet', severity: 'high', test: ({ l }) => R_CMD_QUIET.test(l) },
+  { rule: 'cmd-quiet-for', severity: 'high', test: ({ l }) => R_CMD_QUIET_FOR.test(l) },
   { rule: 'cmd-temp-bat', severity: 'high', test: ({ l }) => R_CMD_TEMP_BAT.test(l) },
   { rule: 'cmd-cmdcmdline', severity: 'high', test: ({ l }) => R_CMD_CMDCMDLINE.test(l) },
   { rule: 'cmd-certutil', severity: 'high', test: ({ l }) => R_CMD_CERTUTIL.test(l) },
@@ -343,7 +345,9 @@ export const UBO_PORTED_RULES: Readonly<Record<string, string>> = {
   '0iogkr8': 'comspec-start-min', // ^%COMSPEC% … start … /min
   '0e7wa01': 'cmd-temp-bat', // ^cmd … /c … %TEMP% … .bat
   '1i4w3pz': 'cmd-cmdcmdline', // ^cmd … /c … CMDCMDLINE
-  '1omfm0t': 'cmd-delayed-expansion', // ^cmd /v:on /q /c
+  '1omfm0t': 'cmd-quiet', // ^cmd /v:on /q /c (older lists; widened by the next one)
+  '1ay9072': 'cmd-quiet', // ^cmd /(v:on|d) /q /c
+  '12kwnuy': 'cmd-quiet-for', // ^cmd … /q /c … for
   '1ikrqfe': 'convert-comspec', // convert … $env:ComSpec
   '122w4rr': 'ps-comment-lure', // ^<#Verification
   '1ggbzep': 'iwr-wscript', // ^Invoke-WebRequest … wscript
