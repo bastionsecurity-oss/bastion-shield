@@ -106,7 +106,7 @@ export function sanitizeRule(input: DnrRule, opts: { allowRegex: boolean }): San
       } catch {
         return { error: 'invalid redirect url' };
       }
-      if (u.protocol === 'javascript:') return { error: 'javascript: redirect' };
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') return { error: `${u.protocol} redirect` };
       action.redirect = { url: r.url };
     } else if (typeof r.extensionPath === 'string') {
       if (!r.extensionPath.startsWith('/')) return { error: 'extensionPath must start with "/"' };
