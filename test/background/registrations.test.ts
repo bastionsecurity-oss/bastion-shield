@@ -147,6 +147,14 @@ test('custom generichide hosts are excluded from the generic-high CSS', () => {
   assert.deepEqual(genericHighExcludedUnion(META, new Set(['annoyances'])), ['annoy.example', 'generichide.example', 'localhost']);
 });
 
+test('first-party-protected lists keep their highly generic CSS out of the registration (Standard un-hiding)', () => {
+  const m = byId(plan(['annoyances', 'easylist', 'ublock'], {}, { softListIds: new Set(['easylist', 'ublock']) }));
+  const gh = m.get(GENERIC_HIGH_ID)!;
+  assert.deepEqual(gh.css, ['cosmetic/generic-high/annoyances.css'], 'the SW serves the protected lists per frame');
+  assert.deepEqual(gh.excludeMatches, ['*://*.annoy.example/*', '*://*.generichide.example/*', '*://*.localhost/*'], 'exclusions of protected lists are not needed');
+  assert.ok(!byId(plan(['easylist'], {}, { softListIds: new Set(['easylist']) })).has(GENERIC_HIGH_ID));
+});
+
 test('the set stays small whatever the size of the lists (PERF-1/PERF-2)', () => {
   const many: ScriptletIndex = {
     registrations: Array.from({ length: 30 }, (_, i) => ({ id: `sl-l${i}-main`, listId: `l${i}`, world: 'MAIN' as const, file: `scriptlets/l${i}-main.js`, matches: ['<all_urls>'] })),

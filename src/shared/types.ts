@@ -154,9 +154,11 @@ export interface CosmeticMeta {
    * listId -> hostnames where that list's highly-generic CSS must NOT be
    * injected statically (hosts with #@# exceptions that target its highly
    * generic selectors, and its `~host` exclusions). The SW registers ONE
-   * generic-high CSS registration for all enabled lists, excluding the union
-   * of these sets of enabled lists plus `genericHideHosts`; on those hosts it
-   * injects a filtered copy of every enabled list's selectors instead.
+   * generic-high CSS registration for all enabled always-apply lists,
+   * excluding the union of these sets of those lists plus `genericHideHosts`;
+   * on those hosts it injects a filtered copy of their selectors instead.
+   * First-party-protected lists are not registered: the SW serves their
+   * selectors with every frame (ARCHITECTURE §5.2.8).
    * Match-pattern hosts only (no entities, no bare labels).
    */
   genericHighExcludedHosts: Record<string, string[]>;
@@ -459,6 +461,14 @@ export interface MsgCosmeticFrameResponse {
   deAmp: boolean;
   /** Top frame only, nerd mode: this host looks like a protected domain. */
   lookalike?: LookalikeHit | null;
+  /**
+   * Standard mode: hide selectors only first-party-protected lists have
+   * (not in `css`). The content script hides them and un-hides the ones that
+   * match first-party content (ARCHITECTURE §5.2.8). Absent otherwise.
+   */
+  soft?: string[];
+  /** With `soft`: the frame's registrable domain, for the first-party test. */
+  site?: string;
 }
 
 /** Content script -> SW: newly seen id/class tokens ("#foo", ".bar"). */
@@ -469,6 +479,8 @@ export interface MsgCosmeticTokens {
 }
 export interface MsgCosmeticTokensResponse {
   css: string;
+  /** Standard mode: soft generic selectors (see MsgCosmeticFrameResponse.soft). */
+  soft?: string[];
 }
 
 /** Content script -> SW: inject content/procedural.js into this frame. */

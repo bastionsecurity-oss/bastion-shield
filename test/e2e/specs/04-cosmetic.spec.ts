@@ -30,6 +30,16 @@ ${body}
 }
 
 test.describe('cosmetic filtering', () => {
+  // The fixture elements are empty first-party boxes, which Standard mode
+  // un-hides after a while (Brave parity, 04c-unhide.spec.ts). Aggressive
+  // mode hides like uBO, which is what these tests check.
+  test.beforeEach(async ({ ext }) => {
+    await ext.sendAndApply({ type: 'settings:set', patch: { defaultMode: 'aggressive' } }, 3000);
+  });
+  test.afterEach(async ({ ext }) => {
+    await ext.sendAndApply({ type: 'settings:set', patch: { defaultMode: 'standard' } }, 3000);
+  });
+
   test('(g) generic selectors hide matching elements, including ones added after load', async ({ page, server, dist }) => {
     const picks = pickGenericSelectors(dist, 3);
     expect(picks.length, 'lowly generic selectors in dist/cosmetic/generic.json').toBeGreaterThan(0);

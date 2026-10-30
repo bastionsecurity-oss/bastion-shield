@@ -68,6 +68,12 @@ export interface RegistrationInputs {
   seedFiles: string[];
   /** Hosts where custom filters say generichide/elemhide (no generic-high CSS there). */
   extraGenericHideHosts?: readonly string[];
+  /**
+   * Enabled first-party-protected lists. Their highly generic CSS is not
+   * registered: the SW serves it per frame, so Standard mode can un-hide it
+   * (cosmetic.ts softHighGeneric).
+   */
+  softListIds?: ReadonlySet<string>;
 }
 
 /** Dist paths are relative to the extension root; tolerate "dist/" or "/" prefixes in metadata. */
@@ -265,7 +271,9 @@ export function computeRegistrations(inputs: RegistrationInputs): DesiredScript[
   const out: DesiredScript[] = [];
 
   out.push(...scopeToEnabled(cosmeticScript(), groups));
-  const gh = genericHighScript(cosmeticMeta, enabledListIds, inputs.extraGenericHideHosts ?? []);
+  const soft = inputs.softListIds;
+  const staticIds = soft && soft.size > 0 ? new Set(Array.from(enabledListIds).filter((id) => !soft.has(id))) : enabledListIds;
+  const gh = genericHighScript(cosmeticMeta, staticIds, inputs.extraGenericHideHosts ?? []);
   if (gh) out.push(...scopeToEnabled(gh.base, groups, gh.exclude));
   for (const s of scriptletScripts(scriptletIndex, enabledListIds)) out.push(...scopeToEnabled(s, groups));
   const nerdOn = settings.nerd.enabled;

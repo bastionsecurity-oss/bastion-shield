@@ -65,7 +65,9 @@ test.describe('managed policy', () => {
   test('kill switch: protectionEnabled=false turns protection off everywhere and back on', async ({ server, dist }) => {
     const specs: ResSpec[] = KNOWN_TRACKERS.map((t) => ({ url: server.url(t.host, t.path), kind: t.kind, label: t.host }));
     const generic = pickGenericSelectors(dist, 1)[0];
-    const probeHtml = generic ? `<!doctype html><meta charset="utf-8"><title>kill switch</title>${elementHtml(generic.element, 'generic')}` : '';
+    // A third-party creative inside, so Standard mode keeps the box hidden (an empty one is un-hidden, 04c-unhide).
+    const adBox = generic ? elementHtml(generic.element, 'generic', '').replace('></', `><img src="https://${HOSTS.CDN}/creative/banner.gif" alt=""></`) : '';
+    const probeHtml = generic ? `<!doctype html><meta charset="utf-8"><title>kill switch</title>${adBox}` : '';
     const probeDisplay = (n: number) =>
       withPage(async (pg) => {
         const url = server.setPage(HOSTS.A, `/e2e/kill-cosmetic-${n}.html`, probeHtml);

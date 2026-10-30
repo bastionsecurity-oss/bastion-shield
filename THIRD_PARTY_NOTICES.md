@@ -76,7 +76,7 @@ The extension contains rulesets compiled from the filter lists below. The lists 
 
 These are development dependencies; no part of them is included in the extension package: TypeScript (Apache-2.0), esbuild (MIT), Playwright and Playwright's Chromium (Apache-2.0; Chromium under its own BSD-style licences), DefinitelyTyped type packages (MIT).
 
-Brave's adblock-rust (MPL-2.0) was used as a reference for behaviour. uBlock Origin Lite was used as a reference too, except for the procedural filtering engine, which is a port and is included (section 1).
+Brave's adblock-rust (MPL-2.0) was used as a reference for behaviour, and so was brave-core's cosmetic filters component (MPL-2.0) for the Standard-mode un-hiding heuristic (`src/content/unhide.ts`, written for Bastion Shield). uBlock Origin Lite was used as a reference too, except for the procedural filtering engine, which is a port and is included (section 1).
 
 ## 5. Trademarks
 

@@ -258,6 +258,39 @@ export function pickGenericSelectors(dist: Dist, max = 3): GenericPick[] {
   return out;
 }
 
+/**
+ * Lowly generic selectors that only first-party-protected default lists
+ * have: hidden by default, un-hidden by Standard mode when they match
+ * first-party content (ARCHITECTURE §5.2.8).
+ */
+export function pickSoftGenericSelectors(dist: Dist, max = 2): GenericPick[] {
+  const tokens = dist.genericIndex().tokens ?? {};
+  let soft = 0;
+  let hard = 0;
+  for (const l of dist.meta?.lists ?? []) {
+    if (!l.default) continue;
+    if (l.firstPartyProtected) soft |= 1 << l.bit;
+    else hard |= 1 << l.bit;
+  }
+  const out: GenericPick[] = [];
+  const seen = new Set<string>();
+  for (const t of [...PREFERRED_TOKENS, ...Object.keys(tokens).sort()]) {
+    if (out.length >= max) break;
+    if (seen.has(t)) continue;
+    seen.add(t);
+    for (const [selector, listMask] of tokens[t] ?? []) {
+      const m = listMask >>> 0;
+      // Exact-token selectors only, and no other token may also carry the selector from an always-apply list.
+      if (selector !== t || !(m & soft) || m & hard) continue;
+      const el = elementForSelector(selector);
+      if (!el) continue;
+      out.push({ token: t, selector, element: el, lists: dist.listNamesForMask(m) });
+      break;
+    }
+  }
+  return out;
+}
+
 export interface HighGenericPick {
   listId: string;
   selector: string;

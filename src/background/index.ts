@@ -141,19 +141,23 @@ const activity = new ActivityService({
   setTimeout: (fn, ms) => setTimeout(fn, ms),
 });
 
-function enabledMask(s: Settings): { mask: number; ids: Set<string>; bits: Map<string, number> } {
+function enabledMask(s: Settings): { mask: number; ids: Set<string>; bits: Map<string, number>; softMask: number; softIds: Set<string> } {
   let mask = 0;
+  let softMask = 0;
   const ids = new Set<string>();
   const bits = new Map<string, number>();
+  const softIds = new Set<string>();
   for (const l of store.meta?.lists ?? []) {
     if (!s.lists[l.id]) continue;
     ids.add(l.id);
+    if (l.firstPartyProtected) softIds.add(l.id);
     if (Number.isInteger(l.bit) && l.bit >= 0 && l.bit < 32) {
       mask = (mask | (1 << l.bit)) >>> 0;
       bits.set(l.id, l.bit);
+      if (l.firstPartyProtected) softMask = (softMask | (1 << l.bit)) >>> 0;
     }
   }
-  return { mask, ids, bits };
+  return { mask, ids, bits, softMask, softIds };
 }
 
 const cosmetic: CosmeticService = new CosmeticService({
@@ -164,12 +168,15 @@ const cosmetic: CosmeticService = new CosmeticService({
   config: (): CosmeticConfig => {
     const s = settings();
     const sites = store.effectiveSites();
-    const { mask, ids, bits } = enabledMask(s);
+    const { mask, ids, bits, softMask, softIds } = enabledMask(s);
     const allOff = store.protectionOff();
     return {
       enabledMask: mask,
       enabledListIds: ids,
       listBits: bits,
+      softMask,
+      softListIds: softIds,
+      modeOf: (host) => resolveSite(host, sites, s).mode,
       deAmp: s.privacy.deAmp,
       custom: custom().cosmetic,
       isOff: (host) => allOff || !resolveSite(host, sites, s).enabled,
