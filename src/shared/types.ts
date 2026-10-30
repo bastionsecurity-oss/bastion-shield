@@ -585,6 +585,18 @@ export interface BisectView {
   also?: (BisectCandidate & { filters: string[]; lists: string[] })[];
   /** The interacting hosts could not be fully separated: `culprit` + `also` is a working superset. */
   partial?: boolean;
+  /**
+   * 'cosmetic': the second phase after a 'clean' network bisect. `allowed`
+   * then holds the list ids (stage 'lists') or selectors (stage 'selectors')
+   * switched off on the tab, and 'clean' means still broken without any
+   * list's cosmetic filters.
+   */
+  kind?: 'cosmetic';
+  stage?: 'lists' | 'selectors';
+  /** Cosmetic 'found': the lists whose cosmetic filters break the page ('custom' for the user's filters). */
+  lists?: string[];
+  /** Cosmetic 'found': their host-specific selectors that do it, when the selector stage isolated them ("keep" adds `site#@#…`). */
+  selectors?: string[];
 }
 
 export interface NerdTabState {
@@ -624,13 +636,14 @@ export type MsgNerdSignal =
 
 /**
  * Popup / commands -> SW. `works` answers "does the page work now?" for
- * action 'answer'. Two helpers share the bisect's data: 'hosts' lists the
+ * action 'answer'; 'cosmetic' goes on from a 'clean' result with the
+ * cosmetic phase. Two helpers share the bisect's data: 'hosts' lists the
  * hosts blocked on the tab's page load (filter texts with `describe`), and
  * 'allow' adds a narrow exception for `host` on the tab's site.
  */
 export interface MsgNerdBisect {
   type: 'nerd:bisect';
-  action: 'start' | 'answer' | 'cancel' | 'state' | 'keep' | 'allow' | 'hosts';
+  action: 'start' | 'answer' | 'cancel' | 'state' | 'keep' | 'allow' | 'hosts' | 'cosmetic';
   tabId: number;
   works?: boolean;
   host?: string;

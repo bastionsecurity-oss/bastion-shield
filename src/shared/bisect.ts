@@ -227,3 +227,26 @@ export function keepFilterLines(
   }
   return lines;
 }
+
+// ---------------------------------------------------------------------------
+// Cosmetic phase: the same machine over list ids, then over selectors
+// ---------------------------------------------------------------------------
+
+/** Pseudo list id for the user's, the admin's and imported lists' cosmetic filters. */
+export const CUSTOM_COSMETIC = 'custom';
+
+/**
+ * The `#@#` body that cancels a host-specific cosmetic entry, from the text
+ * the cosmetic data keeps: a selector (kind 0), `sel { style }` (kind 3,
+ * written back as `sel:style(style)`) or a procedural filter's raw text.
+ */
+export function cosmeticExceptionBody(selector: string): string {
+  const m = /^(.*\S) \{ (.*) \}$/s.exec(selector);
+  return m ? `${m[1]}:style(${m[2]})` : selector;
+}
+
+/** "keep" for cosmetic culprits: one `site#@#…` exception per selector. */
+export function keepCosmeticLines(selectors: readonly string[], site: string, day: string): string[] {
+  const bodies = Array.from(new Set(selectors.map(cosmeticExceptionBody)));
+  return [`! Bastion bisect ${day}: ${site}`, ...bodies.map((b) => `${site}#@#${b}`)];
+}

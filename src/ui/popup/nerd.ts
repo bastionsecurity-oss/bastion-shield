@@ -7,7 +7,8 @@
 //
 // Ctrl+K, "/" or ":" turn it into a command line (commands.ts). A running
 // filter bisect takes over the row and is answered with single keys (y / n /
-// Esc, then k / b / Esc). The bisect lives in the service worker: the tab
+// Esc, then k / b / Esc; c goes on with the cosmetic phase when no network
+// block is to blame). The bisect lives in the service worker: the tab
 // reloads after every answer and the popup may close, so everything here is
 // re-rendered from popup:state / nerd:bisect 'state' when it opens again.
 //
@@ -15,6 +16,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import type { BisectCandidate, BisectView, BuildMeta, FpVector, MsgNerdBisect, NerdBlockedHost, PopupState } from '../../shared/types.ts';
+import { cosmeticExceptionBody } from '../../shared/bisect.ts';
 import { h, replace } from '../shared/dom.ts';
 import { fmtNumber, plural, t } from '../shared/i18n.ts';
 import { ListDirectory } from '../shared/labels.ts';
@@ -66,6 +68,19 @@ export function normaliseBisect(raw: unknown): BisectView | null {
     remaining: count(r.remaining),
     allowed: strs(r.allowed),
   };
+  if (r.kind === 'cosmetic') {
+    v.kind = 'cosmetic';
+    v.stage = r.stage === 'selectors' ? 'selectors' : 'lists';
+    if (phase === 'found') {
+      const lists = strs(r.lists);
+      if (lists.length === 0) return null;
+      v.lists = lists;
+      const selectors = strs(r.selectors);
+      if (selectors.length) v.selectors = selectors;
+      if (r.partial === true) v.partial = true;
+    }
+    return v;
+  }
   if (phase === 'found') {
     const c = described(r.culprit);
     if (!c) return null;
@@ -315,6 +330,9 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     if (filter) void openTab(labPath('blame', { filter }));
   };
 
+  /** The filter text to look up for a cosmetic result: the first selector on the site. */
+  const cosmeticFilter = (v: BisectView): string | undefined => (v.selectors?.length ? `${v.site}##${cosmeticExceptionBody(v.selectors[0]!)}` : undefined);
+
   // --- commands ----------------------------------------------------------
 
   const ctx = (): CommandContext => ({ bisecting: bisect !== null, hosts: hosts ?? [], shortcuts });
@@ -542,8 +560,63 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     ];
   };
 
+  const listNames = (ids: readonly string[]): string[] => ids.map((id) => (dir ? dir.name(id) : id)).filter(Boolean);
+
+  const cosmeticRows = (v: BisectView, tail: HTMLElement[]): HTMLElement[] => {
+    if (!dir) void listDirectory().then((d) => ((dir = d), render()));
+    if (v.phase === 'testing') {
+      const lists = v.stage !== 'selectors';
+      const shown = lists ? listNames(v.allowed) : v.allowed.map(cosmeticExceptionBody);
+      return [
+        h(
+          'div',
+          { class: 'pp-sl__line pp-sl__wrap', attrs: { role: 'status' } },
+          h('span', { class: 'pp-sl__strong', attrs: { title: t('nerdBisectMaxTitle', fmtNumber(Math.max(v.step, v.maxSteps))) }, text: stepLabel(v) }),
+          sep(),
+          h('span', { text: lists ? plural(v.allowed.length, 'nerdBisectAskListsOne', 'nerdBisectAskLists') : plural(v.allowed.length, 'nerdBisectAskSelectorsOne', 'nerdBisectAskSelectors') }),
+        ),
+        h('div', { class: 'pp-sl__note pp-sl__trunc', attrs: { title: shown.join('\n'), ...(lists ? {} : { translate: 'no' }) }, text: shown.join(lists ? ' - ' : ' ') }),
+        h(
+          'div',
+          { class: 'pp-sl__keys' },
+          keyBtn('y', t('nerdBisectYes'), () => void act('answer', true)),
+          keyBtn('n', t('nerdBisectNo'), () => void act('answer', false)),
+          keyBtn('esc', t('nerdBisectAbort'), () => void act('cancel')),
+        ),
+        ...tail,
+      ];
+    }
+    if (v.phase === 'found' && v.lists?.length) {
+      const sels = v.selectors ?? [];
+      return [
+        h('div', { class: 'pp-sl__line pp-sl__wrap', attrs: { role: 'status' } }, h('span', { class: 'pp-sl__note', text: t('nerdBisectFoundCosmetic') })),
+        ...sels.slice(0, FILTERS_SHOWN).map((sel) => {
+          const f = `${v.site}##${cosmeticExceptionBody(sel)}`;
+          return h('div', { class: 'pp-sl__code', attrs: { title: f, translate: 'no' }, text: f });
+        }),
+        ...(sels.length === 0 ? [h('div', { class: 'pp-sl__note', text: t('nerdBisectCosmeticListOnly') })] : []),
+        h('div', { class: 'pp-sl__note', text: listNames(v.lists).join(' - ') }),
+        ...(v.partial ? [h('div', { class: 'pp-sl__note', text: t('nerdBisectPartial') })] : []),
+        h(
+          'div',
+          { class: 'pp-sl__keys' },
+          sels.length ? keyBtn('k', t('nerdBisectKeep'), () => void act('keep')) : null,
+          sels.length ? keyBtn('b', t('nerdBisectBlame'), () => blame(cosmeticFilter(v))) : null,
+          keyBtn('esc', t('nerdBisectDiscard'), () => void act('cancel')),
+        ),
+        ...tail,
+      ];
+    }
+    return [
+      h('div', { class: 'pp-sl__line pp-sl__wrap', attrs: { role: 'status' } }, h('span', { class: 'pp-sl__strong', text: 'bisect' }), sep(), h('span', { text: t('nerdBisectCosmeticClean') })),
+      h('div', { class: 'pp-sl__keys' }, keyBtn('esc', t('nerdBisectOk'), () => void act('cancel'))),
+      ...tail,
+    ];
+  };
+
   const bisectRows = (v: BisectView): HTMLElement[] => {
     const tail = flash ? [h('div', { class: 'pp-sl__flash pp-sl__flash--line', attrs: { role: 'status' }, text: flash })] : [];
+    if (v.kind === 'cosmetic') return cosmeticRows(v, tail);
     if (v.phase === 'testing') {
       return [
         h(
@@ -589,7 +662,7 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     }
     return [
       h('div', { class: 'pp-sl__line pp-sl__wrap', attrs: { role: 'status' } }, h('span', { class: 'pp-sl__strong', text: 'bisect' }), sep(), h('span', { text: t('nerdBisectClean') })),
-      h('div', { class: 'pp-sl__keys' }, keyBtn('esc', t('nerdBisectOk'), () => void act('cancel'))),
+      h('div', { class: 'pp-sl__keys' }, keyBtn('c', t('nerdBisectCosmetic'), () => void act('cosmetic')), keyBtn('esc', t('nerdBisectOk'), () => void act('cancel'))),
       ...tail,
     ];
   };
@@ -637,8 +710,9 @@ export function createNerdStatusline(root: HTMLElement, opts: NerdStatuslineOpti
     const v = bisect;
     let handled = true;
     if (v && !busy && v.phase === 'testing' && (lower === 'y' || lower === 'n')) void act('answer', lower === 'y');
-    else if (v && !busy && v.phase === 'found' && lower === 'k') void act('keep');
-    else if (v && v.phase === 'found' && lower === 'b') blame(v.culprit?.filters[0]);
+    else if (v && !busy && v.phase === 'found' && lower === 'k' && (v.kind !== 'cosmetic' || !!v.selectors?.length)) void act('keep');
+    else if (v && v.phase === 'found' && lower === 'b') blame(v.kind === 'cosmetic' ? cosmeticFilter(v) : v.culprit?.filters[0]);
+    else if (v && !busy && v.phase === 'clean' && v.kind !== 'cosmetic' && lower === 'c') void act('cosmetic');
     else if (v && !busy && key === 'Escape') void act('cancel');
     else if (key === 'Escape' && (fpOpen || clipOpen)) {
       fpOpen = false;

@@ -15,8 +15,10 @@ import {
   bisectProgress,
   halvingSteps,
   isBisectableHost,
+  cosmeticExceptionBody,
   isBisectRuleId,
   isImportantFilter,
+  keepCosmeticLines,
   keepFilterLines,
   MAX_CANDIDATES,
   MAX_ROUNDS,
@@ -24,7 +26,7 @@ import {
 } from '../../src/shared/bisect.ts';
 import type { BisectMachine } from '../../src/shared/bisect.ts';
 import type { BisectView } from '../../src/shared/types.ts';
-import { Bisector, collectCandidates } from '../../src/background/nerd-bisect.ts';
+import { Bisector, collectCandidates, cosmeticOverrideOf } from '../../src/background/nerd-bisect.ts';
 import type { BisectDeps } from '../../src/background/nerd-bisect.ts';
 import { NERD_BISECT_COMMAND, runNerdCommand } from '../../src/background/nerd-commands.ts';
 import type { NerdCommandDeps } from '../../src/background/nerd-commands.ts';
@@ -613,4 +615,191 @@ test('nerd-bisect command: toggles start/cancel, only with nerd mode and the log
   shown = null;
   assert.equal(await runNerdCommand(NERD_BISECT_COMMAND, 9, cmdDeps(true), true), 'started');
   assert.equal(popups, 2);
+});
+
+// ------------------------------------------------------- cosmetic phase --
+
+/** The 20min.ch case: two lists hide the same in-feed aside, which breaks the grid. */
+const ASIDE = 'section aside:has(> div > div > div[data-ad-unit-id])';
+const COSMETIC = {
+  lists: ['ublock', 'regional-fr', 'easylist', 'custom'],
+  selectors: {
+    ublock: [ASIDE, '.teaser-ad', '#skyscraper'],
+    'regional-fr': [ASIDE, '.pub { min-height: 0 }'],
+    easylist: ['.banner'],
+  } as Record<string, string[]>,
+};
+
+/** Clean network bisect on tab 7 (nothing blocked), ready for the cosmetic phase. */
+async function cleanBisect(over: Partial<BisectDeps> = {}) {
+  const fake = installChrome();
+  const d = deps({ blockedOnTab: async () => [], cosmeticCandidates: async () => structuredClone(COSMETIC), ...over });
+  const b = new Bisector(d);
+  assert.equal(bisectOf(await b.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 })).phase, 'clean');
+  return { fake, d, b };
+}
+
+/** The page is broken while a culprit list still applies one of its breaking selectors. */
+async function brokenBy(b: Bisector, culprits: Record<string, string[]>): Promise<boolean> {
+  const ov = await b.cosmeticOverride(7);
+  const listsOff = new Set(ov?.lists ?? []);
+  const selOff = new Set(ov?.selectors ?? []);
+  return Object.entries(culprits).some(([list, sels]) => !listsOff.has(list) && sels.some((x) => !selOff.has(x)));
+}
+
+test('bisect: cosmetic keep lines turn style rules back into :style()', () => {
+  assert.equal(cosmeticExceptionBody('.x'), '.x');
+  assert.equal(cosmeticExceptionBody('.pub { min-height: 0 }'), '.pub:style(min-height: 0)');
+  const lines = keepCosmeticLines([ASIDE, '.pub { min-height: 0 }', ASIDE], '20min.ch', '2026-10-27');
+  assert.deepEqual(lines, ['! Bastion bisect 2026-10-27: 20min.ch', `20min.ch#@#${ASIDE}`, '20min.ch#@#.pub:style(min-height: 0)']);
+});
+
+test('Bisector cosmetic: lists, then selectors, find the aside two lists hide; keep adds #@# exceptions', async () => {
+  const { fake, d, b } = await cleanBisect();
+  assert.equal(await b.cosmeticOverride(7), null, 'nothing switched off before the phase starts');
+  const reloads = fake.reloads.length;
+  let v = bisectOf(await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }));
+  assert.equal(v.kind, 'cosmetic');
+  assert.equal(v.stage, 'lists');
+  assert.equal(v.phase, 'testing');
+  assert.deepEqual(v.allowed, COSMETIC.lists, 'first test: every list off');
+  assert.deepEqual(await b.cosmeticOverride(7), { lists: COSMETIC.lists, selectors: [] });
+  assert.equal(fake.reloads.length, reloads + 1);
+  assert.deepEqual(fake.rules, [], 'no DNR rules in the cosmetic phase');
+  // Starting again while testing keeps the phase.
+  assert.equal(bisectOf(await b.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 })).kind, 'cosmetic');
+
+  const culprits = { ublock: [ASIDE], 'regional-fr': [ASIDE] };
+  let answers = 0;
+  while (v.phase === 'testing') {
+    v = bisectOf(await b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: !(await brokenBy(b, culprits)) }));
+    assert.ok(++answers < 20);
+    if (v.phase === 'testing' && v.stage === 'selectors') assert.equal((await b.cosmeticOverride(7))?.lists.length, 0, 'selector stage: lists back on');
+  }
+  assert.equal(v.phase, 'found');
+  assert.equal(v.stage, 'selectors');
+  assert.deepEqual([...(v.lists ?? [])].sort(), ['regional-fr', 'ublock']);
+  assert.deepEqual(v.selectors, [ASIDE]);
+  assert.deepEqual(await b.cosmeticOverride(7), { lists: [], selectors: [ASIDE] }, 'the result stays applied, like a found host');
+  // One reload per test; none when the result switches off what the last test did.
+  const tested = fake.reloads.length;
+  assert.ok(tested >= reloads + answers && tested <= reloads + 1 + answers, `${tested - reloads} reloads for ${answers} answers`);
+
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'keep', tabId: 7 }), { bisect: null });
+  assert.equal(d.added.length, 1);
+  assert.match(d.added[0]![0]!, /^! Bastion bisect \d{4}-\d{2}-\d{2}: shop\.example$/);
+  assert.deepEqual(d.added[0]!.slice(1), [`shop.example#@#${ASIDE}`]);
+  assert.equal(await b.cosmeticOverride(7), null);
+  assert.equal(fake.session.size, 0);
+  assert.equal(fake.reloads.length, tested + 1, 'keep reloads back to normal protection');
+});
+
+test('Bisector cosmetic: still broken with every list off is clean; no selector found names the list', async () => {
+  const { fake, b } = await cleanBisect();
+  await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 });
+  const reloads = fake.reloads.length;
+  const clean = bisectOf(await b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: false }));
+  assert.deepEqual({ kind: clean.kind, phase: clean.phase, allowed: clean.allowed }, { kind: 'cosmetic', phase: 'clean', allowed: [] });
+  assert.equal(await b.cosmeticOverride(7), null);
+  assert.equal(fake.reloads.length, reloads + 1, 'back to normal filtering');
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: true }), { error: 'not testing' });
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'keep', tabId: 7 }), { error: 'nothing found' });
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }), { bisect: clean }, 'the phase runs once');
+  // Dismissing does not reload again.
+  assert.equal(bisectOf(await b.handle({ type: 'nerd:bisect', action: 'cancel', tabId: 7 })).phase, 'cancelled');
+  assert.equal(fake.reloads.length, reloads + 1);
+
+  // A generic filter of easylist: its host-specific selectors do not help.
+  const second = await cleanBisect();
+  let v = bisectOf(await second.b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }));
+  while (v.phase === 'testing') {
+    const ov = await second.b.cosmeticOverride(7);
+    v = bisectOf(await second.b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: ov?.lists.includes('easylist') === true }));
+  }
+  assert.equal(v.phase, 'found');
+  assert.deepEqual(v.lists, ['easylist']);
+  assert.equal(v.selectors, undefined);
+  assert.deepEqual(await second.b.cosmeticOverride(7), { lists: ['easylist'], selectors: [] });
+  assert.deepEqual(await second.b.handle({ type: 'nerd:bisect', action: 'keep', tabId: 7 }), { error: 'nothing found' });
+});
+
+test('Bisector cosmetic: only after a clean network result; the custom filters are a candidate too', async () => {
+  installChrome();
+  const b = new Bisector(deps({ cosmeticCandidates: async () => structuredClone(COSMETIC) }));
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }), { error: 'not clean' });
+  await b.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 });
+  assert.deepEqual(await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }), { error: 'not clean' });
+
+  const { b: c } = await cleanBisect();
+  let v = bisectOf(await c.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }));
+  while (v.phase === 'testing') {
+    const ov = await c.cosmeticOverride(7);
+    v = bisectOf(await c.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: ov?.lists.includes('custom') === true }));
+  }
+  assert.deepEqual(v.lists, ['custom']);
+
+  // Nothing to switch off: clean at once, without a reload.
+  const { fake, b: e } = await cleanBisect({ cosmeticCandidates: async () => ({ lists: [], selectors: {} }) });
+  const n = fake.reloads.length;
+  assert.equal(bisectOf(await e.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 })).phase, 'clean');
+  assert.equal(fake.reloads.length, n);
+});
+
+test('Bisector cosmetic: cancel, navigation, restart, tab close and nerd mode off clean the override up', async () => {
+  const { fake, b, d } = await cleanBisect();
+  await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 });
+  let reloads = fake.reloads.length;
+  assert.equal(bisectOf(await b.handle({ type: 'nerd:bisect', action: 'cancel', tabId: 7 })).phase, 'cancelled');
+  assert.equal(await b.cosmeticOverride(7), null);
+  assert.equal(fake.reloads.length, reloads + 1, 'cancel reloads to normal filtering');
+
+  // Restart: the override comes back from storage.session.
+  await b.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 });
+  await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 });
+  const fresh = new Bisector(d);
+  assert.deepEqual((await fresh.cosmeticOverride(7))?.lists, COSMETIC.lists);
+  assert.equal(fresh.view(7)?.kind, 'cosmetic');
+
+  // The test reload keeps it, another site ends it.
+  fresh.onCommitted(7, 'https://www.shop.example/');
+  assert.ok(await fresh.cosmeticOverride(7));
+  fresh.onCommitted(7, 'https://elsewhere.example/');
+  assert.deepEqual(await fresh.handle({ type: 'nerd:bisect', action: 'state', tabId: 7 }), { bisect: null });
+  assert.equal(await fresh.cosmeticOverride(7), null);
+  assert.equal(fake.session.size, 0);
+
+  await fresh.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 });
+  await fresh.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 });
+  fresh.onTabGone(7);
+  await fresh.handle({ type: 'nerd:bisect', action: 'state', tabId: 7 });
+  assert.equal(await fresh.cosmeticOverride(7), null);
+
+  await fresh.handle({ type: 'nerd:bisect', action: 'start', tabId: 7 });
+  await fresh.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 });
+  reloads = fake.reloads.length;
+  await fresh.cancelAll();
+  assert.equal(await fresh.cosmeticOverride(7), null);
+  assert.equal(fake.reloads.length, reloads, 'nerd mode off does not reload');
+  assert.equal(fake.session.size, 0);
+});
+
+test('Bisector cosmetic: the badge follows the cosmetic stage', async () => {
+  const badges: [number, string | null][] = [];
+  const { b } = await cleanBisect({ badge: (tabId, text) => badges.push([tabId, text]) });
+  const v = bisectOf(await b.handle({ type: 'nerd:bisect', action: 'cosmetic', tabId: 7 }));
+  assert.deepEqual(badges.at(-1), [7, `1/${v.maxSteps}`]);
+  await b.handle({ type: 'nerd:bisect', action: 'answer', tabId: 7, works: false });
+  assert.deepEqual(badges.at(-1), [7, null]);
+});
+
+test('cosmeticOverrideOf: what each stage switches off', () => {
+  assert.equal(cosmeticOverrideOf(undefined), null);
+  const lists = startBisect(['a', 'b']);
+  assert.deepEqual(cosmeticOverrideOf({ stage: 'lists', lists }), { lists: ['a', 'b'], selectors: [] });
+  let found = lists;
+  while (found.result === 'testing') found = answerBisect(found, found.allowed.includes('a'));
+  assert.deepEqual(found.culprits, ['a']);
+  const selectors = startBisect(['.x']);
+  assert.deepEqual(cosmeticOverrideOf({ stage: 'selectors', lists: found, selectors }), { lists: [], selectors: ['.x'] });
+  assert.deepEqual(cosmeticOverrideOf({ stage: 'selectors', lists: found, selectors: answerBisect(selectors, false) }), { lists: ['a'], selectors: [] });
 });

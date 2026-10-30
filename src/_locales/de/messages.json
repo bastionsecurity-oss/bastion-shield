@@ -2951,6 +2951,50 @@
   "nerdBisectOk": {
     "message": "ok"
   },
+  "nerdBisectCosmetic": {
+    "message": "kosmetische Filter prüfen"
+  },
+  "nerdBisectAskLists": {
+    "message": "Kosmetische Filter von $P1$ Listen aus – funktioniert die Seite jetzt?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskListsOne": {
+    "message": "Kosmetische Filter von $P1$ Liste aus – funktioniert die Seite jetzt?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectors": {
+    "message": "$P1$ Selektoren dieser Website aus – funktioniert die Seite jetzt?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectorsOne": {
+    "message": "$P1$ Selektor dieser Website aus – funktioniert die Seite jetzt?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectFoundCosmetic": {
+    "message": "Gefunden: kosmetischer Filter"
+  },
+  "nerdBisectCosmeticListOnly": {
+    "message": "kein Selektor nur für diese Website – eher ein allgemeiner Filter dieser Liste"
+  },
+  "nerdBisectCosmeticClean": {
+    "message": "auch ohne kosmetische Filter fehlerhaft – eher ein Scriptlet oder die Website selbst"
+  },
   "cmdNerdBisect": {
     "message": "Nerd-Modus: Bisect (fehlerhaften Filter finden) in diesem Tab starten oder beenden"
   },

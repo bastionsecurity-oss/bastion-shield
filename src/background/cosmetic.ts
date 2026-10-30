@@ -11,6 +11,7 @@
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import { CUSTOM_COSMETIC } from '../shared/bisect.ts';
 import { entityCandidates, hostnameCandidates, registrableDomain, shardName, shardOf } from '../shared/hash.ts';
 import type {
   BlockingMode,
@@ -221,6 +222,96 @@ export function resolveHostCosmetic(
     ? Array.from(c.procedural).filter((p) => !proceduralSelectorText(p).some((t) => c.procExceptions.has(t)))
     : [];
   return { hide, soft, styles, procedural, exceptions: c.exceptions, flags: c.flags, genericAllowed };
+}
+
+/**
+ * Cosmetic filtering a running bisect switches off on one tab
+ * (nerd-bisect.ts): every cosmetic filter of `lists` (CUSTOM_COSMETIC for the
+ * custom filters), and the host-specific `selectors` as hostSelectorsByList
+ * names them. The registered generic-high CSS (bs-gh-all, lists that are not
+ * first-party protected) is not per tab and stays.
+ */
+export interface TabCosmeticOverride {
+  lists: readonly string[];
+  selectors: readonly string[];
+}
+
+/** The configuration with the override's lists switched off. */
+export function withOverride(cfg: CosmeticConfig, ov: TabCosmeticOverride): CosmeticConfig {
+  if (ov.lists.length === 0) return cfg;
+  const off = new Set(ov.lists);
+  let mask = cfg.enabledMask >>> 0;
+  let softMask = cfg.softMask >>> 0;
+  for (const id of off) {
+    const bit = cfg.listBits?.get(id);
+    if (bit !== undefined) {
+      mask = (mask & ~(1 << bit)) >>> 0;
+      softMask = (softMask & ~(1 << bit)) >>> 0;
+    }
+  }
+  return {
+    ...cfg,
+    enabledMask: mask,
+    enabledListIds: new Set(Array.from(cfg.enabledListIds).filter((id) => !off.has(id))),
+    softMask,
+    softListIds: new Set(Array.from(cfg.softListIds).filter((id) => !off.has(id))),
+    custom: off.has(CUSTOM_COSMETIC) ? EMPTY_CUSTOM : cfg.custom,
+  };
+}
+
+/** The host's cosmetic state without the switched-off selectors (an exception for each, for one tab). */
+export function withoutSelectors(host: HostCosmetic, off: ReadonlySet<string>): HostCosmetic {
+  if (off.size === 0) return host;
+  return {
+    ...host,
+    hide: host.hide.filter((s) => !off.has(s)),
+    soft: host.soft.filter((s) => !off.has(s)),
+    styles: host.styles.filter((s) => !off.has(s)),
+    procedural: host.procedural.filter((p) => !proceduralSelectorText(p).some((t) => off.has(t))),
+  };
+}
+
+/**
+ * The host-specific selectors that take effect on a host, per enabled list
+ * (CUSTOM_COSMETIC for the custom filters): selectors (kind 0) and style
+ * rules (kind 3) as their text, procedural filters as their selector text. A
+ * selector two lists share is listed under both. These are the candidates of
+ * the bisect's selector stage; `#@#` + cosmeticExceptionBody(text) cancels one.
+ */
+export function hostSelectorsByList(
+  entriesPerKey: readonly (readonly CosmeticHostEntry[] | undefined)[],
+  enabledMask: number,
+  candidates: readonly string[],
+  custom: CustomCosmetic,
+  listBits: ReadonlyMap<string, number>,
+): Map<string, string[]> {
+  const host = resolveHostCosmetic(entriesPerKey, enabledMask, candidates, custom);
+  const live = new Set([...host.hide, ...host.styles]);
+  const liveProc = new Set(host.procedural);
+  const out = new Map<string, Set<string>>();
+  const put = (id: string, kind: number, payload: string): void => {
+    let text: string | undefined;
+    if (kind === 0 || kind === 3) text = live.has(payload) ? payload : undefined;
+    else if (kind === 2 && liveProc.has(payload)) text = proceduralSelectorText(payload).pop();
+    if (text === undefined) return;
+    let set = out.get(id);
+    if (!set) out.set(id, (set = new Set()));
+    set.add(text);
+  };
+  const enabled = Array.from(listBits).filter(([, bit]) => ((enabledMask >>> bit) & 1) === 1);
+  for (const entries of entriesPerKey) {
+    if (!entries) continue;
+    for (const e of entries) {
+      if (!Array.isArray(e) || e.length < 3 || typeof e[1] !== 'string') continue;
+      for (const [id, bit] of enabled) if ((((e[2] >>> 0) >>> bit) & 1) === 1) put(id, e[0], e[1]);
+    }
+  }
+  for (const i of indexHits(customIndex(custom).specificByHost, candidates)) {
+    const s = custom.specific[i];
+    if (s.excludedHosts.length > 0 && anyIn(candidates, s.excludedHosts)) continue;
+    put(CUSTOM_COSMETIC, s.kind, s.payload);
+  }
+  return new Map(Array.from(out, ([id, set]) => [id, Array.from(set)]));
 }
 
 /** `sel1,\nsel2{display:none!important}` in groups of `groupSize` selectors (§5.2.2.6). */
@@ -502,6 +593,8 @@ export interface CosmeticConfig {
   modeOf(topHostname: string): BlockingMode;
   deAmp: boolean;
   custom: CustomCosmetic;
+  /** List id -> its bit in the cosmetic masks (needed for TabCosmeticOverride). */
+  listBits?: ReadonlyMap<string, number>;
   /** Protection off for the page whose top-level hostname is given. */
   isOff(topHostname: string): boolean;
 }
@@ -519,6 +612,8 @@ export interface CosmeticDeps {
   loadGenericHigh(meta: CosmeticMeta): Promise<Record<string, string[]> | null>;
   config(): CosmeticConfig;
   insertCss(target: CosmeticTarget, css: string): Promise<void>;
+  /** What a running bisect switches off on the tab, if anything. */
+  tabOverride?(tabId: number): Promise<TabCosmeticOverride | null>;
 }
 
 export interface FrameSender {
@@ -598,21 +693,28 @@ export class CosmeticService {
     return webHostOf(msgUrl) ?? webHostOf(sender.url) ?? webHostOf(sender.origin) ?? webHostOf(topUrl) ?? webHostOf(sender.tabUrl);
   }
 
-  private async hostResult(hostname: string, cfg: CosmeticConfig): Promise<HostResult> {
-    const cached = this.hostCache.get(hostname);
-    if (cached) return cached;
-    const candidates = hostKeyCandidates(hostname);
-    const meta = await this.deps.loadMeta();
+  /** Shard entries for every candidate key of a hostname. */
+  private async hostEntries(candidates: readonly string[], meta: CosmeticMeta | null): Promise<(CosmeticHostEntry[] | undefined)[]> {
     const shardCount = meta?.shards && meta.shards > 0 ? meta.shards : 256;
     const shardNames = candidates.map((k) => shardName(shardOf(k, shardCount)));
     const loaded = await Promise.all(Array.from(new Set(shardNames)).map(async (n) => [n, await this.shard(n)] as const));
     const byName = new Map(loaded);
-    const entriesPerKey = candidates.map((k, i) => {
+    return candidates.map((k, i) => {
       const s = byName.get(shardNames[i]);
       const hosts = s?.hosts;
       return hosts && Object.prototype.hasOwnProperty.call(hosts, k) ? hosts[k] : undefined;
     });
-    const host = resolveHostCosmetic(entriesPerKey, cfg.enabledMask, candidates, cfg.custom, cfg.softMask);
+  }
+
+  /** A tab with a bisect override bypasses the host cache. */
+  private async hostResult(hostname: string, cfg: CosmeticConfig, ov: TabCosmeticOverride | null = null): Promise<HostResult> {
+    const cached = ov ? undefined : this.hostCache.get(hostname);
+    if (cached) return cached;
+    const candidates = hostKeyCandidates(hostname);
+    const meta = await this.deps.loadMeta();
+    const entriesPerKey = await this.hostEntries(candidates, meta);
+    let host = resolveHostCosmetic(entriesPerKey, cfg.enabledMask, candidates, cfg.custom, cfg.softMask);
+    if (ov) host = withoutSelectors(host, new Set(ov.selectors));
     let extra: string[] = [];
     let softHigh: string[] = [];
     if (host.genericAllowed) {
@@ -630,8 +732,23 @@ export class CosmeticService {
     }
     const soft = softHigh.length === 0 ? host.soft : Array.from(new Set([...host.soft, ...softHigh]));
     const result: HostResult = { host, css: buildHostCss(host, extra), soft };
-    this.hostCache.set(hostname, result);
+    if (!ov) this.hostCache.set(hostname, result);
     return result;
+  }
+
+  /** The configuration for a tab: with the lists a bisect switched off there. */
+  private async tabConfig(tabId: number): Promise<{ cfg: CosmeticConfig; ov: TabCosmeticOverride | null }> {
+    const cfg = this.deps.config();
+    const ov = this.deps.tabOverride ? await this.deps.tabOverride(tabId).catch(() => null) : null;
+    return { cfg: ov ? withOverride(cfg, ov) : cfg, ov };
+  }
+
+  /** Host-specific selectors in effect on `hostname`, per enabled list (hostSelectorsByList). */
+  async hostSelectors(hostname: string): Promise<Map<string, string[]>> {
+    const cfg = this.deps.config();
+    const candidates = hostKeyCandidates(hostname);
+    const entriesPerKey = await this.hostEntries(candidates, await this.deps.loadMeta());
+    return hostSelectorsByList(entriesPerKey, cfg.enabledMask, candidates, cfg.custom, cfg.listBits ?? new Map());
   }
 
   private target(sender: FrameSender): CosmeticTarget {
@@ -646,14 +763,14 @@ export class CosmeticService {
   }
 
   async onFrame(msg: MsgCosmeticFrame, sender: FrameSender): Promise<MsgCosmeticFrameResponse> {
-    const cfg = this.deps.config();
+    const { cfg, ov } = await this.tabConfig(sender.tabId);
     const empty: MsgCosmeticFrameResponse = { off: false, css: '', procedural: [], generic: false, deAmp: cfg.deAmp };
     const topHost = webHostOf(sender.tabUrl) ?? webHostOf(msg.topUrl) ?? CosmeticService.frameHostname(msg.url, sender);
     if (topHost && cfg.isOff(topHost)) return { off: true, css: '', procedural: [], generic: false, deAmp: false };
     const hostname = CosmeticService.frameHostname(msg.url, sender, msg.topUrl);
     if (!hostname) return empty;
     try {
-      const r = await this.hostResult(hostname, cfg);
+      const r = await this.hostResult(hostname, cfg, ov);
       const { host } = r;
       const policy = softPolicy(hostname, topHost, topHost ? cfg.modeOf(topHost) : 'standard');
       const css = CosmeticService.frameCss(r, policy);
@@ -678,13 +795,13 @@ export class CosmeticService {
   }
 
   async onTokens(msg: MsgCosmeticTokens, sender: FrameSender): Promise<MsgCosmeticTokensResponse> {
-    const cfg = this.deps.config();
+    const { cfg, ov } = await this.tabConfig(sender.tabId);
     const hostname = CosmeticService.frameHostname(msg.url, sender);
     if (!hostname || !Array.isArray(msg.tokens) || msg.tokens.length === 0) return { css: '' };
     const topHost = webHostOf(sender.tabUrl) ?? hostname;
     if (cfg.isOff(topHost)) return { css: '' };
     try {
-      const { host } = await this.hostResult(hostname, cfg);
+      const { host } = await this.hostResult(hostname, cfg, ov);
       if (!host.genericAllowed) return { css: '' };
       const tokens = msg.tokens.filter((t): t is string => typeof t === 'string' && t.length > 1 && t.length < 256).slice(0, MAX_TOKENS_PER_MESSAGE);
       const index = await this.deps.loadGeneric();

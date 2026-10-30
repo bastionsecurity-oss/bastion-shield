@@ -2951,6 +2951,50 @@
   "nerdBisectOk": {
     "message": "ok"
   },
+  "nerdBisectCosmetic": {
+    "message": "check cosmetic filters"
+  },
+  "nerdBisectAskLists": {
+    "message": "Cosmetic filters of $P1$ lists off – does the page work now?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskListsOne": {
+    "message": "Cosmetic filters of $P1$ list off – does the page work now?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectors": {
+    "message": "$P1$ selectors of this site off – does the page work now?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectorsOne": {
+    "message": "$P1$ selector of this site off – does the page work now?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectFoundCosmetic": {
+    "message": "Found: cosmetic filter"
+  },
+  "nerdBisectCosmeticListOnly": {
+    "message": "no selector specific to this site – more likely a generic filter of this list"
+  },
+  "nerdBisectCosmeticClean": {
+    "message": "still broken without cosmetic filters – more likely a scriptlet or the site itself"
+  },
   "cmdNerdBisect": {
     "message": "Nerd mode: start or stop the bisect (find the breaking filter) on this tab"
   },

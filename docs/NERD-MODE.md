@@ -173,8 +173,41 @@ and removes its rules at once (the pages are not reloaded).
 
 If the page is still broken with every candidate allowed, the cause is not a
 network block (it may be a cosmetic filter, a scriptlet or the site itself).
-The bisect then says so and stops. `allow` rules do not lift cosmetic
-filtering.
+The bisect says so and offers `c` ("check cosmetic filters"), because `allow`
+rules do not lift cosmetic filtering.
+
+### Cosmetic phase
+
+`c` (action `cosmetic`) runs the same search machine a second time, over the
+enabled lists instead of hosts: "let through" now means "this list's
+cosmetic filters are off on this tab". The candidates are every enabled list,
+the ones with selectors for this site first, plus `custom` (the user's, the
+admin's and imported lists' cosmetic filters) when there are any. No DNR rule
+is involved: the Bisector keeps a per-tab override in the same
+`chrome.storage.session` record, and `CosmeticService` asks for it
+(`cosmeticOverride`) on every `cosmetic:frame` and `cosmetic:tokens` of that
+tab. It clears the lists' mask bits for specific, procedural and token-generic
+selectors and for the generic-high copy, and bypasses the host cache. Other
+tabs are not affected. Each answer reloads the tab when what is switched off
+changed.
+
+When the lists are found, the search goes on with the host-specific
+selectors those lists apply on the site (`hostSelectorsByList`: plain
+selectors, `:style()` rules and procedural filters that survive the site's
+exceptions), with the lists back on. A selector that is off acts like a
+`#@#` exception for that tab. The result shows `site##selector` with the
+list names; `k` appends `site#@#selector` (`:style()` written back) to the
+user's filters, `b` opens the filter history of `site##selector`. When the
+site's own selectors do not explain it (a generic filter), the result names
+the list only, without `k`.
+
+Still broken with every list's cosmetic filters off: "more likely a scriptlet
+or the site itself". Two parts cannot be switched off per tab and stay on in
+this phase: scriptlets (one bundle per world for every site, matched in the
+page's MAIN world before any message could reach it) and the registered
+generic-high CSS (`bs-gh-all`). The cosmetic state is cleaned up in the same
+places as the network rules (finish, cancel, keep, tab close, navigation to
+another site, nerd mode off).
 
 ## Fingerprinting counter
 

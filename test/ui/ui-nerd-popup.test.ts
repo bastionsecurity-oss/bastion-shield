@@ -77,6 +77,18 @@ test('statusline: bisect views and host lists are validated', () => {
   assert.equal(f?.culprit?.host, 'cdn.example');
   assert.deepEqual(f?.also, [{ host: 'x.example', rules: [], count: 0, filters: [], lists: [] }]);
   assert.equal(f?.partial, true);
+  // Cosmetic phase: lists and selectors instead of a culprit host.
+  const base = { tabId: 3, site: 'shop.example', step: 1, maxSteps: 3, remaining: 2, kind: 'cosmetic' };
+  assert.deepEqual(normaliseBisect({ ...base, phase: 'testing', stage: 'bogus', allowed: ['ublock', 1] }), {
+    ...base,
+    phase: 'testing',
+    stage: 'lists',
+    allowed: ['ublock'],
+  });
+  assert.equal(normaliseBisect({ ...base, phase: 'found', allowed: [] }), null, 'cosmetic found without lists is unusable');
+  const c = normaliseBisect({ ...base, phase: 'found', stage: 'selectors', allowed: ['.x'], lists: ['ublock', 2], selectors: ['.x'], partial: true });
+  assert.deepEqual([c?.stage, c?.lists, c?.selectors, c?.partial, c?.culprit], ['selectors', ['ublock'], ['.x'], true, undefined]);
+  assert.equal(normaliseBisect({ ...base, phase: 'found', allowed: [], lists: ['easylist'] })?.selectors, undefined);
   assert.deepEqual(normaliseHosts([{ host: 'a.example', count: 3, rules: ['x:1'] }, { count: 1 }, null]), [{ host: 'a.example', rules: ['x:1'], count: 3, filters: [], lists: [] }]);
   assert.deepEqual(normaliseHosts('junk'), []);
 });

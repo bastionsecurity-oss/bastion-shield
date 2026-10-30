@@ -2951,6 +2951,50 @@
   "nerdBisectOk": {
     "message": "ok"
   },
+  "nerdBisectCosmetic": {
+    "message": "vérifier les filtres cosmétiques"
+  },
+  "nerdBisectAskLists": {
+    "message": "Filtres cosmétiques de $P1$ listes désactivés – la page fonctionne-t-elle maintenant ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskListsOne": {
+    "message": "Filtres cosmétiques de $P1$ liste désactivés – la page fonctionne-t-elle maintenant ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectors": {
+    "message": "$P1$ sélecteurs de ce site désactivés – la page fonctionne-t-elle maintenant ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectAskSelectorsOne": {
+    "message": "$P1$ sélecteur de ce site désactivé – la page fonctionne-t-elle maintenant ?",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "nerdBisectFoundCosmetic": {
+    "message": "Trouvé : filtre cosmétique"
+  },
+  "nerdBisectCosmeticListOnly": {
+    "message": "aucun sélecteur propre à ce site – plutôt un filtre générique de cette liste"
+  },
+  "nerdBisectCosmeticClean": {
+    "message": "toujours défectueux sans filtres cosmétiques – plutôt un scriptlet ou le site lui-même"
+  },
   "cmdNerdBisect": {
     "message": "Mode nerd : lancer ou arrêter le bisect (trouver le filtre fautif) dans cet onglet"
   },
