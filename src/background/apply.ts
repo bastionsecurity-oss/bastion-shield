@@ -309,7 +309,7 @@ async function applyDynamic(plan: DynamicPlan, report: ApplyReport, my: CustomCo
   const dnr = chrome.declarativeNetRequest;
   const current = (await log.attempt('dynamic', () => dnr.getDynamicRules(), [] as chrome.declarativeNetRequest.Rule[])) as unknown as DnrRule[];
   let desired = plan.dynamic;
-  const isSystem = (id: number) => id >= RULE_ID.SITES_DISABLED && id <= RULE_ID.GPC_HEADER;
+  const isSystem = (id: number) => id >= RULE_ID.SITES_DISABLED && id <= RULE_ID.SYSTEM_DYNAMIC_END;
   // Tiers to fall back to if Chrome rejects the update: drop offending
   // rules first, then whole sources, keeping the system rules to the end.
   for (let attempt = 0; attempt < 8; attempt++) {

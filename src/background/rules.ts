@@ -14,7 +14,7 @@ import { canonicalJson } from './util.ts';
 /** Debounce redirect priority; see PRIORITY.DEBOUNCE for the rationale. */
 export const DEBOUNCE_PRIORITY = PRIORITY.DEBOUNCE;
 
-/** Ids 8_000_000..8_000_009 are reserved for nested "protection off" groups. */
+/** Ids 8_000_000..8_000_009 (and their 8_000_030.. companions) are reserved for nested "protection off" groups. */
 const SITES_DISABLED_SLOTS = 10;
 /** Ids 8_000_010..8_000_019 for Standard-mode first-party allow groups. */
 const STANDARD_SLOTS = RULE_ID.GPC_HEADER - RULE_ID.STANDARD_1P_ALLOW;
@@ -59,17 +59,24 @@ function domains(list: readonly string[]): string[] {
  * (including the disabled site's own iframes), so only main_frame is
  * matched. Matching sub_frame too would also unfilter that site's embeds on
  * every other site (BS-3).
+ *
+ * With `topDomains` (Chrome 145+) each group also gets an `allow` for the
+ * subresources of pages whose top-level site is in the group. Chromium
+ * extends allowAllRequests to subresources through per-frame state set when
+ * the browser processes the navigation commit; requests the renderer sends
+ * before that (the first scripts of a page, on a busy machine) were still
+ * filtered right after the user switched protection off and reloaded.
  */
-export function buildSitesDisabledRules(sites: SitesMap): SiteRules {
+export function buildSitesDisabledRules(sites: SitesMap, topDomainsSupported = false): SiteRules {
   const groups = layerScopes(explicitField(sites, 'enabled'), true).filter((g) => g.value === false && g.include !== null);
   const dynamic: DnrRule[] = [];
   const session: DnrRule[] = [];
+  let n = 0;
   for (const g of groups) {
     const include = domains(g.include ?? []);
     if (include.length === 0) continue;
     const exclude = domains(g.exclude);
-    if (dynamic.length >= SITES_DISABLED_SLOTS) break;
-    const n = dynamic.length;
+    if (n >= SITES_DISABLED_SLOTS) break;
     const dyn: DnrRule = {
       id: RULE_ID.SITES_DISABLED + n,
       priority: PRIORITY.SITE_DISABLED,
@@ -78,6 +85,16 @@ export function buildSitesDisabledRules(sites: SitesMap): SiteRules {
     };
     if (exclude.length > 0) dyn.condition.excludedRequestDomains = exclude;
     dynamic.push(dyn);
+    if (topDomainsSupported) {
+      const top: DnrRule = {
+        id: RULE_ID.SITES_DISABLED_TOP + n,
+        priority: PRIORITY.SITE_DISABLED,
+        action: { type: 'allow' },
+        condition: { topDomains: include },
+      };
+      if (exclude.length > 0) top.condition.excludedTopDomains = exclude;
+      dynamic.push(top);
+    }
     if (n < SESSION_DISABLED_SLOTS) {
       const ses: DnrRule = {
         id: RULE_ID.SESSION_SITES_DISABLED_NO_TAB + n,
@@ -88,6 +105,7 @@ export function buildSitesDisabledRules(sites: SitesMap): SiteRules {
       if (exclude.length > 0) ses.condition.excludedInitiatorDomains = exclude;
       session.push(ses);
     }
+    n++;
   }
   return { dynamic, session };
 }
@@ -155,9 +173,11 @@ export function buildProceedRule(id: number, host: string, tabId: number, resour
 
 /**
  * Fleet kill switch (policy `protectionEnabled: false`): allowAllRequests on
- * every top document (covers its whole frame tree) plus a session allow for
- * requests without a tab. They replace every other Bastion dynamic/session
- * rule while the switch is off.
+ * every top document (covers its whole frame tree), an `allow` for every
+ * subresource (the early requests allowAllRequests can miss, see
+ * buildSitesDisabledRules) and a session allow for requests without a tab.
+ * They replace every other Bastion dynamic/session rule while the switch is
+ * off.
  */
 export function buildGlobalOffRules(): SiteRules {
   return {
@@ -168,6 +188,7 @@ export function buildGlobalOffRules(): SiteRules {
         action: { type: 'allowAllRequests' },
         condition: { resourceTypes: ['main_frame'] },
       },
+      { id: RULE_ID.SITES_DISABLED_TOP, priority: PRIORITY.SITE_DISABLED, action: { type: 'allow' }, condition: {} },
     ],
     session: [
       {
@@ -335,7 +356,7 @@ export function buildSystemDynamicRules(
   opts: { topDomainsSupported: boolean; resourceTypes: readonly string[]; globallyDisabled?: boolean },
 ): { dynamic: DnrRule[]; session: DnrRule[] } {
   if (opts.globallyDisabled) return buildGlobalOffRules();
-  const disabled = buildSitesDisabledRules(sites);
+  const disabled = buildSitesDisabledRules(sites, opts.topDomainsSupported);
   const dynamic = [...disabled.dynamic, ...buildStandardModeRules(sites, settings.defaultMode, opts.topDomainsSupported)];
   if (settings.privacy.gpc) dynamic.push(buildGpcRule(opts.resourceTypes));
   return { dynamic, session: disabled.session };

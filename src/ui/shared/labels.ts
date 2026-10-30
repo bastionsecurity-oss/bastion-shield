@@ -121,5 +121,6 @@ export function dynamicRuleLabel(rulesetId: string, ruleId: number): string {
   if (ruleId >= RULE_ID.SITES_DISABLED && ruleId < RULE_ID.STANDARD_1P_ALLOW) return t('ruleSiteOff');
   if (ruleId >= RULE_ID.STANDARD_1P_ALLOW && ruleId < RULE_ID.GPC_HEADER) return t('ruleStandard1p');
   if (ruleId === RULE_ID.GPC_HEADER) return t('ruleGpc');
+  if (ruleId >= RULE_ID.SITES_DISABLED_TOP && ruleId <= RULE_ID.SYSTEM_DYNAMIC_END) return t('ruleSiteOff');
   return t('ruleDynamic');
 }

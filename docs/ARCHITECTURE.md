@@ -100,7 +100,7 @@ docs/                       this file, FILTER-LISTS.md, DEPLOYMENT-INTUNE.md, PR
 | SITE_USER_BLOCK | 60 | reserved (per-site user blocks) |
 | PROCEED_ANYWAY | 900 | session `allow` after "proceed anyway" (§4.5) |
 | BISECT_ALLOW | 950 | nerd mode: session `allow` (`requestDomains` + `tabIds`) for the hosts let through in one bisect test reload; never `main_frame`, does not lift cosmetic filters or scriptlets (docs/NERD-MODE.md) |
-| SITE_DISABLED | 1000 | dynamic `allowAllRequests` (main_frame) for sites with protection off, its session `allow` for `tabIds:[-1]`, and the global allow of the emergency switch (§10.5) |
+| SITE_DISABLED | 1000 | dynamic `allowAllRequests` (main_frame) for sites with protection off, its `topDomains` `allow` for subresources, its session `allow` for `tabIds:[-1]`, and the global allows of the emergency switch (§10.5) |
 | GPC_HEADER | 5000 | dynamic `modifyHeaders` set `Sec-GPC: 1` (applies everywhere) |
 
 Equal-priority tie-break (Chromium): allow > allowAllRequests > block > upgradeScheme > redirect > modifyHeaders. A `modifyHeaders` rule, and a redirect that only transforms the URL, applies only when its priority is higher than the highest-priority matching allow or allowAllRequests rule.
@@ -187,6 +187,7 @@ What follows from the bands:
 | Rule | Kind | Id |
 |---|---|---|
 | Sites with protection off | dynamic `allowAllRequests`, `resourceTypes:["main_frame"]`, `requestDomains:[...]` (+ `excludedRequestDomains` for re-enabled subdomains), one rule per nesting level | 8,000,000–8,000,009 |
+| Same sites, subresources of their pages (Chrome 145+) | dynamic `allow`, `topDomains:[...]` (+ `excludedTopDomains`), no resource types (every subresource), one per level, paired with the `allowAllRequests` rule of the same level | 8,000,030–8,000,039 |
 | Same sites, requests without a tab | session `allow`, `tabIds:[-1]`, `initiatorDomains:[...]` (+ exclusions), one per level | 9,000,000–9,000,009 |
 | Standard 1p allow | dynamic, one per group (§4.3) | 8,000,010–8,000,019 |
 | GPC | dynamic `modifyHeaders` `Sec-GPC: 1`, every resource type the browser reports, when `privacy.gpc` | 8,000,020 |
@@ -196,9 +197,10 @@ What follows from the bands:
 | Debounce | dynamic `redirect.regexSubstitution` → `chrome-extension://<id>/pages/bounce.html[?from=<host>]#<target>`, priority 35, from `data/debounce.json` | 2,000,000..2,000,999 |
 | Proceed anyway | session `allow` (§4.5) | 9,100,000..9,199,999 |
 | Filter bisect (nerd mode) | session `allow`, priority 950, one tab; kept across applies, removed on finish, cancel, tab close, navigation to another site, nerd mode off and stale state after a worker restart | 9,200,000..9,209,999 |
-| Emergency switch (§10.5) | replaces every rule above: dynamic `allowAllRequests` with only `resourceTypes:["main_frame"]` (every site) and a session `allow` for `tabIds:[-1]` | 8,000,000 and 9,000,000 |
+| Emergency switch (§10.5) | replaces every rule above: dynamic `allowAllRequests` with only `resourceTypes:["main_frame"]` (every site), a dynamic `allow` without conditions (every subresource) and a session `allow` for `tabIds:[-1]` | 8,000,000, 8,000,030 and 9,000,000 |
 
 - **Protection off is keyed to the top-level site**, as in uBO, uBO Lite and Brave: `allowAllRequests` on the top document covers its whole frame tree, including the disabled site's own iframes. The same site embedded as an iframe in another site stays filtered. Content scripts are excluded per frame (`excludeMatches` with `allFrames`), so cosmetic filtering, scriptlets and the privacy script are still skipped inside such embeds; the content script itself decides `off` by the tab's URL.
+- **Why the `topDomains` companion.** Chromium applies an `allowAllRequests` match to subresources through per-frame state that it records when the browser processes the navigation commit (`RulesetMatcherBase::OnDidFinishNavigation`), not per request. The renderer starts the first subresource requests a millisecond or two after that, and on a loaded machine they can reach the browser first: right after the user switches protection off and reloads, the first scripts of the page were still blocked or redirected (seen in CI on 2026-10-30). The `allow` with `topDomains` is matched per request from the request's own data, so it does not depend on that ordering; `allowAllRequests` stays for browsers before Chrome 145. Embeds of the site on other sites still have another top-level site, so BS-3 is unchanged.
 - **Debounce conversion** (`src/background/debounce.ts`, Brave's `debounce.json`, MPL-2.0, packaged as `data/debounce.json`):
   - `redirect`: the target is a query parameter; only values that start with an http(s) scheme (raw or percent-encoded) are captured. With `prepend_scheme`, scheme-less values are captured and the scheme is added (fragment `#https://<value>`).
   - `base64,redirect`: base64 values that encode `http…`, as fragment `#b64:<value>`.
@@ -465,7 +467,7 @@ In an incognito (split mode) instance, steps 5 and 7 are left to the regular ins
 
 A fleet-wide kill switch for administrators (DEPLOYMENT-INTUNE.md §9). While the policy sets `protectionEnabled: false`:
 
-- the dynamic and session rules are replaced by the global allow (§4.6): dynamic 8,000,000 `allowAllRequests` on every top document and session 9,000,000 `allow` for `tabIds:[-1]`; custom filters, debounce, Standard-mode and GPC rules are removed;
+- the dynamic and session rules are replaced by the global allow (§4.6): dynamic 8,000,000 `allowAllRequests` on every top document, dynamic 8,000,030 `allow` for every subresource and session 9,000,000 `allow` for `tabIds:[-1]`; custom filters, debounce, Standard-mode and GPC rules are removed;
 - every content-script registration is removed, so new pages get no cosmetic filtering, scriptlets or privacy script;
 - every `chrome.privacy` and content setting that Bastion controls is released;
 - static rulesets stay enabled (the allow at 1000 outranks them), so restoring is instant;
