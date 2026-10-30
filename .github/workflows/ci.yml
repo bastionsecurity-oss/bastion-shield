@@ -124,6 +124,14 @@ jobs:
           xvfb-run --auto-servernum npm run validate
           node tools/build.ts --offline
 
+      # The checks job has no lists, so the ClickFix parity test skips there.
+      # Here it runs against the lists the build just fetched and fails when
+      # uBO's ClickFix filter gains an alternative clip-detect.ts does not port.
+      - name: ClickFix rules match uBO's filter
+        env:
+          BASTION_REQUIRE_LISTS: '1'
+        run: node --test --test-name-pattern="ClickFix alternative" test/content/clipguard.test.ts
+
       - name: Rule budget of the default lists
         run: node .github/scripts/check-budget.ts dist
 

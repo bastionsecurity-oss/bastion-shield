@@ -238,13 +238,16 @@ they selected on the page is not blocked.
 The detector (`main/clip-detect.ts`) is at least as strong as uBlock filters'
 generic ClickFix filter: every alternative of that filter's regex is ported as
 a named rule (`UBO_PORTED_RULES`; a unit test fails when the cached uBlock
-list gains an alternative that is not ported). Most rules are 'high'. Hidden
+list gains an alternative that is not ported, and CI's build job runs it
+against the lists each build fetches). Most rules are 'high'. Hidden
 or minimised PowerShell windows (`-w hidden`, `-w minimized`) are 'high' even
 without a download: no web page has a legitimate reason to put one on the
 clipboard. PowerShell launched as a program (at a line start or after a path
 separator, as uBO anchors it) with `-NoP`, `-ExecutionPolicy Bypass` /
 `Unrestricted`, `iex(`, `Invoke-Expression`, `Invoke-WebRequest` or
-`-UseBasicParsing` is 'high' too. 'medium' stays for the download-and-run
+`-UseBasicParsing` is 'high' too, and so is `cmd` started quietly at a line
+start: `/q /c` after `/v:on` or `/d`, or `/q /c` followed by a `for` loop.
+'medium' stays for the download-and-run
 lines that install docs print (`curl -s … | bash`, `bash -c "$(curl …)"`,
 `irm … | iex`, `iex(irm …)`, `wget -q …/install.sh`, `msiexec` of a local
 package, a bash line with an aligned `#` comment); they are allowed when the
