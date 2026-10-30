@@ -401,7 +401,9 @@ async function applyRegistrations(deps: ApplyDeps, report: ApplyReport): Promise
   }
   const settings = deps.settings();
   const meta = deps.meta();
-  const enabledListIds = new Set((meta?.lists ?? []).filter((l) => settings.lists[l.id]).map((l) => l.id));
+  const enabledLists = (meta?.lists ?? []).filter((l) => settings.lists[l.id]);
+  const enabledListIds = new Set(enabledLists.map((l) => l.id));
+  const softListIds = new Set(enabledLists.filter((l) => l.firstPartyProtected).map((l) => l.id));
   const [cosmeticMeta, scriptletIndex, seedFiles] = await Promise.all([loadCosmeticMeta(), loadScriptletIndex(), deps.seedFiles()]);
   const desired = computeRegistrations({
     settings,
@@ -411,6 +413,7 @@ async function applyRegistrations(deps: ApplyDeps, report: ApplyReport): Promise
     scriptletIndex,
     seedFiles,
     extraGenericHideHosts: deps.custom().genericHideHosts,
+    softListIds,
   });
   const current = (await log.attempt('scripts', () => scripting.getRegisteredContentScripts(), [] as chrome.scripting.RegisteredContentScript[])) as unknown as RegisteredScript[];
   const diff = diffRegistrations(current, desired);

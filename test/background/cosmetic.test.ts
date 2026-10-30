@@ -14,12 +14,17 @@ import {
   buildHostCss,
   CosmeticService,
   customHighlyGeneric,
+  EMPTY_CUSTOM,
   genericHighCopies,
   genericHighExcludedSet,
   genericLookupFromText,
   genericSelectorsForTokens,
   hostKeyCandidates,
+  isVettedSearchEngine,
   resolveHostCosmetic,
+  softHighGeneric,
+  softPolicy,
+  splitGenericSelectors,
 } from '../../src/background/cosmetic.ts';
 import type { CosmeticConfig, CosmeticTarget, CustomCosmetic } from '../../src/background/cosmetic.ts';
 
@@ -222,13 +227,19 @@ test('generic-high filtered copy: the selectors of every enabled list on hosts t
 
 // --- service ---------------------------------------------------------------
 
-function makeService(shards: Record<string, CosmeticShard>, opts: { off?: string[]; generic?: GenericIndex; meta?: CosmeticMeta; high?: Record<string, string[]> } = {}) {
+function makeService(
+  shards: Record<string, CosmeticShard>,
+  opts: { off?: string[]; generic?: GenericIndex; meta?: CosmeticMeta; high?: Record<string, string[]>; soft?: 'b'; aggressive?: string[] } = {},
+) {
   const inserted: { target: CosmeticTarget; css: string }[] = [];
   const loads: string[] = [];
   const meta: CosmeticMeta = opts.meta ?? { shards: 256, genericHighCss: {}, genericHighExcludedHosts: {}, genericHighSelectorsFile: 'cosmetic/generic-high.json' };
   const cfg: CosmeticConfig = {
     enabledMask: A | B,
     enabledListIds: new Set(['a', 'b']),
+    softMask: opts.soft ? B : 0,
+    softListIds: new Set(opts.soft ? ['b'] : []),
+    modeOf: (h) => ((opts.aggressive ?? []).includes(h) ? 'aggressive' : 'standard'),
     deAmp: true,
     custom: { specific: [], generic: [] },
     isOff: (h) => (opts.off ?? []).some((o) => h === o || h.endsWith(`.${o}`)),
@@ -327,4 +338,97 @@ test('service: hosts skipped by the generic-high registration get the filtered c
   assert.equal(hidden.css, '', 'generichide: no copy');
   const other = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://news.ch/' }, { tabId: 1, frameId: 0, tabUrl: 'https://news.ch/' });
   assert.equal(other.css, '', 'registered CSS applies, no copy needed');
+});
+
+// --- Standard-mode soft selectors (ARCHITECTURE §5.2.8) ----------------------
+
+test('soft selectors: only first-party-protected lists, never custom filters', () => {
+  const entries: CosmeticHostEntry[] = [
+    [0, '.only-b', B],
+    [0, '.a-and-b', A | B],
+    [0, '.only-a', A],
+    [0, '.b-and-disabled', B | C],
+    [0, '.custom', B],
+  ];
+  const custom: CustomCosmetic = { specific: [{ kind: 0, payload: '.custom', hosts: ['example.com'], excludedHosts: [], raw: 'example.com##.custom' }], generic: [] };
+  const r = resolveHostCosmetic([entries], A | B, ['example.com'], custom, B);
+  assert.deepEqual(r.hide.sort(), ['.a-and-b', '.custom', '.only-a']);
+  assert.deepEqual(r.soft.sort(), ['.b-and-disabled', '.only-b']);
+  const all = resolveHostCosmetic([entries], A | B, ['example.com'], custom);
+  assert.deepEqual(all.soft, [], 'without a soft mask everything is hard');
+  const ex = resolveHostCosmetic([[...entries, [1, '.only-b', A]]], A | B, ['example.com'], EMPTY_CUSTOM, B);
+  assert.ok(!ex.soft.includes('.only-b'), 'exceptions apply to soft selectors');
+});
+
+test('soft selectors: generic tokens split the same way', () => {
+  const index: GenericIndex = { tokens: { '.x': [['.x', B], ['.x.y', A | B], ['div.x', A]] } };
+  const custom: CustomCosmetic = { specific: [], generic: [{ selector: '.x .c', token: '.x', excludedHosts: [], raw: '##.x .c' }] };
+  const r = splitGenericSelectors(index, ['.x'], A | B, { exceptions: new Set() }, ['example.com'], custom, B);
+  assert.deepEqual(r.hard.sort(), ['.x .c', '.x.y', 'div.x']);
+  assert.deepEqual(r.soft, ['.x']);
+  assert.deepEqual(genericSelectorsForTokens(index, ['.x'], A | B, { exceptions: new Set() }, ['example.com'], custom).sort(), ['.x', '.x .c', '.x.y', 'div.x']);
+});
+
+test('soft selectors: highly generic CSS of protected lists, minus exceptions', () => {
+  const high = { a: ['.ha'], b: ['.hb', '.hx'], c: ['.hc'] };
+  assert.deepEqual(softHighGeneric(high, new Set(['b']), { exceptions: new Set(['.hx']), genericAllowed: true }), ['.hb']);
+  assert.deepEqual(softHighGeneric(high, new Set(['b']), { exceptions: new Set(), genericAllowed: false }), []);
+  assert.deepEqual(softHighGeneric(null, new Set(['b']), { exceptions: new Set(), genericAllowed: true }), []);
+});
+
+test('soft policy follows Brave: aggressive, cross-host frames and YouTube hide; search engines drop', () => {
+  assert.equal(softPolicy('www.20min.ch', 'www.20min.ch', 'standard'), 'soft');
+  assert.equal(softPolicy('www.20min.ch', 'www.20min.ch', 'aggressive'), 'hard');
+  assert.equal(softPolicy('ads.example.net', 'www.20min.ch', 'standard'), 'hard');
+  assert.equal(softPolicy('m.20min.ch', 'www.20min.ch', 'standard'), 'hard', 'another origin, even same-site');
+  assert.equal(softPolicy('www.youtube.com', 'www.youtube.com', 'standard'), 'hard');
+  assert.equal(softPolicy('www.google.ch', 'www.google.ch', 'standard'), 'drop');
+  assert.equal(softPolicy('www.google.co.uk', 'www.google.co.uk', 'standard'), 'drop');
+  assert.equal(softPolicy('duckduckgo.com', 'duckduckgo.com', 'standard'), 'drop');
+  assert.equal(softPolicy('search.brave.com', 'search.brave.com', 'aggressive'), 'hard');
+  assert.equal(softPolicy('www.google.ch', null, 'standard'), 'drop');
+  assert.equal(isVettedSearchEngine('maps.google.com'), true);
+  assert.equal(isVettedSearchEngine('googleads.example.com'), false);
+  assert.equal(isVettedSearchEngine('bing.example.com'), false);
+});
+
+test('service: Standard mode sends soft selectors apart, Aggressive mode hides them', async () => {
+  const meta: CosmeticMeta = {
+    shards: 256,
+    genericHighCss: { a: 'cosmetic/generic-high/a.css', b: 'cosmetic/generic-high/b.css' },
+    genericHighExcludedHosts: { a: [], b: ['example.com'] },
+    genericHighSelectorsFile: 'cosmetic/generic-high.json',
+  };
+  const high = { a: ['.ha'], b: ['.hb'] };
+  const shards = shardsFor({ 'example.com': [[0, '.hard', A], [0, '.soft', B]], 'google.ch': [[0, '.serp-ad', B], [0, '.serp-hard', A]] });
+  const { svc, inserted } = makeService(shards, { meta, high, soft: 'b', aggressive: ['agg.example.com'], generic: { tokens: { '.t': [['.t', B], ['.t2', A]] } } });
+
+  const std = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://www.example.com/' }, { tabId: 1, frameId: 0, tabUrl: 'https://www.example.com/' });
+  assert.match(std.css, /\.hard/);
+  assert.doesNotMatch(std.css, /\.soft|\.hb/);
+  assert.doesNotMatch(std.css, /\.ha\b/, "list a's highly generic CSS is registered; example.com is only excluded by soft list b");
+  assert.deepEqual(std.soft?.sort(), ['.hb', '.soft']);
+  assert.equal(std.site, 'example.com');
+  assert.doesNotMatch(inserted.at(-1)!.css, /\.soft/, 'soft selectors never reach insertCSS (USER origin cannot be undone)');
+
+  const agg = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://agg.example.com/' }, { tabId: 1, frameId: 0, tabUrl: 'https://agg.example.com/' });
+  assert.match(agg.css, /\.soft/);
+  assert.match(agg.css, /\.hb/);
+  assert.equal(agg.soft, undefined);
+
+  const sub = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://www.example.com/frame' }, { tabId: 1, frameId: 3, tabUrl: 'https://news.ch/' });
+  assert.match(sub.css, /\.soft/, 'a frame of another site hides like Aggressive mode');
+  assert.equal(sub.soft, undefined);
+
+  const serp = await svc.onFrame({ type: 'cosmetic:frame', url: 'https://www.google.ch/search' }, { tabId: 1, frameId: 0, tabUrl: 'https://www.google.ch/search' });
+  assert.match(serp.css, /\.serp-hard/);
+  assert.doesNotMatch(serp.css, /\.serp-ad|\.hb/);
+  assert.equal(serp.soft, undefined, 'search engines: soft selectors are not applied at all');
+
+  const tok = await svc.onTokens({ type: 'cosmetic:tokens', url: 'https://www.example.com/', tokens: ['.t'] }, { tabId: 1, frameId: 0, tabUrl: 'https://www.example.com/' });
+  assert.equal(tok.css, '.t2{display:none!important}');
+  assert.deepEqual(tok.soft, ['.t']);
+  const tokAgg = await svc.onTokens({ type: 'cosmetic:tokens', url: 'https://agg.example.com/', tokens: ['.t'] }, { tabId: 1, frameId: 0, tabUrl: 'https://agg.example.com/' });
+  assert.match(tokAgg.css, /\.t,\n\.t2|\.t2,\n\.t/);
+  assert.equal(tokAgg.soft, undefined);
 });

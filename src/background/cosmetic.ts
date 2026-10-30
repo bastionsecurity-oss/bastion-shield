@@ -11,8 +11,9 @@
 // SPDX-FileCopyrightText: 2026 Bastion Security GmbH and contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { entityCandidates, hostnameCandidates, shardName, shardOf } from '../shared/hash.ts';
+import { entityCandidates, hostnameCandidates, registrableDomain, shardName, shardOf } from '../shared/hash.ts';
 import type {
+  BlockingMode,
   CosmeticHostEntry,
   CosmeticMeta,
   CosmeticShard,
@@ -100,7 +101,10 @@ export function customHasTokens(custom: CustomCosmetic): boolean {
 
 /** Everything we know about one hostname after merging all sources. */
 export interface HostCosmetic {
+  /** Hide selectors of at least one always-apply list or a custom filter. */
   hide: string[];
+  /** Hide selectors only first-party-protected lists have: un-hidden by the Standard-mode heuristic (§5.2.8). */
+  soft: string[];
   styles: string[];
   procedural: string[];
   /** Selectors excepted on this host (#@#sel); also apply to generic data. */
@@ -112,6 +116,8 @@ export interface HostCosmetic {
 
 interface Collected {
   hide: Set<string>;
+  /** Hide selectors from an always-apply list or a custom filter. */
+  hard: Set<string>;
   styles: Set<string>;
   procedural: Set<string>;
   exceptions: Set<string>;
@@ -120,13 +126,14 @@ interface Collected {
 }
 
 function newCollected(): Collected {
-  return { hide: new Set(), styles: new Set(), procedural: new Set(), exceptions: new Set(), procExceptions: new Set(), flags: new Set() };
+  return { hide: new Set(), hard: new Set(), styles: new Set(), procedural: new Set(), exceptions: new Set(), procExceptions: new Set(), flags: new Set() };
 }
 
-function addEntry(c: Collected, kind: number, payload: string): void {
+function addEntry(c: Collected, kind: number, payload: string, hard: boolean): void {
   switch (kind) {
     case 0:
       c.hide.add(payload);
+      if (hard) c.hard.add(payload);
       break;
     case 1:
       c.exceptions.add(payload);
@@ -176,14 +183,18 @@ function proceduralSelectorText(payload: string): string[] {
  * Merge shard entries (already looked up for every candidate key) and custom
  * filters into the cosmetic state of one host, applying list masks,
  * exceptions (kind 1 removes kind 0/3 with the same text, kind 5 removes
- * kind 2) and flags (generichide, specifichide, elemhide).
+ * kind 2) and flags (generichide, specifichide, elemhide). Hide selectors
+ * that only lists in `softMask` (enabled first-party-protected lists) have
+ * go to `soft`; custom filters are always hard.
  */
 export function resolveHostCosmetic(
   entriesPerKey: readonly (readonly CosmeticHostEntry[] | undefined)[],
   enabledMask: number,
   candidates: readonly string[],
   custom: CustomCosmetic = EMPTY_CUSTOM,
+  softMask = 0,
 ): HostCosmetic {
+  const hardMask = (enabledMask & ~softMask) >>> 0;
   const c = newCollected();
   for (const entries of entriesPerKey) {
     if (!entries) continue;
@@ -191,23 +202,25 @@ export function resolveHostCosmetic(
       if (!Array.isArray(e) || e.length < 3) continue;
       const [kind, payload, mask] = e;
       if (typeof payload !== 'string' || ((mask >>> 0) & (enabledMask >>> 0)) === 0) continue;
-      addEntry(c, kind, payload);
+      addEntry(c, kind, payload, ((mask >>> 0) & hardMask) !== 0);
     }
   }
   for (const i of indexHits(customIndex(custom).specificByHost, candidates)) {
     const s = custom.specific[i];
     if (s.excludedHosts.length > 0 && anyIn(candidates, s.excludedHosts)) continue;
-    addEntry(c, s.kind, s.payload);
+    addEntry(c, s.kind, s.payload, true);
   }
   const elemhide = c.flags.has('elemhide');
   const specificAllowed = !(elemhide || c.flags.has('specifichide'));
   const genericAllowed = !(elemhide || c.flags.has('generichide'));
-  const hide = specificAllowed ? Array.from(c.hide).filter((s) => !c.exceptions.has(s)) : [];
+  const all = specificAllowed ? Array.from(c.hide).filter((s) => !c.exceptions.has(s)) : [];
+  const hide = all.filter((s) => c.hard.has(s));
+  const soft = all.filter((s) => !c.hard.has(s));
   const styles = specificAllowed ? Array.from(c.styles).filter((s) => !c.exceptions.has(s)) : [];
   const procedural = specificAllowed
     ? Array.from(c.procedural).filter((p) => !proceduralSelectorText(p).some((t) => c.procExceptions.has(t)))
     : [];
-  return { hide, styles, procedural, exceptions: c.exceptions, flags: c.flags, genericAllowed };
+  return { hide, soft, styles, procedural, exceptions: c.exceptions, flags: c.flags, genericAllowed };
 }
 
 /** `sel1,\nsel2{display:none!important}` in groups of `groupSize` selectors (§5.2.2.6). */
@@ -326,7 +339,23 @@ export function genericSelectorsForTokens(
   candidates: readonly string[],
   custom: CustomCosmetic = EMPTY_CUSTOM,
 ): string[] {
+  const { hard, soft } = splitGenericSelectors(index, tokens, enabledMask, host, candidates, custom, 0);
+  return hard.concat(soft);
+}
+
+/** genericSelectorsForTokens, split like resolveHostCosmetic: `soft` holds the selectors only `softMask` lists have. */
+export function splitGenericSelectors(
+  index: GenericIndex | GenericLookup | null,
+  tokens: readonly string[],
+  enabledMask: number,
+  host: Pick<HostCosmetic, 'exceptions'>,
+  candidates: readonly string[],
+  custom: CustomCosmetic,
+  softMask: number,
+): { hard: string[]; soft: string[] } {
   const out = new Set<string>();
+  const hard = new Set<string>();
+  const hardMask = (enabledMask & ~softMask) >>> 0;
   const wanted = new Set(tokens);
   const lookup = index === null || typeof index !== 'object' ? null : 'tokens' in index ? lookupFromIndex(index) : index;
   if (lookup) {
@@ -339,6 +368,7 @@ export function genericSelectorsForTokens(
         if (typeof sel !== 'string' || ((mask >>> 0) & (enabledMask >>> 0)) === 0) continue;
         if (host.exceptions.has(sel)) continue;
         out.add(sel);
+        if (((mask >>> 0) & hardMask) !== 0) hard.add(sel);
       }
     }
   }
@@ -347,8 +377,10 @@ export function genericSelectorsForTokens(
     if (host.exceptions.has(g.selector)) continue;
     if (g.excludedHosts.length > 0 && anyIn(candidates, g.excludedHosts)) continue;
     out.add(g.selector);
+    hard.add(g.selector);
   }
-  return Array.from(out);
+  const all = Array.from(out);
+  return { hard: all.filter((s) => hard.has(s)), soft: all.filter((s) => !hard.has(s)) };
 }
 
 /** Custom highly generic selectors (no token): injected with the frame CSS. */
@@ -409,6 +441,52 @@ export function genericHighCopies(
   return out;
 }
 
+/**
+ * Highly generic selectors of the enabled first-party-protected lists, minus
+ * the host's exceptions. They are not registered statically (bs-gh-all holds
+ * the always-apply lists only), so the SW serves them with every frame:
+ * soft in Standard mode, as CSS otherwise (§5.2.4, §5.2.8).
+ */
+export function softHighGeneric(
+  selectorsByList: Record<string, string[]> | null,
+  softListIds: ReadonlySet<string>,
+  host: Pick<HostCosmetic, 'exceptions' | 'genericAllowed'>,
+): string[] {
+  if (!selectorsByList || !host.genericAllowed) return [];
+  const out = new Set<string>();
+  for (const listId of Array.from(softListIds).sort()) {
+    for (const sel of selectorsByList[listId] ?? []) if (typeof sel === 'string' && !host.exceptions.has(sel)) out.add(sel);
+  }
+  return Array.from(out);
+}
+
+/** Brave's vetted search engines (cosmetic_filters_js_handler.cc). */
+const SEARCH_ENGINES = new Set(['duckduckgo', 'qwant', 'bing', 'startpage', 'google', 'yandex', 'ecosia', 'brave']);
+
+/** True when the label before the public suffix of the host's registrable domain is a vetted search engine. */
+export function isVettedSearchEngine(hostname: string): boolean {
+  const site = registrableDomain(hostname);
+  const i = site.indexOf('.');
+  return i > 0 && SEARCH_ENGINES.has(site.slice(0, i));
+}
+
+/**
+ * How a frame treats soft selectors (Brave's enabled_1st_party_cf_):
+ *   - 'hard': hidden like every other selector: Aggressive mode, frames on
+ *     another host than the top page (Brave: cross-origin to the main
+ *     frame) and youtube.com, which Brave always filters aggressively;
+ *   - 'drop': Standard mode on a vetted search engine: not applied at all;
+ *   - 'soft': Standard mode: hidden, then checked by the content script.
+ */
+export function softPolicy(frameHost: string, topHost: string | null, mode: BlockingMode): 'hard' | 'soft' | 'drop' {
+  if (mode === 'aggressive') return 'hard';
+  const f = frameHost.toLowerCase();
+  if (topHost !== null && topHost.toLowerCase() !== f) return 'hard';
+  if (registrableDomain(f) === 'youtube.com') return 'hard';
+  if (isVettedSearchEngine(f)) return 'drop';
+  return 'soft';
+}
+
 // ---------------------------------------------------------------------------
 // Service (runtime)
 // ---------------------------------------------------------------------------
@@ -416,6 +494,12 @@ export function genericHighCopies(
 export interface CosmeticConfig {
   enabledMask: number;
   enabledListIds: ReadonlySet<string>;
+  /** Bits of the enabled first-party-protected lists (catalog `firstPartyProtected`). */
+  softMask: number;
+  /** Ids of the enabled first-party-protected lists. */
+  softListIds: ReadonlySet<string>;
+  /** Blocking mode of the page whose top-level hostname is given. */
+  modeOf(topHostname: string): BlockingMode;
   deAmp: boolean;
   custom: CustomCosmetic;
   /** Protection off for the page whose top-level hostname is given. */
@@ -451,7 +535,19 @@ export interface FrameSender {
 
 interface HostResult {
   host: HostCosmetic;
+  /** CSS of the hard selectors and :style() rules. */
   css: string;
+  /** Soft specific selectors plus the soft highly generic ones. */
+  soft: string[];
+  /** css plus the soft selectors, built on first use. */
+  hardCss?: string;
+}
+
+/** Enabled lists whose highly generic CSS is registered statically (bs-gh-all). */
+function staticListIds(cfg: CosmeticConfig): Set<string> {
+  const out = new Set<string>();
+  for (const id of cfg.enabledListIds) if (!cfg.softListIds.has(id)) out.add(id);
+  return out;
 }
 
 export class CosmeticService {
@@ -516,26 +612,37 @@ export class CosmeticService {
       const hosts = s?.hosts;
       return hosts && Object.prototype.hasOwnProperty.call(hosts, k) ? hosts[k] : undefined;
     });
-    const host = resolveHostCosmetic(entriesPerKey, cfg.enabledMask, candidates, cfg.custom);
+    const host = resolveHostCosmetic(entriesPerKey, cfg.enabledMask, candidates, cfg.custom, cfg.softMask);
     let extra: string[] = [];
+    let softHigh: string[] = [];
     if (host.genericAllowed) {
       extra = customHighlyGeneric(cfg.custom, host, candidates);
       if (meta) {
-        const excluded = this.excludedSet(meta, cfg.enabledListIds);
+        const statics = staticListIds(cfg);
+        const excluded = this.excludedSet(meta, statics);
         const parents = hostnameCandidates(hostname);
         if (excluded.size > 0 && anyIn(parents, excluded)) {
           const selectors = await this.deps.loadGenericHigh(meta);
-          extra = extra.concat(genericHighCopies(meta, selectors, cfg.enabledListIds, parents, host, excluded));
+          extra = extra.concat(genericHighCopies(meta, selectors, statics, parents, host, excluded));
         }
+        if (cfg.softListIds.size > 0) softHigh = softHighGeneric(await this.deps.loadGenericHigh(meta), cfg.softListIds, host);
       }
     }
-    const result: HostResult = { host, css: buildHostCss(host, extra) };
+    const soft = softHigh.length === 0 ? host.soft : Array.from(new Set([...host.soft, ...softHigh]));
+    const result: HostResult = { host, css: buildHostCss(host, extra), soft };
     this.hostCache.set(hostname, result);
     return result;
   }
 
   private target(sender: FrameSender): CosmeticTarget {
     return sender.documentId ? { tabId: sender.tabId, frameId: sender.frameId, documentId: sender.documentId } : { tabId: sender.tabId, frameId: sender.frameId };
+  }
+
+  /** Frame CSS for a soft policy: soft selectors join the CSS only when they are hidden like the rest. */
+  private static frameCss(r: HostResult, policy: 'hard' | 'soft' | 'drop'): string {
+    if (policy !== 'hard' || r.soft.length === 0) return r.css;
+    if (r.hardCss === undefined) r.hardCss = [r.css, buildHideCss(r.soft)].filter((c) => c !== '').join('\n');
+    return r.hardCss;
   }
 
   async onFrame(msg: MsgCosmeticFrame, sender: FrameSender): Promise<MsgCosmeticFrameResponse> {
@@ -546,7 +653,10 @@ export class CosmeticService {
     const hostname = CosmeticService.frameHostname(msg.url, sender, msg.topUrl);
     if (!hostname) return empty;
     try {
-      const { host, css } = await this.hostResult(hostname, cfg);
+      const r = await this.hostResult(hostname, cfg);
+      const { host } = r;
+      const policy = softPolicy(hostname, topHost, topHost ? cfg.modeOf(topHost) : 'standard');
+      const css = CosmeticService.frameCss(r, policy);
       if (css) {
         // The content script adopts the CSS at once; insertCSS (USER origin)
         // makes it robust against page styles. Do not delay the reply for it.
@@ -554,7 +664,13 @@ export class CosmeticService {
       }
       // generic.json is only loaded when the first tokens arrive, keeping this reply fast.
       const generic = host.genericAllowed && (cfg.enabledMask !== 0 || customHasTokens(cfg.custom));
-      return { off: false, css, procedural: host.procedural, generic, deAmp: cfg.deAmp };
+      const res: MsgCosmeticFrameResponse = { off: false, css, procedural: host.procedural, generic, deAmp: cfg.deAmp };
+      // `site` also tells the content script to check soft selectors that arrive with token replies.
+      if (policy === 'soft' && cfg.softMask !== 0) {
+        res.soft = r.soft;
+        res.site = registrableDomain(hostname);
+      }
+      return res;
     } catch (e) {
       log.warn('cosmetic', 'frame', hostname, e);
       return empty;
@@ -572,11 +688,12 @@ export class CosmeticService {
       if (!host.genericAllowed) return { css: '' };
       const tokens = msg.tokens.filter((t): t is string => typeof t === 'string' && t.length > 1 && t.length < 256).slice(0, MAX_TOKENS_PER_MESSAGE);
       const index = await this.deps.loadGeneric();
-      const selectors = genericSelectorsForTokens(index, tokens, cfg.enabledMask, host, hostKeyCandidates(hostname), cfg.custom);
-      if (selectors.length === 0) return { css: '' };
-      const css = buildHideCss(selectors);
-      void this.deps.insertCss(this.target(sender), css).catch((e: unknown) => log.warn('cosmetic', 'insertCSS', e));
-      return { css };
+      const policy = softPolicy(hostname, topHost, cfg.modeOf(topHost));
+      const split = splitGenericSelectors(index, tokens, cfg.enabledMask, host, hostKeyCandidates(hostname), cfg.custom, cfg.softMask);
+      const hard = policy === 'hard' ? split.hard.concat(split.soft) : split.hard;
+      const css = hard.length === 0 ? '' : buildHideCss(hard);
+      if (css) void this.deps.insertCss(this.target(sender), css).catch((e: unknown) => log.warn('cosmetic', 'insertCSS', e));
+      return policy === 'soft' && split.soft.length !== 0 ? { css, soft: split.soft } : { css };
     } catch (e) {
       log.warn('cosmetic', 'tokens', hostname, e);
       return { css: '' };
