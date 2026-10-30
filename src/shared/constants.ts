@@ -108,6 +108,17 @@ export const RULE_ID = {
   STANDARD_1P_ALLOW_SITES: 8_000_011,
   /** Dynamic: GPC header rule. */
   GPC_HEADER: 8_000_020,
+  /**
+   * Dynamic: one `allow` per SITES_DISABLED group for every subresource whose
+   * top-level site has protection off (`topDomains`, Chrome 145+; without a
+   * condition under the kill switch). Chromium applies allowAllRequests to
+   * subresources through per-frame state it records when the navigation
+   * commits in the browser, so the first requests of a freshly loaded page
+   * can miss it; this rule is matched per request.
+   */
+  SITES_DISABLED_TOP: 8_000_030,
+  /** Last id of Bastion's own dynamic rules (protection off, Standard, GPC). */
+  SYSTEM_DYNAMIC_END: 8_000_039,
   /** Session: tabId -1 (service worker / no-frame) allow for disabled sites. */
   SESSION_SITES_DISABLED_NO_TAB: 9_000_000,
   /** Session: proceed-anyway allows, one per (tab, host): 9_100_000 + n. */
@@ -172,7 +183,7 @@ export function savesRequest(kind: string): boolean {
  */
 export function isSystemAllowRuleId(rulesetId: string, ruleId: number): boolean {
   if (rulesetId === '_dynamic') {
-    return ruleId >= RULE_ID.SITES_DISABLED && ruleId <= RULE_ID.GPC_HEADER;
+    return ruleId >= RULE_ID.SITES_DISABLED && ruleId <= RULE_ID.SYSTEM_DYNAMIC_END;
   }
   if (rulesetId === '_session') {
     return ruleId >= RULE_ID.SESSION_SITES_DISABLED_NO_TAB && ruleId <= RULE_ID.SESSION_BISECT_END;

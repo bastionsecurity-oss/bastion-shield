@@ -38,6 +38,7 @@ import {
   writeText,
   type Logger,
 } from './lib/util.ts';
+import { HttpBodyTooLargeError, httpGet, type HttpGetResponse } from './lib/http-get.ts';
 
 export const CACHE_DIR = join(ROOT, '.cache', 'lists');
 export const LOCK_FILE = join(ROOT, 'filters', 'lock.json');
@@ -166,6 +167,11 @@ function looksLikeHtml(text: string, contentType: string | null): boolean {
   return head.startsWith('<!doctype') || head.startsWith('<html') || head.startsWith('<head') || head.startsWith('<?xml');
 }
 
+function header(res: HttpGetResponse, name: string): string | undefined {
+  const v = res.headers[name];
+  return Array.isArray(v) ? v[0] : v;
+}
+
 function decode(body: Uint8Array): string {
   return stripBom(new TextDecoder('utf-8').decode(body)).replace(/\r\n?/g, '\n');
 }
@@ -215,48 +221,37 @@ async function downloadUncached(url: string, offline: boolean, log: Logger, cach
     const headers: Record<string, string> = { 'user-agent': ua, accept: 'text/plain, */*;q=0.5' };
     if (cached?.meta.etag) headers['if-none-match'] = cached.meta.etag;
     if (cached?.meta.lastModifiedHeader) headers['if-modified-since'] = cached.meta.lastModifiedHeader;
-    let res: Response;
+    let res: HttpGetResponse;
     try {
-      res = await fetch(url, { headers, redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS) });
+      res = await httpGet(url, { headers, timeoutMs: TIMEOUT_MS, maxBytes: MAX_BYTES });
     } catch (e) {
+      if (e instanceof HttpBodyTooLargeError) throw new FetchError(`${url}: ${e.message}`);
       lastError = `network error: ${(e as Error).message}`;
       continue;
     }
-    if (res.status === 304 && cached) {
-      await res.body?.cancel().catch(() => {});
-      return fromCache(cached);
-    }
+    if (res.status === 304 && cached) return fromCache(cached);
     if (res.status === 429 || res.status >= 500) {
       lastError = `HTTP ${res.status}`;
-      await res.body?.cancel().catch(() => {});
       continue;
     }
-    if (!res.ok) {
+    if (res.status < 200 || res.status > 299) {
       lastError = `HTTP ${res.status}`;
-      await res.body?.cancel().catch(() => {});
       break; // 4xx: retrying will not help
     }
-    let body: Buffer;
-    try {
-      body = Buffer.from(await res.arrayBuffer());
-    } catch (e) {
-      lastError = `read error: ${(e as Error).message}`;
-      continue;
-    }
-    if (body.length > MAX_BYTES) throw new FetchError(`${url}: response larger than ${MAX_BYTES} bytes`);
+    const body = res.body;
     const text = decode(body);
     if (text.trim() === '') {
       lastError = 'empty response';
       continue;
     }
-    if (looksLikeHtml(text, res.headers.get('content-type'))) {
+    if (looksLikeHtml(text, header(res, 'content-type') ?? null)) {
       // Captive portals, CDN error pages and "list moved" pages are HTML.
-      throw new FetchError(`${url}: refusing HTML response (content-type ${res.headers.get('content-type') ?? 'unknown'})`);
+      throw new FetchError(`${url}: refusing HTML response (content-type ${header(res, 'content-type') ?? 'unknown'})`);
     }
     const meta: CacheMeta = {
       url,
-      etag: res.headers.get('etag') ?? undefined,
-      lastModifiedHeader: res.headers.get('last-modified') ?? undefined,
+      etag: header(res, 'etag'),
+      lastModifiedHeader: header(res, 'last-modified'),
       sha256: sha256(body),
       bytes: body.length,
       fetchedAt: cached && cached.meta.sha256 === sha256(body) ? cached.meta.fetchedAt : new Date().toISOString(),

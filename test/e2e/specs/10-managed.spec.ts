@@ -84,7 +84,8 @@ test.describe('managed policy', () => {
     // Switch protection off fleet-wide.
     const off = await pushPolicy({ protectionEnabled: false, organizationName: 'Bastion e2e' }, isGlobalOff);
     expect(isGlobalOff(off), `global allowAllRequests and no content scripts\n${JSON.stringify(off.dynamicRules)}\nscripts=${off.scripts.length}`).toBe(true);
-    const others = (off.dynamicRules as Rule[]).filter((r) => r.id !== RULE_ID.SITES_DISABLED);
+    // SITES_DISABLED_TOP is the global subresource allow that goes with it.
+    const others = (off.dynamicRules as Rule[]).filter((r) => r.id !== RULE_ID.SITES_DISABLED && r.id !== RULE_ID.SITES_DISABLED_TOP);
     expect.soft(others.map((r) => r.id), 'custom, Standard, GPC and debounce rules are removed while the switch is off').toEqual([]);
     expect.soft((off.sessionRules as Rule[]).some((r) => r.id === RULE_ID.SESSION_SITES_DISABLED_NO_TAB && (r.condition.tabIds ?? []).includes(-1)), 'tabId -1 session allow').toBe(true);
 

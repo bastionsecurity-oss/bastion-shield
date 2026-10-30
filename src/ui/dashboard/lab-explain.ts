@@ -119,6 +119,7 @@ export function allowReason(hit: Pick<ExplainHit, 'source' | 'ruleId'>): AllowRe
   if (hit.source === '_dynamic') {
     if (id >= RULE_ID.SITES_DISABLED && id < RULE_ID.STANDARD_1P_ALLOW) return 'siteOff';
     if (id >= RULE_ID.STANDARD_1P_ALLOW && id < RULE_ID.GPC_HEADER) return 'standard1p';
+    if (id >= RULE_ID.SITES_DISABLED_TOP && id <= RULE_ID.SYSTEM_DYNAMIC_END) return 'siteOff';
   }
   return 'exception';
 }

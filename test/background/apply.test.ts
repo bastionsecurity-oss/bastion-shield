@@ -228,6 +228,7 @@ test('fleet kill switch: global allow, no scripts, privacy released; full restor
   await applier.now();
   assert.deepEqual(fake.dynamic, [
     { id: RULE_ID.SITES_DISABLED, priority: PRIORITY.SITE_DISABLED, action: { type: 'allowAllRequests' }, condition: { resourceTypes: ['main_frame'] } },
+    { id: RULE_ID.SITES_DISABLED_TOP, priority: PRIORITY.SITE_DISABLED, action: { type: 'allow' }, condition: {} },
   ]);
   assert.deepEqual(
     fake.session.sort((a, b) => (a.id as number) - (b.id as number)),
@@ -259,5 +260,5 @@ test('kill switch removes registrations even without build metadata', async () =
   const { applier } = setup({ managed: { protectionEnabled: false } }, {}, null);
   await applier.now();
   assert.equal(fake.scripts.size, 0);
-  assert.equal(fake.dynamic.length, 1);
+  assert.deepEqual(fake.dynamic.map((r) => r.id), [RULE_ID.SITES_DISABLED, RULE_ID.SITES_DISABLED_TOP]);
 });

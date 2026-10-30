@@ -48,6 +48,35 @@ test('disabled sites: allowAllRequests on the top document only + tabId -1 sessi
   });
 });
 
+test('with topDomains: a per-request allow for subresources of the disabled top-level site', () => {
+  const { dynamic } = buildSitesDisabledRules({ 'example.com': { enabled: false }, 'shop.example.com': { enabled: true }, 'b.ch': { enabled: false } }, true);
+  assert.deepEqual(
+    dynamic.map((r) => [r.id, r.action.type]),
+    [
+      [RULE_ID.SITES_DISABLED, 'allowAllRequests'],
+      [RULE_ID.SITES_DISABLED_TOP, 'allow'],
+    ],
+  );
+  // No resourceTypes: every subresource (and sub_frame) of a page whose top
+  // level is the site, never the site's embeds on other sites (BS-3).
+  assert.deepEqual(dynamic[1], {
+    id: RULE_ID.SITES_DISABLED_TOP,
+    priority: PRIORITY.SITE_DISABLED,
+    action: { type: 'allow' },
+    condition: { topDomains: ['b.ch', 'example.com'], excludedTopDomains: ['shop.example.com'] },
+  });
+  assert.equal(isSystemAllowRuleId('_dynamic', RULE_ID.SITES_DISABLED_TOP + 9), true);
+});
+
+test('nested groups keep their companions paired by slot', () => {
+  const { dynamic } = buildSitesDisabledRules({ 'example.com': { enabled: false }, 'shop.example.com': { enabled: true }, 'cart.shop.example.com': { enabled: false } }, true);
+  assert.deepEqual(
+    dynamic.map((r) => r.id),
+    [RULE_ID.SITES_DISABLED, RULE_ID.SITES_DISABLED_TOP, RULE_ID.SITES_DISABLED + 1, RULE_ID.SITES_DISABLED_TOP + 1],
+  );
+  assert.deepEqual(dynamic[3].condition.topDomains, ['cart.shop.example.com']);
+});
+
 test('re-enabled subdomain is excluded; re-disabled below it gets its own rule', () => {
   const { dynamic, session } = buildSitesDisabledRules({
     'example.com': { enabled: false },
@@ -125,10 +154,11 @@ test('proceed rule: allow requests TO the host in that tab, every type incl. mai
   assert.deepEqual(buildProceedRule(1, 'x.ch', 1, ['script']).condition.resourceTypes, ['main_frame', 'script']);
 });
 
-test('fleet kill switch: one global allowAllRequests + no-tab allow replace every system rule', () => {
+test('fleet kill switch: one global allowAllRequests + subresource allow + no-tab allow replace every system rule', () => {
   const off = buildGlobalOffRules();
   assert.deepEqual(off.dynamic, [
     { id: RULE_ID.SITES_DISABLED, priority: PRIORITY.SITE_DISABLED, action: { type: 'allowAllRequests' }, condition: { resourceTypes: ['main_frame'] } },
+    { id: RULE_ID.SITES_DISABLED_TOP, priority: PRIORITY.SITE_DISABLED, action: { type: 'allow' }, condition: {} },
   ]);
   assert.deepEqual(off.session, [{ id: RULE_ID.SESSION_SITES_DISABLED_NO_TAB, priority: PRIORITY.SITE_DISABLED, action: { type: 'allow' }, condition: { tabIds: [-1] } }]);
   const sys = buildSystemDynamicRules(defaultSettings(), { 'x.ch': { enabled: false } }, { topDomainsSupported: true, resourceTypes: [], globallyDisabled: true });
