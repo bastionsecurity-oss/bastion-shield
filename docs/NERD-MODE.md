@@ -247,7 +247,9 @@ separator, as uBO anchors it) with `-NoP`, `-ExecutionPolicy Bypass` /
 `Unrestricted`, `iex(`, `Invoke-Expression`, `Invoke-WebRequest` or
 `-UseBasicParsing` is 'high' too, and so is `cmd` started quietly at a line
 start: `/q /c` after `/v:on` or `/d`, or `/q /c` followed by a `for` loop.
-'medium' stays for the download-and-run
+A whole HTML page (a line starting with `<html`) that uses
+`navigator.clipboard` is 'high' as well: lures hand it out to be saved and
+opened. 'medium' stays for the download-and-run
 lines that install docs print (`curl -s … | bash`, `bash -c "$(curl …)"`,
 `irm … | iex`, `iex(irm …)`, `wget -q …/install.sh`, `msiexec` of a local
 package, a bash line with an aligned `#` comment); they are allowed when the

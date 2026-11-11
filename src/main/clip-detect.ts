@@ -216,6 +216,7 @@ const R_CONVERT_COMSPEC = re(String.raw`\bconvert\b.*\$env:comspec\b`);
 const R_PS_COMMENT_LURE = rl(String.raw`^<#\s*verification`);
 const R_IWR_WSCRIPT = rl(String.raw`^(?:invoke-webrequest|iwr)\b[\s\S]*?\bwscript(?:\.exe)?\b`);
 const R_URL_FILENAME_EXE = rl(String.raw`^\$url\b[\s\S]*?\n\$filename\b[\s\S]*?\.exe\b`);
+const R_HTML_CLIPBOARD = rl(String.raw`^<html\b[\s\S]*?\bnavigator\.clipboard\b`);
 
 const RULES: readonly Rule[] = [
   // Lure: "<command> # I am not a robot - reCAPTCHA Verification ID: 1234".
@@ -264,6 +265,8 @@ const RULES: readonly Rule[] = [
   { rule: 'ps-comment-lure', severity: 'high', test: ({ l }) => R_PS_COMMENT_LURE.test(l) },
   { rule: 'iwr-wscript', severity: 'high', test: ({ l }) => R_IWR_WSCRIPT.test(l) },
   { rule: 'url-filename-exe', severity: 'high', test: ({ l }) => R_URL_FILENAME_EXE.test(l) },
+  // A whole HTML page that writes the clipboard itself, handed out to be saved and opened.
+  { rule: 'html-clipboard', severity: 'high', test: ({ l }) => R_HTML_CLIPBOARD.test(l) },
   { rule: 'launcher-recaptcha', severity: 'high', test: ({ l }) => R_LAUNCHER_RECAPTCHA.test(l) },
   { rule: 'padded-comment', severity: 'high', test: ({ w }) => R_PADDED_WIN.test(w) },
   { rule: 'python-c-exec', severity: 'high', test: ({ l }) => R_PYTHON_C.test(l) },
@@ -303,7 +306,8 @@ export const UBO_PORTED_RULES: Readonly<Record<string, string>> = {
   // cached uBlock list and fails on any it does not find here.
   '0cirywr': 'mshta / msiexec-start', // ^ms(hta|iexec)
   '0y05avd': 'herestring-base64', // ^(bash <<<|curl -kfsSL) $(echo … base64 -d
-  '0z2vlq4': 'cmd-payload', // ^cmd /c … curl … .exe|.bat
+  '0z2vlq4': 'cmd-payload', // ^cmd /c … curl … .exe|.bat (older lists; widened by the next one)
+  '0v58ka0': 'cmd-payload', // ^cmd /c … curl(.exe) … .exe|.bat|.ps1
   '1t0r2es': 'cmd-for-delims', // ^cmd … for /f … delims … pow
   '12rql10': 'powershell-hidden', // powershell … -w(indowStyle) h(idden)
   '1le8gnf': 'powershell-hidden', // powershell … -w* m*
@@ -352,6 +356,7 @@ export const UBO_PORTED_RULES: Readonly<Record<string, string>> = {
   '122w4rr': 'ps-comment-lure', // ^<#Verification
   '1ggbzep': 'iwr-wscript', // ^Invoke-WebRequest … wscript
   '1ocv57d': 'url-filename-exe', // ^$url … \n$filename … .exe
+  '0k4ihdg': 'html-clipboard', // ^<html … navigator.clipboard
 };
 
 /**
