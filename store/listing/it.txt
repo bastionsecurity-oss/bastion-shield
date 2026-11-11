@@ -33,5 +33,3 @@ Codice sorgente: https://github.com/bastionsecurity-oss/bastion-shield
 Informativa sulla privacy: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
 
 Sviluppato a Zurigo da Bastion Security GmbH (https://bastionsecurity.ch).
-
-Bastion Shield non è affiliato né approvato da Brave Software, Google, Microsoft, il progetto uBlock Origin, EasyList o AdGuard.
