@@ -26,6 +26,7 @@ import { computeRegistrations, registrationStats } from '../src/background/regis
 import { normalizeSettings } from '../src/background/settings.ts';
 import { fetchLists, loadCatalog, type FetchedList } from './fetch-lists.ts';
 import { loadResources, WAR_PREFIX, type ResourceSet } from './resources.ts';
+import { findRemoteCode } from './lib/remote-code.ts';
 import { emitScriptlets, type EmitScriptletsResult } from './scriptlets.ts';
 import { NOTICE_EVENT_DEFINE } from './lib/notice-transform.ts';
 import { loadUnsupportedRegexes, regexKey } from './validate-dist.ts';
@@ -620,6 +621,13 @@ export async function build(opts: BuildOptions = {}): Promise<{ meta: BuildMeta;
     phase('bundle');
   }
   await writeManifest(outDir, version, ruleResources, war, log);
+
+  // Chrome Web Store: no remotely hosted code in an MV3 package. Always fatal,
+  // a package that fails this check is rejected in review.
+  const remoteCode = await findRemoteCode(outDir);
+  if (remoteCode.length) {
+    throw new Error(`remotely hosted code in the package: ${remoteCode.map((f) => `${f.file} (${f.reason})`).join(', ')}`);
+  }
 
   // 13. Report.
   const enabledLists = catalog.lists.filter((l) => l.default);
