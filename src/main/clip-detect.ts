@@ -186,7 +186,7 @@ const R_HERESTRING_B64 = rl(String.raw`^(?:(?:ba|z)?sh\s*<<<|curl\s+-kfssl)\s*["
 const R_CMD_FOR_DELIMS = rl(String.raw`^["'@(]*cmd(?:\.exe)?\b[\s\S]*?\bfor\s+\/f\b[\s\S]*?\bdelims\b[\s\S]*?\bpow`);
 const R_PS_NOP = rl(PS_LAUNCH + String.raw`[\s\S]*?\s-nop\b`);
 const R_PS_BYPASS = rl(PS_LAUNCH + String.raw`[\s\S]*?\s-(?:ep[a-z]*|ex[a-z]*)\s+["']?(?:b|bypass|u|unrestricted)\b`);
-const R_PS_LAUNCH_EXEC = rl(PS_LAUNCH + String.raw`[\s\S]*?(?:\biex\s*\(|invoke-expression|invoke-webrequest|-usebasicparsing\b)`);
+const R_PS_LAUNCH_EXEC = rl(PS_LAUNCH + String.raw`[\s\S]*?(?:\biex\s*\(|invoke-expression|invoke-webrequest|-usebasicparsing\b|\bdownloadstring\b)`);
 const R_PS_IRM_RELAUNCH = rl(PS_LAUNCH + String.raw`[\s\S]*?\birm\s[\s\S]*?\.[a-z]+\/[\s\S]*?powershell`);
 const R_CMD_NOP_IEX = rl(String.raw`^["'@(]*cmd(?:\.exe)?\b[\s\S]*?\/c\s[\s\S]*?\s-nop\s[\s\S]*?\biex\b`);
 const R_LAUNCHER_RECAPTCHA = rl(String.raw`^["'@(]*(?:cmd|powershell|pwsh|bash|sh|zsh|osascript)(?:\.exe)?\b[\s\S]*?recaptcha`);
@@ -318,6 +318,7 @@ export const UBO_PORTED_RULES: Readonly<Record<string, string>> = {
   '1fy21tz': 'powershell-launch-exec', // powershell … Invoke-Expression
   '1qoyvm9': 'powershell-launch-exec', // powershell … Invoke-WebRequest
   '02sbpxf': 'powershell-launch-exec', // powershell … -UseBasicParsing
+  '1rtr89u':'powershell-launch-exec', // powershell … DownloadString
   '0amn2p0': 'cmd-nop-iex', // ^cmd … /c … -nop … iex
   '166ea8q': 'launcher-recaptcha', // ^(cmd|powershell) … recaptcha
   '05nq4u4': 'padded-comment', // ^(cmd|powershell) … #(Verification|5 spaces)

