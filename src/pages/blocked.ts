@@ -57,6 +57,9 @@ function fitHost(chip: HTMLElement, host: string): void {
   let max = chipMaxChars(width, charPx, 2);
   let text = truncateMiddle(host, max);
   while (max > 8 && hostLines(text, perLine) > 2) text = truncateMiddle(host, --max);
+  // A word joiner after «…»: Chrome may otherwise wrap there, which moves a
+  // label longer than a line to the next line and costs a third line.
+  text = text.replace('…', '…⁠');
   chip.replaceChildren(...text.split(/(?<=[.\-])/).flatMap((part, i) => (i ? [document.createElement('wbr'), part] : [part])));
 }
 

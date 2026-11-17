@@ -244,10 +244,12 @@ or minimised PowerShell windows (`-w hidden`, `-w minimized`) are 'high' even
 without a download: no web page has a legitimate reason to put one on the
 clipboard. PowerShell launched as a program (at a line start or after a path
 separator, as uBO anchors it) with `-NoP`, `-ExecutionPolicy Bypass` /
-`Unrestricted`, `iex(`, `Invoke-Expression`, `Invoke-WebRequest` or
-`-UseBasicParsing` is 'high' too, and so is `cmd` started quietly at a line
+`Unrestricted`, `iex(`, `Invoke-Expression`, `Invoke-WebRequest`,
+`DownloadString` or `-UseBasicParsing` is 'high' too, and so is `cmd` started quietly at a line
 start: `/q /c` after `/v:on` or `/d`, or `/q /c` followed by a `for` loop.
-'medium' stays for the download-and-run
+A whole HTML page (a line starting with `<html`) that uses
+`navigator.clipboard` is 'high' as well: lures hand it out to be saved and
+opened. 'medium' stays for the download-and-run
 lines that install docs print (`curl -s … | bash`, `bash -c "$(curl …)"`,
 `irm … | iex`, `iex(irm …)`, `wget -q …/install.sh`, `msiexec` of a local
 package, a bash line with an aligned `#` comment); they are allowed when the

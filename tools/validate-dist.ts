@@ -43,9 +43,18 @@ self.__results = (async () => {
   const out = { errors: [] };
   try {
     const dnr = chrome.declarativeNetRequest;
-    out.enabledRulesets = await dnr.getEnabledRulesets();
-    out.availableStaticRules = await dnr.getAvailableStaticRuleCount();
     const manifest = chrome.runtime.getManifest();
+    // Chrome loads the static rulesets asynchronously: right after the service
+    // worker starts, getEnabledRulesets() can still be empty (seen in Chrome 156
+    // with every ruleset enabled). Wait until all declared rulesets are there.
+    const declared = manifest.declarative_net_request.rule_resources.length;
+    const deadline = Date.now() + 30000;
+    for (;;) {
+      out.enabledRulesets = await dnr.getEnabledRulesets();
+      if (out.enabledRulesets.length >= declared || Date.now() >= deadline) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    out.availableStaticRules = await dnr.getAvailableStaticRuleCount();
     out.regexChecked = 0;
     out.regexUnsupported = [];
     for (const rr of manifest.declarative_net_request.rule_resources) {
@@ -167,7 +176,7 @@ export async function validateDist(opts: { distDir?: string; headed?: boolean; l
     seedChromiumProfile(join(work, 'profile'));
     const context = await chromium.launchPersistentContext(join(work, 'profile'), {
       headless: !opts.headed,
-      channel: 'chromium',
+      ...(process.env.CHROME_FOR_TESTING ? { executablePath: process.env.CHROME_FOR_TESTING } : { channel: 'chromium' }),
       args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
     });
     try {

@@ -13,6 +13,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { ScriptletInfo } from '../src/compiler/types.ts';
+import { remoteCodeReason } from './lib/remote-code.ts';
 import { ROOT, createLogger, fileExists, isMain, readJson, stripBom, type Logger } from './lib/util.ts';
 
 export const VENDOR_DIR = join(ROOT, 'vendor');
@@ -331,6 +332,14 @@ async function loadBraveResources(set: ResourceSet, redirects: RedirectResource[
       set.skipped.push({ name, reason: 'relies on Brave-injected global deAmpEnabled (De-AMP is built into Bastion)' });
       continue;
     }
+    // Rewritten third-party scripts (sugarcoat: analytics.js, bat.js) and
+    // hooks that evaluate fetched code (Twitch worker) count as remotely
+    // hosted code in the Chrome Web Store; they are never packaged.
+    const remote = remoteCodeReason(body);
+    if (remote !== null) {
+      set.skipped.push({ name, reason: `${remote} (remotely hosted code is not allowed in the Chrome Web Store)` });
+      continue;
+    }
     const template = /\{\{\d+\}\}/.test(body);
     const requiresTrust = typeof entry.permission === 'number' && entry.permission !== 0;
     const aliases = asArray(entry.aliases).filter((a) => typeof a === 'string');
@@ -359,11 +368,10 @@ async function loadBraveResources(set: ResourceSet, redirects: RedirectResource[
       for (const k of [name, ...aliases]) addScriptletKeys(set.scriptletMap, k, info, log);
     }
 
-    // Redirect target too (e.g. brave-sugarcoat.txt uses $redirect=async-sugarcoat-<hash>.js).
-    // Templates cannot be redirect targets: the file would contain raw placeholders.
+    // Redirect target too. Templates cannot be redirect targets: the file
+    // would contain raw placeholders.
     if (!template && !taken.has(name)) {
-      // Brave lists reference some resources without the ".js" suffix
-      // (brave-sugarcoat.txt: redirect=async-sugarcoat-<hash>); accept both.
+      // Brave lists reference some resources without the ".js" suffix; accept both.
       const extra = name.endsWith('.js') ? [name.slice(0, -3)] : [];
       const all = [...aliases, ...extra].filter((a) => !taken.has(a) && a !== name);
       redirects.push({

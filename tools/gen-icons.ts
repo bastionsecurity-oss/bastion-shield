@@ -30,7 +30,10 @@ await mkdir(out, { recursive: true });
 // Persistent context with a seeded profile: a bare chromium.launch() makes
 // Chromium probe the Windows password (see tools/lib/chromium-profile.ts).
 const profile = freshProfileDir('bastion-icons-');
-const browser = await chromium.launchPersistentContext(profile, { deviceScaleFactor: 1 });
+const browser = await chromium.launchPersistentContext(profile, {
+  deviceScaleFactor: 1,
+  ...(process.env.CHROME_FOR_TESTING ? { executablePath: process.env.CHROME_FOR_TESTING } : {}),
+});
 const page = browser.pages()[0] ?? (await browser.newPage());
 for (const [name, v] of Object.entries(VARIANTS)) {
   await writeFile(join(out, `mark-${name}.svg`), svg(v) + '\n');

@@ -100,7 +100,9 @@ export class ExtensionHarness {
     if (staged) args.push(`--disable-extensions-except=${staged}`, `--load-extension=${staged}`);
     const headless = opts.headless ?? !process.env.HEADED;
     const context = await chromium.launchPersistentContext(userDataDir, {
-      channel: 'chromium',
+      // CHROME_FOR_TESTING: path to a Chrome for Testing build (branded Chrome dropped
+      // --load-extension in 137; Playwright's bundled Chromium may lag security fixes).
+      ...(process.env.CHROME_FOR_TESTING ? { executablePath: process.env.CHROME_FOR_TESTING } : { channel: 'chromium' }),
       headless,
       ignoreHTTPSErrors: true,
       viewport: { width: 1280, height: 900 },
@@ -381,7 +383,7 @@ export async function diagnoseLoadFailure(dist: string, waitMs = 6000): Promise<
   try {
     staged = stageExtension(dist, 'bastion-e2e-diag-ext-');
     const child = spawn(
-      chromium.executablePath(),
+      process.env.CHROME_FOR_TESTING ?? chromium.executablePath(),
       ['--headless=new', `--user-data-dir=${dir}`, '--no-first-run', '--enable-logging=stderr', '--v=0', `--disable-extensions-except=${staged}`, `--load-extension=${staged}`, 'about:blank'],
       { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true },
     );
