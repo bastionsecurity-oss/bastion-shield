@@ -4,7 +4,7 @@ SCHNELL
 Das Blockieren erledigt der Browser selbst in seiner Netzwerk-Engine (declarativeNetRequest). Pro Anfrage läuft kein Erweiterungscode, und der Hintergrundprozess ruht, wenn nichts passiert.
 
 BEWÄHRTE FILTERLISTEN
-Bastion Shield verwendet dieselben Filterlisten, die Brave Shields standardmässig nutzt: uBlock-Origin-Filter, EasyList, EasyPrivacy, die Listen von Brave, die Liste von Peter Lowe, URLhaus-Malware-Domains, Listen gegen Cookie-Hinweise und App-Banner sowie die Regionallisten für Deutsch, Französisch und Italienisch. Mit jedem wöchentlichen Update kommen die aktuellen Listen. Weitere geprüfte Listen lassen sich einschalten, und eigene Listen können Sie aus einer Datei oder von einer Web-Adresse importieren.
+Bastion Shield bringt bekannte quelloffene Listen gegen Werbung, Tracker, Malware-Domains, Cookie-Hinweise und App-Banner mit, dazu Regionallisten für Deutsch, Französisch und Italienisch. Jedes wöchentliche Update liefert den aktuellen Stand. Weitere geprüfte Listen lassen sich einschalten, und eigene können Sie aus einer Datei oder von einer Web-Adresse importieren. Alle Quellen und Lizenzen: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/FILTER-LISTS.md
 
 TRANSPARENT
 • Live-Aktivität pro Tab: jede blockierte, umgeleitete oder bereinigte Anfrage, mit der Filterliste und der Regel, die gegriffen hat.
