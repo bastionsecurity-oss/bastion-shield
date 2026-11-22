@@ -307,7 +307,8 @@ export const UBO_PORTED_RULES: Readonly<Record<string, string>> = {
   '0cirywr': 'mshta / msiexec-start', // ^ms(hta|iexec)
   '0y05avd': 'herestring-base64', // ^(bash <<<|curl -kfsSL) $(echo … base64 -d
   '0z2vlq4': 'cmd-payload', // ^cmd /c … curl … .exe|.bat (older lists; widened by the next one)
-  '0v58ka0': 'cmd-payload', // ^cmd /c … curl(.exe) … .exe|.bat|.ps1
+  '0v58ka0': 'cmd-payload', // ^cmd /c … curl(.exe) … .exe|.bat|.ps1 (older lists; widened by the next one)
+  '0zspcga': 'cmd-payload', // ^cmd(.exe) /c … curl(.exe) … .exe|.bat|.ps1
   '1t0r2es': 'cmd-for-delims', // ^cmd … for /f … delims … pow
   '12rql10': 'powershell-hidden', // powershell … -w(indowStyle) h(idden)
   '1le8gnf': 'powershell-hidden', // powershell … -w* m*
