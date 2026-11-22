@@ -1,7 +1,7 @@
 Bastion Shield blocks ads, trackers and known malicious websites in Chrome, Edge and Brave. It is open source, keeps everything on your device and shows exactly what it blocked and why.
 
 FAST
-Blocking happens inside the browser's own network engine (declarativeNetRequest). No extension code runs for each request, and the background process sleeps when nothing happens.
+The work happens inside the browser's own network engine (declarativeNetRequest). No extension code runs for each request, and the background process sleeps when nothing happens.
 
 PROVEN FILTER LISTS
 Bastion Shield ships well-known open-source lists against ads, trackers, malware domains, cookie notices and app banners, plus regional ones for German, French and Italian. Every weekly update brings their current versions. You can switch on further vetted ones, or import your own from a file or a web address. All sources and licences: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/FILTER-LISTS.md
@@ -9,17 +9,17 @@ Bastion Shield ships well-known open-source lists against ads, trackers, malware
 TRANSPARENT
 • Live activity per tab: every blocked, redirected or cleaned request, with the filter list and the exact rule that matched.
 • Local statistics for up to 30 days. You can delete them at any time or switch them off.
-• Open source under GPL-3.0. Every release lists the exact filter lists it was built from.
+• Open source under GPL-3.0. Every release names the exact sources it was built from.
 
 PRIVACY
 • Global Privacy Control, removal of tracking parameters from links, skipping of bounce-tracking redirects.
 • Fingerprinting protection for canvas, WebGL, audio and browser properties.
 • Hyperlink auditing and the Privacy Sandbox advertising APIs switched off.
-• Per site: protection on or off, Standard or Aggressive mode, block JavaScript.
+• Per site: protection on or off, Standard or Aggressive mode, JavaScript on or off.
 
 SECURITY
 • Warning page before known malware and scam websites.
-• ClickFix protection: blocks dangerous commands (PowerShell, mshta, curl | sh) that websites secretly put on your clipboard to trick you into running them. What you copy yourself is not affected.
+• ClickFix protection: stops dangerous commands (PowerShell, mshta, curl | sh) that websites secretly put on your clipboard to trick you into running them. What you copy yourself is not affected.
 
 FOR ORGANISATIONS
 Every setting can be set and locked by browser policy. A ready-made kit for Microsoft Intune, registry files and macOS profiles is included. A fleet-wide emergency switch turns protection off on every device without uninstalling.
