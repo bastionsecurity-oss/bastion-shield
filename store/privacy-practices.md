@@ -71,8 +71,9 @@ Certify all three statements:
 - [x] I do not use or transfer user data for purposes that are unrelated to my item's single purpose.
 - [x] I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
-**Privacy policy URL:** `https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md`
-(Later, once the website has its own page: `https://bastionsecurity.ch/…`, and update this file.)
+**Privacy policy URL:** `https://www.bastionsecurity.ch/en/shield/privacy`
+
+That page is a word-for-word copy of [docs/PRIVACY.md](../docs/PRIVACY.md), generated in the website repository (`npm run privacy:import -- <path to PRIVACY.md> <YYYY-MM-DD>`). When `docs/PRIVACY.md` changes, regenerate the page and update the German translation at `https://www.bastionsecurity.ch/shield/datenschutz`.
 
 ## Microsoft Edge Add-ons
 
@@ -84,6 +85,6 @@ Certify all three statements:
 
 ## Support contact
 
-- Website: `https://bastionsecurity.ch`
+- Website: `https://www.bastionsecurity.ch/shield`
 - Support URL: `https://github.com/bastionsecurity-oss/bastion-shield/issues`
 - Support e-mail: `info@bastionsecurity.ch`

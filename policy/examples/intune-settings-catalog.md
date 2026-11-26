@@ -4,7 +4,7 @@
 
 A click-through checklist. Background, alternatives and caveats: [docs/DEPLOYMENT-INTUNE.md](../../docs/DEPLOYMENT-INTUNE.md).
 
-Replace `<EDGE_ADDONS_ID>` and `<CHROME_WEB_STORE_ID>` with the store ids of Bastion Shield. All profiles: **Devices > Manage devices > Configuration > Create > New policy**, assign to a pilot **device** group first.
+Replace `<EDGE_ADDONS_ID>` and `<CHROME_WEB_STORE_ID>` with the store ids of Bastion Shield. The Chrome Web Store id is `bpcdegnedgngecamappcnpphjkkiihio`; the Edge Add-ons listing is not published yet. All profiles: **Devices > Manage devices > Configuration > Create > New policy**, assign to a pilot **device** group first.
 
 ## Profile 1: Edge, Windows: install
 

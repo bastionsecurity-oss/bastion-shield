@@ -29,7 +29,8 @@ Nessun account, nessuna telemetria, nessuna analisi, nessuna configurazione remo
 
 Lingue: italiano, tedesco, inglese, francese.
 
+Sito web: https://www.bastionsecurity.ch/shield
 Codice sorgente: https://github.com/bastionsecurity-oss/bastion-shield
-Informativa sulla privacy: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+Informativa sulla privacy: https://www.bastionsecurity.ch/en/shield/privacy
 
 Sviluppato a Zurigo da Bastion Security GmbH (https://bastionsecurity.ch).

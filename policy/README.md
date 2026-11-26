@@ -10,8 +10,8 @@ All examples use placeholders. Replace them before use:
 
 | Placeholder | Meaning | Used by |
 |---|---|---|
-| `<CHROME_WEB_STORE_ID>` | id of Bastion Shield in the Chrome Web Store | Google Chrome, Brave |
-| `<EDGE_ADDONS_ID>` | id of Bastion Shield in Microsoft Edge Add-ons | Microsoft Edge |
+| `<CHROME_WEB_STORE_ID>` | id of Bastion Shield in the Chrome Web Store: `bpcdegnedgngecamappcnpphjkkiihio` | Google Chrome, Brave |
+| `<EDGE_ADDONS_ID>` | id of Bastion Shield in Microsoft Edge Add-ons (listing not published yet) | Microsoft Edge |
 
 The two stores assign **different** ids. In the `.mobileconfig` files the placeholders are written without angle brackets (`CHROME_WEB_STORE_ID`, `EDGE_ADDONS_ID`) because `<` is not allowed in XML text. The scripts refuse to write anything for a browser whose id is still a placeholder.
 

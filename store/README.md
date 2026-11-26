@@ -26,9 +26,11 @@ Everything the Chrome Web Store and Microsoft Edge Add-ons listings need, kept n
 | Screenshots | `images/<lang>/screenshot-1…5` | same |
 | Small promo tile | `images/<lang>/promo-small-440x280.png` (required) | same (optional) |
 | Marquee / large promo tile | `images/<lang>/promo-marquee-1400x560.png` (optional) | same (optional) |
-| Official URL / website | `https://bastionsecurity.ch` (after verifying the domain in Google Search Console) | `https://bastionsecurity.ch` |
+| Official URL | `https://bastionsecurity.ch` (after verifying the domain in Google Search Console) | n/a |
+| Homepage / website | `https://www.bastionsecurity.ch/shield` | `https://www.bastionsecurity.ch/shield` |
+| Published listing | https://chromewebstore.google.com/detail/bastion-shield/bpcdegnedgngecamappcnpphjkkiihio (id `bpcdegnedgngecamappcnpphjkkiihio`) | not published yet |
 | Support | `https://github.com/bastionsecurity-oss/bastion-shield/issues` | same, plus `info@bastionsecurity.ch` |
-| Privacy | `privacy-practices.md` | `privacy-practices.md` |
+| Privacy | `privacy-practices.md`; policy URL `https://www.bastionsecurity.ch/en/shield/privacy` | same |
 | Mature content | No | No |
 | Search terms | (none) | en: `ad blocker`, `tracker blocker`, `privacy`, `ClickFix`, `Intune`, `malware protection`, `adblock`; de: `Werbeblocker`, `Trackerblocker`, `Datenschutz`, `ClickFix`, `Intune`, `Malware-Schutz`, `Adblocker` |
 
