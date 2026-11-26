@@ -29,7 +29,8 @@ Pas de compte, pas de télémétrie, pas d’analyse, pas de configuration à di
 
 Langues : français, allemand, anglais, italien.
 
+Site web : https://www.bastionsecurity.ch/shield
 Code source : https://github.com/bastionsecurity-oss/bastion-shield
-Politique de confidentialité : https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+Politique de confidentialité : https://www.bastionsecurity.ch/en/shield/privacy
 
 Développé à Zurich par Bastion Security GmbH (https://bastionsecurity.ch).

@@ -7,10 +7,14 @@ A lean, open-source ad and tracker blocker for Chromium browsers (Google Chrome,
 
 Made by [Bastion Security GmbH](https://bastionsecurity.ch), a cyber-security MSP in Zurich, for its customers and for everyone else.
 
+**Install:** [Bastion Shield in the Chrome Web Store](https://chromewebstore.google.com/detail/bastion-shield/bpcdegnedgngecamappcnpphjkkiihio), for Chrome and Brave. Product page: [bastionsecurity.ch/shield](https://www.bastionsecurity.ch/shield).
+
 Created by **Luca Seeberger**, Bastion Shield is Bastion Security GmbH's first open-source project.
 Original project code is Copyright (C) 2026 Bastion Security GmbH and contributors, licensed under GPL-3.0-or-later. See [AUTHORS.md](AUTHORS.md) for project credits and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for upstream code, filter lists and fonts.
 
 ## Kurz auf Deutsch
+
+**Installieren:** [Bastion Shield im Chrome Web Store](https://chromewebstore.google.com/detail/bastion-shield/bpcdegnedgngecamappcnpphjkkiihio), für Chrome und Brave. Produktseite: [bastionsecurity.ch/shield](https://www.bastionsecurity.ch/shield).
 
 Bastion Shield ist ein schlanker, quelloffener Werbe- und Tracker-Blocker für Chrome, Edge und Brave. Er blockiert so gut wie Brave Shields im Standardmodus und verwendet dieselben bewährten Filterlisten (uBlock Origin, EasyList, EasyPrivacy, Brave) sowie die Regionallisten für Deutsch, Französisch und Italienisch, die in der Schweizer Ausgabe alle eingeschaltet sind.
 

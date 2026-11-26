@@ -58,8 +58,8 @@ Use the stores unless you have a specific reason not to.
 ## 2. Before you start
 
 - **Extension ids.** Throughout this guide and in `policy/examples/`:
-  - `<CHROME_WEB_STORE_ID>`: Bastion Shield in the Chrome Web Store. Used by **Chrome and Brave**.
-  - `<EDGE_ADDONS_ID>`: Bastion Shield in Microsoft Edge Add-ons. Used by **Edge**.
+  - `<CHROME_WEB_STORE_ID>`: Bastion Shield in the Chrome Web Store. Used by **Chrome and Brave**. The published id is `bpcdegnedgngecamappcnpphjkkiihio` ([listing](https://chromewebstore.google.com/detail/bastion-shield/bpcdegnedgngecamappcnpphjkkiihio)).
+  - `<EDGE_ADDONS_ID>`: Bastion Shield in Microsoft Edge Add-ons. Used by **Edge**. The Edge listing is not published yet; its id is added here when it is.
 
   An extension id is 32 letters from `a` to `p`. Copy it from the store listing URL or from `chrome://extensions` / `edge://extensions` (Developer mode shows ids). Never use one store's id with the other store's update URL.
 - **Store update URLs** (verbatim, no trailing slash):

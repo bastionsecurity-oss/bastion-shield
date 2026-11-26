@@ -29,7 +29,8 @@ No account, no telemetry, no analytics, no remote configuration. Your settings a
 
 Languages: English, German, French, Italian.
 
+Website: https://www.bastionsecurity.ch/shield
 Source code: https://github.com/bastionsecurity-oss/bastion-shield
-Privacy policy: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+Privacy policy: https://www.bastionsecurity.ch/en/shield/privacy
 
 Made in Zurich by Bastion Security GmbH (https://bastionsecurity.ch).

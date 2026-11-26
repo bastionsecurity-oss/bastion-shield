@@ -29,7 +29,8 @@ Kein Konto, keine Telemetrie, keine Analyse, keine Fernkonfiguration. Einstellun
 
 Sprachen: Deutsch, Englisch, Französisch, Italienisch.
 
+Website: https://www.bastionsecurity.ch/shield
 Quellcode: https://github.com/bastionsecurity-oss/bastion-shield
-Datenschutzerklärung: https://github.com/bastionsecurity-oss/bastion-shield/blob/main/docs/PRIVACY.md
+Datenschutzerklärung: https://www.bastionsecurity.ch/shield/datenschutz
 
 Entwickelt in Zürich von der Bastion Security GmbH (https://bastionsecurity.ch).
